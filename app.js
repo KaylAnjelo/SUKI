@@ -66,6 +66,10 @@ app.post('/login', (req,res) =>{
   });
 })
 
+app.post('/logout', (req, res) => {
+    res.redirect('/');
+});
+
 
 app.listen(5000, () =>{
     console.log('Server Started on port 5000');
