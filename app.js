@@ -6,6 +6,9 @@ const dotenv = require('dotenv');
 dotenv.config({path: './.env'});
 
 const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
 
 const db = mysql.createConnection({
     host: process.env.DATABASE_HOST,
@@ -13,6 +16,7 @@ const db = mysql.createConnection({
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE
 });
+
 
 const publicDirectory = path.join(__dirname, './public');
 app.use(express.static(publicDirectory));
@@ -34,7 +38,8 @@ app.get("/", (req, res) => {
 
 app.post('/login', (req,res) =>{
     console.log(req.body);
-    const { email, password } = req.body;
+    const email = req.body["email"]
+    const password = req.body["password"]
 
     console.log('Login attempt:');
     console.log('Email:', email);
@@ -44,7 +49,7 @@ app.post('/login', (req,res) =>{
         return res.send('⚠️ Please enter both email and password.');
     }
 
-    const query = "'SELECT * FROM admin WHERE Useranme = 'kyle123@email.com' AND Password = 'kyle123'";
+    const query = "SELECT * FROM admin WHERE Username = ? AND Password = ?";
     db.query(query, [email, password], (err, results) => {
         if (err) {
         console.error('❌ Database error:', err);
@@ -53,7 +58,7 @@ app.post('/login', (req,res) =>{
 
         if (results.length > 0) {
         console.log('✅ Login successful for:', email);
-        res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+        res.render('page2');
         } else {
         console.log('❌ Invalid login attempt for:', email);
         res.send('❌ Invalid email or password.');
