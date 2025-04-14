@@ -1,0 +1,112 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #2e2321;
+    color: #000;
+  }
+  
+  .container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 220px;
+    background-color: #8b0000;
+    color: white;
+    padding: 20px;
+  }
+  
+  .logo {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 40px;
+  }
+  
+  .nav {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nav-item {
+    color: white;
+    padding: 10px;
+    text-decoration: none;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+  
+  .nav-item.active {
+    background-color: #333;
+  }
+  
+  .features {
+    margin-top: auto;
+    margin-top: 20px;
+    font-size: 12px;
+  }
+  
+  .new {
+    background-color: white;
+    color: black;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  
+  .main-content {
+    flex-grow: 1;
+    padding: 40px;
+    background-color: #fff;
+    position: relative;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .add-store, .logout {
+    background-color: #8b0000;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  h1 {
+    margin-bottom: 20px;
+  }
+  
+  .report-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .report-btn {
+    padding: 15px;
+    font-size: 16px;
+    background-color: #a9a9a9;
+    border: none;
+    border-radius: 5px;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .support {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .support-btn {
+    background-color: #8b0000;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+  }
