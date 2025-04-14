@@ -58,7 +58,7 @@ app.post('/login', (req,res) =>{
 
         if (results.length > 0) {
         console.log('✅ Login successful for:', email);
-        res.render('page2');
+        res.render('GenerateReports');
         } else {
         console.log('❌ Invalid login attempt for:', email);
         res.send('❌ Invalid email or password.');
