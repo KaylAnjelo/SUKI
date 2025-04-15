@@ -38,29 +38,30 @@ app.get("/", (req, res) => {
 
 app.post('/login', (req,res) =>{
     console.log(req.body);
-    const email = req.body["email"]
+    const username = req.body["username"]
     const password = req.body["password"]
 
+
     console.log('Login attempt:');
-    console.log('Email:', email);
+    console.log('Username:', username);
     console.log('Password:', password);
 
-    if (!email || !password) {
+    if (!username || !password) {
         return res.send('⚠️ Please enter both email and password.');
     }
 
     const query = "SELECT * FROM admin WHERE Username = ? AND Password = ?";
-    db.query(query, [email, password], (err, results) => {
+    db.query(query, [username, password], (err, results) => {
         if (err) {
         console.error('❌ Database error:', err);
         return res.send('🚫 An error occurred while checking your credentials.');
         }
 
         if (results.length > 0) {
-        console.log('✅ Login successful for:', email);
+        console.log('✅ Login successful for:', username);
         res.render('GenerateReports');
         } else {
-        console.log('❌ Invalid login attempt for:', email);
+        console.log('❌ Invalid login attempt for:', username);
         res.send('❌ Invalid email or password.');
         }
   });
