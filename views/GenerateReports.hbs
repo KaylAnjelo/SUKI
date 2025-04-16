@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Generate Reports</title>
-  <link rel="stylesheet" href="/style-page2.css" />
-  <script src="/actions.js" defer></script>
+  <link rel="stylesheet" href="/css/style-page2.css" />
+  <script src="/js/notifications.js" defer></script>
 </head>
 <body>
   <div class="container">
@@ -24,17 +24,10 @@
     <main class="main-content">
       <div class="header">
         <button class="add-store">Add Store</button>
-         <div class="notif-container">
-          <button id="notifButton" class="notif-button">Notifications</button>
-          <div id="notifDropdown" class="notif-dropdown hidden">
-            <span class="notifdrop"></span>
-            <!-- Notifications will be dynamically inserted here -->
-            <p>No recent notifications</p>
-          </div>
-        <form action="/logout" method="POST">
-          <button type="submit" class="logout">Log out</button>
-        </form>
-        </div>
+        <button id="notifButton" class="notif-button">Notifications</button>
+          <form action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
       </div>
       <h1>Reports</h1>
       <div class="report-buttons">
