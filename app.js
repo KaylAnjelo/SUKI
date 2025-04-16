@@ -16,11 +16,14 @@ const db = mysql.createConnection({
   database: process.env.DATABASE
 });
 
+// Static file directory
 const publicDirectory = path.join(__dirname, './public');
 app.use(express.static(publicDirectory));
 
+// View engine setup
 app.set("view engine", "hbs");
 
+// MySQL Connection
 db.connect((error) => {
   if (error) {
     console.log('❌ MySQL Connection Error:', error);
@@ -91,10 +94,11 @@ app.get('/notifications', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch notifications' });
     }
 
-    res.json(results);
+    res.json(results);  // Send results as JSON
   });
 });
 
+// Start the server
 app.listen(5000, () => {
   console.log('🚀 Server started on port 5000');
 });
