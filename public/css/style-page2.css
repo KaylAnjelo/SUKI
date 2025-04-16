@@ -74,30 +74,38 @@ body {
   position: relative;
 }
 
-.notif-dropdown {
-  display: none;
+#notificationsDropdown {
   position: absolute;
-  top: 110%;
-  right: 0;
-  background-color: white;
-  min-width: 250px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  top: 50px; /* adjust based on your layout */
+  right: 20px;
+  width: 260px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   z-index: 1000;
+  display: none;
   padding: 10px;
-  color: black;
-  font-size: 14px;
 }
 
-.notif-dropdown p {
-  margin: 8px 0;
-  padding: 6px;
+#notificationsDropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#notificationsDropdown li {
+  font-size: 13px;
+  padding: 6px 8px;
   border-bottom: 1px solid #eee;
 }
 
-.hidden {
-  display: none;
+#notificationsDropdown li:last-child {
+  border-bottom: none;
 }
+
 
 h1 {
   margin-bottom: 20px;
@@ -133,3 +141,4 @@ h1 {
   border-radius: 30px;
   cursor: pointer;
 }
+

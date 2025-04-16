@@ -46,25 +46,4 @@
     </main>
   </div>
 </body>
-<script>
-  // Fetch logs and display them in the notifications dropdown
-  document.getElementById('notificationsBtn').addEventListener('click', async () => {
-    const response = await fetch('/notifications');
-    const logs = await response.json();
-
-    const notificationsList = document.getElementById('notificationsList');
-    notificationsList.innerHTML = '';  // Clear existing notifications
-
-    logs.forEach(log => {
-      const listItem = document.createElement('li');
-      // Assuming 'login_time' is a timestamp
-      const formattedTime = new Date(log.login_time).toLocaleString();  // Format the timestamp
-      listItem.textContent = `${log.admin_name} logged in at ${formattedTime}`;
-      notificationsList.appendChild(listItem);
-    });
-
-    const dropdown = document.getElementById('notificationsDropdown');
-    dropdown.style.display = 'block';  // Show the dropdown
-  });
-</script>
 </html>
