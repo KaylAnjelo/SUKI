@@ -41,7 +41,6 @@ app.post('/login', (req,res) =>{
     const username = req.body["username"]
     const password = req.body["password"]
 
-
     console.log('Login attempt:');
     console.log('Username:', username);
     console.log('Password:', password);
@@ -71,6 +70,25 @@ app.post('/logout', (req, res) => {
     res.redirect('/');
 });
 
+
+// GET /notifications route (fetch recent admin logins)
+app.get('/notifications', (req, res) => {
+    const notifQuery = `
+      SELECT admin_name, login_time
+      FROM admin_logins
+      ORDER BY login_time DESC
+      LIMIT 5
+    `;
+  
+    db.query(notifQuery, (err, results) => {
+      if (err) {
+        console.error('❌ Error fetching notifications:', err);
+        return res.status(500).json({ error: 'Failed to fetch notifications' });
+      }
+  
+      res.json(results);
+    });
+  });
 
 app.listen(5000, () =>{
     console.log('Server Started on port 5000');
