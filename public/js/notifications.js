@@ -9,9 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btn.addEventListener('click', async (e) => {
-    e.stopPropagation(); // Prevent click from bubbling to document
+    e.stopPropagation();
 
-    // Toggle visibility
     const isVisible = dropdown.style.display === 'block';
     dropdown.style.display = isVisible ? 'none' : 'block';
 
@@ -21,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok) throw new Error('Network response was not ok');
 
         const logs = await response.json();
-        list.innerHTML = ''; // Clear previous
+        list.innerHTML = '';
 
         if (logs.length === 0) {
           const li = document.createElement('li');
@@ -29,9 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
           list.appendChild(li);
         } else {
           logs.forEach(log => {
+            const d = new Date();
+            const newFormattedDate =` ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} at ${
+              (d.getHours() % 12) || 12
+            }:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
             const li = document.createElement('li');
-            const time = new Date(log.login_time).toLocaleString();
-            li.textContent = `${log.admin_name} logged in at ${time}`;
+            li.textContent = `${log.admin_name} logged in on ${newFormattedDate}`;
             list.appendChild(li);
           });
         }
@@ -43,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Hide dropdown if clicking outside
   document.addEventListener('click', (e) => {
     if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.style.display = 'none';

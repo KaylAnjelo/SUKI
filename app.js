@@ -82,8 +82,8 @@ app.post('/login', (req, res) => {
     if (results.rows.length > 0) {
       console.log('✅ Login successful for:', username);
 
-      // Log the admin login in admin_logins table
-      const logQuery = "INSERT INTO admin_logins (admin_name) VALUES ($1)";
+      // Log the admin login in admin_logs table
+      const logQuery = "INSERT INTO admin_logs (admin_name) VALUES ($1)";
       db.query(logQuery, [username], (logErr) => {
         if (logErr) {
           console.error('⚠️ Failed to log admin login:', logErr);
@@ -108,9 +108,9 @@ app.post('/logout', (req, res) => {
 app.get('/notifications', (req, res) => {
   const notifQuery = `
     SELECT admin_name, login_time
-    FROM admin_logins
+    FROM admin_logs
     ORDER BY login_time DESC
-    LIMIT 5
+    LIMIT 1
   `;
 
   db.query(notifQuery, (err, results) => {
