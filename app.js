@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const mysql = require("mysql");
 const dotenv = require('dotenv');
+const { error } = require('console');
 
 dotenv.config({ path: './.env' });
 
@@ -45,14 +46,14 @@ app.post('/login', (req, res) => {
   console.log('Login attempt:', username);
 
   if (!username || !password) {
-    return res.send('⚠️ Please enter both email and password.');
+    return res.render('index', {error: 'Please enter both username and password'});
   }
 
   const query = "SELECT * FROM admin WHERE Username = ? AND Password = ?";
   db.query(query, [username, password], (err, results) => {
     if (err) {
-      console.error('❌ Database error:', err);
-      return res.send('🚫 An error occurred while checking your credentials.');
+      console.error('Database error:', err);
+      return res.render('index', {error: 'An error occurred while checking your credentials.'});
     }
 
     if (results.length > 0) {
@@ -69,7 +70,7 @@ app.post('/login', (req, res) => {
       res.render('GenerateReports');
     } else {
       console.log('❌ Invalid login attempt for:', username);
-      res.send('❌ Invalid email or password.');
+      res.render('index', {error: 'Invalid username or password, try again.'})
     }
   });
 });
