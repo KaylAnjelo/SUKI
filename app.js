@@ -110,7 +110,7 @@ app.get('/notifications', (req, res) => {
     SELECT admin_name, login_time
     FROM admin_logs
     ORDER BY login_time DESC
-    LIMIT 1
+    LIMIT 2
   `;
 
   db.query(notifQuery, (err, results) => {
