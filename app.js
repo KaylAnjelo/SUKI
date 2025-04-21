@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
-// Login route with admin login logging
+
 // Login route with admin login logging
 app.post('/login', (req, res) => {
   const username = req.body["username"];
@@ -83,7 +83,7 @@ app.post('/login', (req, res) => {
       console.log('✅ Login successful for:', username);
 
       // Log the admin login in admin_logs table
-      const logQuery = "INSERT INTO admin_logs (admin_name) VALUES ($1)";
+      const logQuery = "INSERT INTO admin_logs (admin_name, login_time) VALUES ($1, NOW())";
       db.query(logQuery, [username], (logErr) => {
         if (logErr) {
           console.error('⚠️ Failed to log admin login:', logErr);

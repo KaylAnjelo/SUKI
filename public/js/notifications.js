@@ -28,12 +28,34 @@ document.addEventListener('DOMContentLoaded', () => {
           list.appendChild(li);
         } else {
           logs.forEach(log => {
-            const loginDate = new Date(log.login_time);
-            const newFormattedDate = `${loginDate.getDate()}/${loginDate.getMonth() + 1}/${loginDate.getFullYear()} at ${
-              (loginDate.getHours() % 12) || 12
-            }:${loginDate.getMinutes().toString().padStart(2, '0')} ${loginDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+            if (!log.login_time) {
+              console.error('Invalid date: null or missing login_time');
+              return; // Skip this log entry if the date is invalid or missing
+            }
+
+            // Log the raw login_time for debugging
+            console.log(log.login_time);
+
+            // Create a Date object from the timestamp (which should be in UTC)
+            const loginDate = new Date(log.login_time); // This converts from UTC to local time
+
+            // Check if the date is valid
+            if (isNaN(loginDate)) {
+              console.error('Invalid date:', log.login_time);
+              return;  // Skip this log entry if the date is invalid
+            }
+
+            const utcPlus8 = new Date(loginDate.getTime() + 8 * 60 * 60 * 1000);
+            // 12 hour format for the notifications
+            const hours = utcPlus8.getHours();
+            const hours12 = (hours % 12) || 12; // convert 0 to 12
+            const minutes = String(utcPlus8.getMinutes()).padStart(2, '0');
+            const seconds = String(utcPlus8.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            const formattedDate = `${utcPlus8.getFullYear()}-${String(utcPlus8.getMonth() + 1).padStart(2, '0')}-${String(utcPlus8.getDate()).padStart(2, '0')} ` +`${hours12}:${minutes}:${seconds} ${ampm}`;
             const li = document.createElement('li');
-            li.textContent = `${log.admin_name} logged in on ${newFormattedDate}`;
+            li.textContent = `${log.admin_name} logged in on ${formattedDate}`;
             list.appendChild(li);
           });
         }
