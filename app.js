@@ -10,13 +10,60 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-const db = mysql.createConnection({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port : process.env.MYSQLPORT
-});
+let db;
+
+// db = mysql.createConnection({
+//   host: process.env.MYSQLHOST,
+//   user: process.env.MYSQLUSER,
+//   password: process.env.MYSQLPASSWORD,
+//   database: process.env.MYSQLDATABASE,
+//   port : process.env.MYSQLPORT
+// });
+
+// if (process.env.MYSQL_URL) {
+//   db = new pg.Pool({
+//       connectionString: process.env.MYSQL_URL,
+//       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+//   });
+//   console.log("Connecting to Railway PostgreSQL using connection string");
+// } else{
+//   db = new pg.Pool({
+//       user: process.env.PGUSER,
+//       host: process.env.PGHOST,
+//       database: process.env.PGDATABASE,
+//       password: String(process.env.PGPASSWORD),
+//       port: Number(process.env.PGPORT),
+//       ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized : false} : false
+//   });
+//   console.log("LOCAL")
+// }
+
+// let db;
+
+if (process.env.MYSQL_URL) {
+  // If using Railway's full MySQL connection string
+  db = mysql.createConnection(process.env.MYSQL_URL);
+  console.log("✅ Connected using MYSQL_URL");
+} else {
+  // If using individual environment variables
+  db = mysql.createConnection({
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
+  });
+  console.log("✅ Connected using separate MySQL variables");
+}
+
+// // Connect to the database
+// db.connect((error) => {
+//   if (error) {
+//     console.error("❌ Database connection failed:", error);
+//   } else {
+//     console.log("✅ MySQL database connected successfully.");
+//   }
+// });
 
 // Static file directory
 const publicDirectory = path.join(__dirname, './public');
