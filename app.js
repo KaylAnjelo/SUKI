@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const mysql = require("mysql");
+const pg = require("pg");
 const dotenv = require('dotenv');
 const { error } = require('console');
 
@@ -10,60 +10,42 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+const port = process.env.PORT || 5000;
+
 let db;
 
-// db = mysql.createConnection({
-//   host: process.env.MYSQLHOST,
-//   user: process.env.MYSQLUSER,
-//   password: process.env.MYSQLPASSWORD,
-//   database: process.env.MYSQLDATABASE,
-//   port : process.env.MYSQLPORT
-// });
-
-// if (process.env.MYSQL_URL) {
-//   db = new pg.Pool({
-//       connectionString: process.env.MYSQL_URL,
-//       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-//   });
-//   console.log("Connecting to Railway PostgreSQL using connection string");
-// } else{
-//   db = new pg.Pool({
-//       user: process.env.PGUSER,
-//       host: process.env.PGHOST,
-//       database: process.env.PGDATABASE,
-//       password: String(process.env.PGPASSWORD),
-//       port: Number(process.env.PGPORT),
-//       ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized : false} : false
-//   });
-//   console.log("LOCAL")
-// }
-
-// let db;
-
-if (process.env.MYSQL_URL) {
-  // If using Railway's full MySQL connection string
-  db = mysql.createConnection(process.env.MYSQL_URL);
-  console.log("✅ Connected using MYSQL_URL");
-} else {
-  // If using individual environment variables
-  db = mysql.createConnection({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-    port: process.env.MYSQLPORT
+if (process.env.DATABASE_URL) {
+  db = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
-  console.log("✅ Connected using separate MySQL variables");
+  console.log("Connecting to Railway PostgreSQL using connection string");
+} else{
+  db = new pg.Pool({
+      user: process.env.PGUSER,
+      host: process.env.PGHOST,
+      database: process.env.PGDATABASE,
+      password: String(process.env.PGPASSWORD),
+      port: Number(process.env.PGPORT),
+      ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized : false} : false
+  });
+  console.log("LOCAL")
 }
 
-// // Connect to the database
-// db.connect((error) => {
-//   if (error) {
-//     console.error("❌ Database connection failed:", error);
-//   } else {
-//     console.log("✅ MySQL database connected successfully.");
-//   }
-// });
+console.log("🔐 ENV:", {
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  host: process.env.PGHOST,
+  db: process.env.PGDATABASE,
+  port: process.env.PGPORT
+});
+db.connect()
+.then(()=>{
+  console.log("🎉 Connected to PostgreSQL database");
+})
+.catch((err)=>{
+  console.error("😭 Connection error", err.stack);
+});
 
 // Static file directory
 const publicDirectory = path.join(__dirname, './public');
@@ -72,14 +54,6 @@ app.use(express.static(publicDirectory));
 // View engine setup
 app.set("view engine", "hbs");
 
-// MySQL Connection
-db.connect((error) => {
-  if (error) {
-    console.log('❌ MySQL Connection Error:', error);
-  } else {
-    console.log("✅ MySQL Connected");
-  }
-});
 
 // Home page
 app.get("/", (req, res) => {
@@ -147,7 +121,6 @@ app.get('/notifications', (req, res) => {
   });
 });
 
-// Start the server
 app.listen(5000, () => {
   console.log('🚀 Server started on port 5000');
 });
