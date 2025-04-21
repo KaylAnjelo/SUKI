@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
           list.appendChild(li);
         } else {
           logs.forEach(log => {
-            const d = new Date();
-            const newFormattedDate =` ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} at ${
-              (d.getHours() % 12) || 12
-            }:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
+            const loginDate = new Date(log.login_time);
+            const newFormattedDate = `${loginDate.getDate()}/${loginDate.getMonth() + 1}/${loginDate.getFullYear()} at ${
+              (loginDate.getHours() % 12) || 12
+            }:${loginDate.getMinutes().toString().padStart(2, '0')} ${loginDate.getHours() >= 12 ? 'PM' : 'AM'}`;
             const li = document.createElement('li');
             li.textContent = `${log.admin_name} logged in on ${newFormattedDate}`;
             list.appendChild(li);
