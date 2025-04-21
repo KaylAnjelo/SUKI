@@ -14,6 +14,8 @@ const port = process.env.PORT || 5000;
 
 let db;
 
+process.env.TZ = 'Asia/Manila';
+
 if (process.env.DATABASE_URL) {
   db = new pg.Pool({
       connectionString: process.env.DATABASE_URL,
