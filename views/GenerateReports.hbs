@@ -6,6 +6,7 @@
   <title>Generate Reports</title>
   <link rel="stylesheet" href="/css/style-page2.css" />
   <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
 </head>
 <body>
   <div class="container">
@@ -30,7 +31,7 @@
           <ul id="notificationsList"></ul>
         </div>
         </div>
-          <form action="/logout" method="POST" style="display: inline;">
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>
       </div>
