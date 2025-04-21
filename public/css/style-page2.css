@@ -51,7 +51,7 @@ body {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px; /* spacing between buttons */
+  gap: 10px; 
 }
 
 .header form {
@@ -76,7 +76,7 @@ body {
 
 #notificationsDropdown {
   position: absolute;
-  top: 50px; /* adjust based on your layout */
+  top: 50px;
   right: 20px;
   width: 260px;
   background-color: #fff;
@@ -105,7 +105,6 @@ body {
 #notificationsDropdown li:last-child {
   border-bottom: none;
 }
-
 
 h1 {
   margin-bottom: 20px;
