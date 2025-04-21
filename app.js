@@ -61,6 +61,7 @@ app.get("/", (req, res) => {
 });
 
 // Login route with admin login logging
+// Login route with admin login logging
 app.post('/login', (req, res) => {
   const username = req.body["username"];
   const password = req.body["password"];
@@ -68,21 +69,21 @@ app.post('/login', (req, res) => {
   console.log('Login attempt:', username);
 
   if (!username || !password) {
-    return res.render('index', {error: 'Please enter both username and password'});
+    return res.render('index', { error: 'Please enter both username and password' });
   }
 
-  const query = "SELECT * FROM admin WHERE Username = ? AND Password = ?";
+  const query = "SELECT * FROM admin WHERE Username = $1 AND Password = $2";
   db.query(query, [username, password], (err, results) => {
     if (err) {
       console.error('Database error:', err);
-      return res.render('index', {error: 'An error occurred while checking your credentials.'});
+      return res.render('index', { error: 'An error occurred while checking your credentials.' });
     }
 
-    if (results.length > 0) {
+    if (results.rows.length > 0) {
       console.log('✅ Login successful for:', username);
 
       // Log the admin login in admin_logins table
-      const logQuery = "INSERT INTO admin_logins (admin_name) VALUES (?)";
+      const logQuery = "INSERT INTO admin_logins (admin_name) VALUES ($1)";
       db.query(logQuery, [username], (logErr) => {
         if (logErr) {
           console.error('⚠️ Failed to log admin login:', logErr);
@@ -92,10 +93,11 @@ app.post('/login', (req, res) => {
       res.render('GenerateReports');
     } else {
       console.log('❌ Invalid login attempt for:', username);
-      res.render('index', {error: 'Invalid username or password, try again.'})
+      res.render('index', { error: 'Invalid username or password, try again.' });
     }
   });
 });
+
 
 // Logout route
 app.post('/logout', (req, res) => {
@@ -117,9 +119,10 @@ app.get('/notifications', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch notifications' });
     }
 
-    res.json(results);  // Send results as JSON
+    res.json(results.rows);  // PostgreSQL result access
   });
 });
+
 
 app.listen(5000, () => {
   console.log('🚀 Server started on port 5000');
