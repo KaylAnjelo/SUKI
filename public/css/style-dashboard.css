@@ -1,0 +1,175 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #2e2321;
+    color: #000;
+  }
+  
+  .container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 220px;
+    background-color: #7c0f0f;
+    color: white;
+    padding: 20px;
+  }
+  
+  .logo {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 40px;
+  }
+  
+  .nav {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nav-item {
+    color: white;
+    padding: 10px;
+    text-decoration: none;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+  
+  .nav-item.active {
+    background-color: #333;
+  }
+  
+  .main-content {
+    flex-grow: 1;
+    padding: 40px;
+    background-color: #fff;
+    position: relative;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 40px;
+  }
+  
+  .header h1{
+    margin-bottom: 0;
+  }
+
+
+  .notif-logout {
+    display: flex;
+    gap: 10px;
+    align-items: center; /* Vertically align notifications and logout */
+  }
+
+
+  .header form {
+    margin: 0;
+  }
+  
+  .add-store,
+  .logout,
+  .notif-button {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  }
+  
+  .notif-container {
+    position: relative;
+  }
+
+  #notificationsDropdown {
+  position: absolute;
+  top: 50px;
+  right: 0; /* Align dropdown to the right of the button */
+  width: 260px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  z-index: 1000;
+  display: none;
+  padding: 10px;
+}
+
+  
+  #notificationsDropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  #notificationsDropdown li {
+    font-size: 13px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  #notificationsDropdown li:last-child {
+    border-bottom: none;
+  }
+  
+  h1 {
+    margin-bottom: 20px;
+  }
+
+  .totals {
+    display: flex;
+    gap: 20px; /* Adjust the gap for spacing between the bordered elements */
+    margin: 10px;
+    justify-content: space-between;
+    padding: 10px 300px 50px 300px; /* Adjust padding for the container */
+  }
+  
+  .totals span {
+    font-weight: bold;
+    border: 1px solid black; /* Add border to each span */
+    padding: 8px 15px; /* Add padding inside each border */
+    border-radius: 15px; /* Optional: Add rounded corners to each border */
+    background-color: #968E8D; /* Optional: Add a light background to each */
+    color: white;
+  }
+  
+  /* .report-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .report-btn {
+    padding: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: #a9a9a9;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+  } */
+  
+  .support {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .support-btn {
+    background-color: #8b0000;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+  }
+  
+  
