@@ -62,6 +62,14 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
+app.get("/dashboard", (req, res) => {
+  res.render("Dashboard");
+});
+
+app.get("/reports", (req, res) => {
+  res.render("GenerateReports");
+});
+
 
 // Login route with admin login logging
 app.post('/login', (req, res) => {
@@ -92,7 +100,7 @@ app.post('/login', (req, res) => {
         }
       });
 
-      res.render('GenerateReports');
+      res.render('Dashboard');
     } else {
       console.log('❌ Invalid login attempt for:', username);
       res.render('index', { error: 'Invalid username or password, try again.' });

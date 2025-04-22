@@ -1,11 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style-page2.css" />
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
 </head>
 <body>
-    
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/dashboard" class="nav-item active">Dashboard</a>
+        <a href="/reports" class="nav-item ">Generate Reports</a>
+        <a href="#" class="nav-item">Points Allocation</a>
+        <a href="#" class="nav-item">Transactions</a>
+        <a href="#" class="nav-item">User Redemptions</a>
+        <a href="#" class="nav-item">User Management</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <button class="add-store">Add Store</button>
+        <div class="notif-container">
+        <button id="notificationsBtn" class="notif-button">Notifications</button>
+        <div id="notificationsDropdown" style="display: none;">
+          <ul id="notificationsList"></ul>
+        </div>
+        </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+      </div>
+      <div class="support">
+        <button class="support-btn">Support</button>
+      </div>
+    </main>
+  </div>
 </body>
 </html>
