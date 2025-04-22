@@ -57,18 +57,41 @@ app.use(express.static(publicDirectory));
 app.set("view engine", "hbs");
 
 
-// Home page
+// Login Page
 app.get("/", (req, res) => {
   res.render("index");
 });
 
+//Dashboard
 app.get("/dashboard", (req, res) => {
   res.render("Dashboard");
 });
 
+// Reports
 app.get("/reports", (req, res) => {
   res.render("GenerateReports");
 });
+
+// Points Allocation
+app.get("/allocation", (req, res) => {
+  res.render("PointsAllocation");
+})
+
+// Transactions 
+app.get("/transac", (req,res) =>{
+  res.render("Transactions")
+})
+
+// User Redemptions
+app.get("/redemptions", (req,res) =>{
+  res.render("Redemptions")
+})
+
+// User Management 
+app.get("/userman", (req,res) =>{
+  res.render("UserManagement")
+})
+
 
 
 // Login route with admin login logging
