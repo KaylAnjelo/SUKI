@@ -98,6 +98,10 @@ body {
   padding: 10px;
 }
 
+.nav :hover{
+  background-color: #333;
+  box-shadow: 0 0 2px 1px white;
+}
   
   #notificationsDropdown ul {
     list-style: none;
@@ -110,8 +114,15 @@ body {
   #notificationsDropdown li {
     font-size: 13px;
     padding: 6px 8px;
+    box-shadow: 1px 1px black;
+    cursor: pointer;
     border-bottom: 1px solid #eee;
   }
+
+  /* #notificationsDropdown :hover{
+    box-shadow: 0 0 2px 1px black;
+    cursor: pointer;
+  } */
   
   #notificationsDropdown li:last-child {
     border-bottom: none;
