@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
-  <link rel="stylesheet" href="/css/style-page2.css" />
+  <link rel="stylesheet" href="/css/style-transactions.css" />
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
 </head>
@@ -24,17 +24,17 @@
 
     <main class="main-content">
       <div class="header">
+        <h1>Transactions</h1>
         <div class="notif-container">
         <button id="notificationsBtn" class="notif-button">Notifications</button>
         <div id="notificationsDropdown" style="display: none;">
           <ul id="notificationsList"></ul>
         </div>
-        </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>
+        </div>
       </div>
-      <h1>Transactions</h1>
       <div class="trans">
         
       </div>

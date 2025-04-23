@@ -18,18 +18,18 @@ process.env.TZ = 'Asia/Manila';
 
 if (process.env.DATABASE_URL) {
   db = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
   console.log("Connecting to Railway PostgreSQL using connection string");
-} else{
+} else {
   db = new pg.Pool({
-      user: process.env.PGUSER,
-      host: process.env.PGHOST,
-      database: process.env.PGDATABASE,
-      password: String(process.env.PGPASSWORD),
-      port: Number(process.env.PGPORT),
-      ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized : false} : false
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: String(process.env.PGPASSWORD),
+    port: Number(process.env.PGPORT),
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
   console.log("LOCAL")
 }
@@ -42,12 +42,12 @@ console.log("🔐 ENV:", {
   port: process.env.PGPORT
 });
 db.connect()
-.then(()=>{
-  console.log("🎉 Connected to PostgreSQL database");
-})
-.catch((err)=>{
-  console.error("😭 Connection error", err.stack);
-});
+  .then(() => {
+    console.log("🎉 Connected to PostgreSQL database");
+  })
+  .catch((err) => {
+    console.error("😭 Connection error", err.stack);
+  });
 
 // Static file directory
 const publicDirectory = path.join(__dirname, './public');
@@ -57,14 +57,41 @@ app.use(express.static(publicDirectory));
 app.set("view engine", "hbs");
 
 
+// Function to fetch dashboard data from the database
+async function getDashboardData() {
+  try {
+    // Use the global db connection pool
+    const storeOwnersResult = await db.query('SELECT COUNT(*) FROM store_owners');
+    const totalStoreOwners = parseInt(storeOwnersResult.rows[0].count, 10);
+
+    const customersResult = await db.query('SELECT COUNT(*) FROM customers');
+    const totalCustomers = parseInt(customersResult.rows[0].count, 10);
+
+    return { totalStoreOwners, totalCustomers };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    throw error; // Re-throw the error to be caught by the route handler
+  }
+}
+
+// Dashboard route
+app.get("/dashboard", async (req, res) => {
+  try {
+    const dashboardData = await getDashboardData();
+    res.render('Dashboard', {
+      title: 'Dashboard', //optional
+      total_owners: dashboardData.totalStoreOwners,
+      total_customers: dashboardData.totalCustomers,
+    });
+  } catch (error) {
+    console.error("Error in /dashboard route:", error);
+    res.status(500).send("Internal Server Error"); // Or render an error page
+  }
+});
+
 // Login Page
 app.get("/", (req, res) => {
   res.render("index");
-});
-
-//Dashboard
-app.get("/dashboard", (req, res) => {
-  res.render("Dashboard");
 });
 
 // Reports
@@ -78,17 +105,17 @@ app.get("/allocation", (req, res) => {
 })
 
 // Transactions 
-app.get("/transac", (req,res) =>{
+app.get("/transac", (req, res) => {
   res.render("Transactions")
 })
 
 // User Redemptions
-app.get("/redemptions", (req,res) =>{
+app.get("/redemptions", (req, res) => {
   res.render("Redemptions")
 })
 
 // User Management 
-app.get("/userman", (req,res) =>{
+app.get("/userman", (req, res) => {
   res.render("UserManagement")
 })
 
@@ -152,11 +179,11 @@ app.get('/notifications', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch notifications' });
     }
 
-    res.json(results.rows);  // PostgreSQL result access
+    res.json(results.rows);  // PostgreSQL result access
   });
 });
 
 
-app.listen(5000, () => {
-  console.log('🚀 Server started on port 5000');
+app.listen(port, () => {
+  console.log(`🚀 Server started on port ${port}`);
 });

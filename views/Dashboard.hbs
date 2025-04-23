@@ -1,52 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="/css/style-dashboard.css" />
-  <script src="/js/notifications.js" defer></script>
-  <script src="/js/logout.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style-dashboard.css">
+    <script src="/js/notifications.js" defer></script>
+    <script src="/js/logout.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">
-      <div class="logo">SUKI Incorporation</div>
-      <nav class="nav">
-        <a href="/dashboard" class="nav-item active">Dashboard</a>
-        <a href="/reports" class="nav-item ">Generate Reports</a>
-        <a href="/allocation" class="nav-item">Points Allocation</a>
-        <a href="/transac" class="nav-item">Transactions</a>
-        <a href="/redemptions" class="nav-item">User Redemptions</a>
-        <a href="/userman" class="nav-item">User Management</a>
-      </nav>
-    </aside>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">SUKI Incorporation</div>
+            <nav class="nav">
+                <a href="/dashboard" class="nav-item active">Dashboard</a>
+                <a href="/reports" class="nav-item ">Generate Reports</a>
+                <a href="/allocation" class="nav-item">Points Allocation</a>
+                <a href="/transac" class="nav-item">Transactions</a>
+                <a href="/redemptions" class="nav-item">User Redemptions</a>
+                <a href="/userman" class="nav-item">User Management</a>
+            </nav>
+        </aside>
 
-    <main class="main-content">
-      <div class="header">
-        <h1>Dashboard</h1>
-        <div class="notif-logout">
-          <div class="notif-container">
-            <button id="notificationsBtn" class="notif-button">Notifications</button>
-            <div id="notificationsDropdown" style="display: none;">
-              <ul id="notificationsList"></ul>
+        <main class="main-content">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="notif-container">
+                    <button id="notificationsBtn" class="notif-button">Notifications</button>
+                    <div id="notificationsDropdown" style="display: none;">
+                        <ul id="notificationsList"></ul>
+                    </div>
+                    <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+                        <button type="submit" class="logout">Log out</button>
+                    </form>
+                </div>
             </div>
-          </div>
-          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-            <button type="submit" class="logout">Log out</button>
-          </form>
-        </div>
-      </div>
-      <div class="dash">
-        <div class="totals">
-          <span>Total Store Owners</span>
-          <span>Total Customers</span>
-        </div>
-      </div>
-      <div class="support">
-        <button class="support-btn">Support</button>
-      </div>
-    </main>
-  </div>
+            <div class="dash">
+                <div class="totals">
+                    <span>Total Store Owners: {{total_owners}}</span>
+                    <span>Total Customers: {{total_customers}}</span>
+                </div>
+            </div>
+            <div class="support">
+                <button class="support-btn">Support</button>
+            </div>
+        </main>
+    </div>
 </body>
 </html>

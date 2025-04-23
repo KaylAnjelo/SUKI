@@ -49,16 +49,17 @@ body {
 
 .header {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px; 
+  justify-content: space-between; /* Push elements to the edges */
+  align-items: center;          /* Vertically center items */
+  padding-right: 40px;
 }
+
 
 .header form {
   margin: 0;
 }
 
-.add-store,
+
 .logout,
 .notif-button {
   background-color: #8b0000;
