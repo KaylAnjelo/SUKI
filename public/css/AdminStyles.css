@@ -1,3 +1,6 @@
+@import url(reports.css);
+@import url(totals.css);
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -36,6 +39,12 @@ body {
   border-radius: 5px;
 }
 
+
+.nav :hover{
+  background-color: #333;
+  box-shadow: 0 0 2px 1px white;
+}
+
 .nav-item.active {
   background-color: #333;
 }
@@ -49,8 +58,8 @@ body {
 
 .header {
   display: flex;
-  justify-content: space-between; /* Push elements to the edges */
-  align-items: center;          /* Vertically center items */
+  justify-content: space-between; 
+  align-items: center;     
   padding-right: 40px;
 }
 
@@ -109,23 +118,6 @@ body {
 
 h1 {
   margin-bottom: 20px;
-}
-
-.report-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.report-btn {
-  padding: 15px;
-  font-size: 20px;
-  font-weight: bold;
-  background-color: #a9a9a9;
-  border: none;
-  border-radius: 5px;
-  text-align: center;
-  cursor: pointer;
 }
 
 .support {

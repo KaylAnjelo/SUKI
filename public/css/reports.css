@@ -1,0 +1,16 @@
+.report-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .report-btn {
+    padding: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: #a9a9a9;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+  }

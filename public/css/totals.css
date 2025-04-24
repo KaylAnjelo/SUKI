@@ -1,0 +1,18 @@
+.totals {
+    display: flex;
+    gap: 20px; /* Adjust the gap for spacing between the bordered elements */
+    margin: 10px;
+    justify-content: space-between;
+    padding: 10px 300px 50px 300px; /* Adjust padding for the container */
+  }
+  
+  .totals span {
+    font-weight: bold;
+    font-size: 15px;
+    border: 1px solid black; /* Add border to each span */
+    padding: 8px 15px; /* Add padding inside each border */
+    border-radius: 15px; /* Optional: Add rounded corners to each border */
+    background-color: #968E8D; /* Optional: Add a light background to each */
+    color: white;
+    width: 120px;
+  }
