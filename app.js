@@ -89,7 +89,7 @@ app.get("/dashboard", async (req, res) => {
       total_owners: dashboardData.totalStoreOwners,
       total_customers: dashboardData.totalCustomers,
       total_points: dashboardData.totalPoints,
-      redeemed_points: dashboardDa.totalRedeem
+      redeemed_points: dashboardData.totalRedeem
     });
   } catch (error) {
     console.error("Error in /dashboard route:", error);
