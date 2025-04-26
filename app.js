@@ -61,13 +61,19 @@ app.set("view engine", "hbs");
 async function getDashboardData() {
   try {
     // Use the global db connection pool
-    const storeOwnersResult = await db.query('SELECT COUNT(*) FROM store_owners');
+    const storeOwnersResult = await db.query('SELECT COUNT(*) FROM stores');
     const totalStoreOwners = parseInt(storeOwnersResult.rows[0].count, 10);
 
-    const customersResult = await db.query('SELECT COUNT(*) FROM customers');
+    const customersResult = await db.query('SELECT COUNT(*) FROM users');
     const totalCustomers = parseInt(customersResult.rows[0].count, 10);
 
-    return { totalStoreOwners, totalCustomers };
+    const totalpointsResult = await db.query('SELECT SUM(total_points) AS total_points_sum FROM user_points');
+    const totalPoints = totalpointsResult.rows[0].total_points_sum;
+
+    const redeempointsResult = await db.query('SELECT SUM(redeemed_points) AS total_redeemed_points_sum FROM user_points')
+    const totalRedeem = redeempointsResult.rows[0].total_redeemed_points_sum;
+
+    return { totalStoreOwners, totalCustomers,totalPoints,totalRedeem };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
     throw error; // Re-throw the error to be caught by the route handler
@@ -82,6 +88,8 @@ app.get("/dashboard", async (req, res) => {
       title: 'Dashboard', //optional
       total_owners: dashboardData.totalStoreOwners,
       total_customers: dashboardData.totalCustomers,
+      total_points: dashboardData.totalPoints,
+      redeemed_points: dashboardDa.totalRedeem
     });
   } catch (error) {
     console.error("Error in /dashboard route:", error);
