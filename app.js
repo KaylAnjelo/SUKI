@@ -60,7 +60,6 @@ app.set("view engine", "hbs");
 // Function to fetch dashboard data from the database
 async function getDashboardData() {
   try {
-    // Use the global db connection pool
     const storeOwnersResult = await db.query('SELECT COUNT(*) FROM stores');
     const totalStoreOwners = parseInt(storeOwnersResult.rows[0].count, 10);
 
@@ -73,29 +72,93 @@ async function getDashboardData() {
     const redeempointsResult = await db.query('SELECT COALESCE(SUM(redeemed_points), 0) AS total_redeemed_points_sum FROM user_points')
     const totalRedeem = redeempointsResult.rows[0].total_redeemed_points_sum;
 
-    return { totalStoreOwners, totalCustomers,totalPoints,totalRedeem };
+    const transactionQuery = `
+      SELECT t.transaction_date, u.username, t.points, s.store_name
+      FROM transactions t
+      JOIN users u ON t.user_id = u.user_id
+      JOIN stores s ON t.store_id = s.owner_id
+      ORDER BY t.transaction_date DESC
+      LIMIT 10;
+    `;
+    const transactionResult = await db.query(transactionQuery);
+    const transactions = transactionResult.rows;
+
+    // 🛠️ This is what was missing:
+    const storesResult = await db.query('SELECT store_name, location, is_active FROM stores');
+    const stores = storesResult.rows;
+
+    return { totalStoreOwners, totalCustomers, totalPoints, totalRedeem, transactions, stores };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    throw error; // Re-throw the error to be caught by the route handler
+    throw error;
   }
 }
+
 
 // Dashboard route
 app.get("/dashboard", async (req, res) => {
   try {
     const dashboardData = await getDashboardData();
+    let transactionTableRowsHtml = ''; // Initialize an empty string to store the transaction table rows
+    let totalPoints = 0;
+    let storesTableRowsHtml = ''; // Initialize string for stores table
+
+    // Check if there are transactions
+    if (dashboardData.transactions && dashboardData.transactions.length > 0) {
+      // Loop through the transactions and build the HTML string
+      dashboardData.transactions.forEach(transaction => {
+        transactionTableRowsHtml += `
+          <tr>
+            <td>${formatDate(transaction.transaction_date)}</td>
+            <td>${transaction.username}</td>
+            <td>${transaction.points}</td>
+            <td>${transaction.store_name}</td>
+          </tr>
+        `;
+        totalPoints += transaction.points; // Calculate total points
+      });
+    } else {
+      transactionTableRowsHtml = '<tr><td colspan="4">No transactions available.</td></tr>'; // Or any message you want
+    }
+
+    // Check if there are stores
+    if (dashboardData.stores && dashboardData.stores.length > 0) {
+      dashboardData.stores.forEach(store => {
+        storesTableRowsHtml += `
+          <tr>
+            <td>${store.store_name}</td>
+            <td>${store.location || 'N/A'}</td> 
+            <td>${store.status || 'N/A'}</td> 
+          </tr>
+        `;
+      });
+    } else {
+      storesTableRowsHtml = '<tr><td colspan="3">No stores available.</td></tr>';
+    }
+
+
+    // Pass the generated HTML string to the template
     res.render('Dashboard', {
-      title: 'Dashboard', //optional
+      title: 'Dashboard',
       total_owners: dashboardData.totalStoreOwners,
       total_customers: dashboardData.totalCustomers,
-      total_points: dashboardData.totalPoints,
-      redeemed_points: dashboardData.totalRedeem
+      total_points: totalPoints, // Pass the calculated total points
+      redeemed_points: dashboardData.totalRedeem,
+      transactionTableRows: transactionTableRowsHtml, // Pass the HTML string here
+      storesTableRows: storesTableRowsHtml
     });
   } catch (error) {
     console.error("Error in /dashboard route:", error);
-    res.status(500).send("Internal Server Error"); // Or render an error page
+    res.status(500).send("Internal Server Error");
   }
 });
+
+// Helper function to format the date
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+}
 
 // Login Page
 app.get("/", (req, res) => {
