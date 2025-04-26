@@ -67,10 +67,10 @@ async function getDashboardData() {
     const customersResult = await db.query('SELECT COUNT(*) FROM users');
     const totalCustomers = parseInt(customersResult.rows[0].count, 10);
 
-    const totalpointsResult = await db.query('SELECT SUM(total_points) AS total_points_sum FROM user_points');
+    const totalpointsResult = await db.query('SELECT COALESCE(SUM(total_points), 0) AS total_points_sum FROM user_points');
     const totalPoints = totalpointsResult.rows[0].total_points_sum;
 
-    const redeempointsResult = await db.query('SELECT SUM(redeemed_points) AS total_redeemed_points_sum FROM user_points')
+    const redeempointsResult = await db.query('SELECT COALESCE(SUM(redeemed_points), 0) AS total_redeemed_points_sum FROM user_points')
     const totalRedeem = redeempointsResult.rows[0].total_redeemed_points_sum;
 
     return { totalStoreOwners, totalCustomers,totalPoints,totalRedeem };
