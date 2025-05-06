@@ -3,7 +3,6 @@ const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
 
-
 dotenv.config({ path: './.env' });
 
 const app = express();

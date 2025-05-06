@@ -29,6 +29,7 @@ body {
 .nav {
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
 
 .nav-item {
@@ -39,13 +40,24 @@ body {
   border-radius: 5px;
 }
 
-
-.nav :hover{
-  background-color: #333;
+.nav-item,
+.dropdown{
+  position: relative;
 }
 
+.nav-item i {
+  margin-right: 8px;
+}
+
+.nav-item:hover {
+  background-color: #5a0000;
+  color: #fff;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
 .nav-item.active {
-  background-color: #333;
+  background-color: #5a0000;
 }
 
 .main-content {
@@ -66,7 +78,6 @@ body {
 .header form {
   margin: 0;
 }
-
 
 .logout,
 .notif-button {
@@ -115,50 +126,46 @@ body {
   border-bottom: none;
 }
 
-.dropdown {
-  position: relative;
-}
-
 .dropdown-toggle {
   display: block;
-  padding: none;
   color: white;
+  padding: 10px 0px 10px 0px;
   cursor: pointer;
   border-radius: 5px;
 }
 
-.dropdown-toggle:hover {
-  background-color: #333;
+.dropdown-menu {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  flex-direction: column;
+  margin-top: 5px;
+  background-color: white;
+  border-radius: 5px;
 }
 
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  left: 0;
-  top: 100%;
-  background-color: #8b0000;
-  border-radius: 5px;
-  z-index: 10;
-  flex-direction: column;
-  width: 180px;
+
+.dropdown:hover .dropdown-menu {
+  max-height: 500px; /* Enough to fit all items */
+  opacity: 1;
 }
 
 .dropdown-menu a {
-  padding: 10px;
-  color: white;
+  padding: 8px 12px;
+  color: #8b0000;
   text-decoration: none;
   display: block;
-  border-bottom: 1px solid #5a0000;
 }
 
 .dropdown-menu a:hover {
   background-color: #5a0000;
+  color: white;
 }
 
 .dropdown:hover .dropdown-menu {
   display: flex;
 }
-
 
 h1 {
   margin-bottom: 20px;
