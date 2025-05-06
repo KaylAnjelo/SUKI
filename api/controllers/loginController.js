@@ -23,7 +23,7 @@ exports.login = (req, res) => {
         }
       });
 
-      res.render('Dashboard');
+      res.redirect('/Dashboard');
     } else {
       res.render('index', { error: 'Invalid username or password, try again.' });
     }

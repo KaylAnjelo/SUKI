@@ -3,6 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
 
+
 dotenv.config({ path: './.env' });
 
 const app = express();
@@ -23,36 +24,24 @@ app.set('view engine', 'hbs');
 const dashboardRoutes = require('./api/routes/dashboardRoutes');
 const authRoutes = require('./api/routes/authRoutes');
 const notificationRoutes = require('./api/routes/notificationRoutes');
+const reportsRouter = require('./api/routes/reports');
+const userRouter = require('./api/routes/users')
 
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
+app.use('/reports', reportsRouter);
+app.use('/users', userRouter);
 
 // Reports
 app.get("/reports", (req, res) => {
   res.render("GenerateReports");
 });
 
-// Points Allocation
-app.get("/allocation", (req, res) => {
-  res.render("PointsAllocation");
-});
-
 // Transactions
 app.get("/transac", (req, res) => {
   res.render("Transactions");
 });
-
-// Redemptions
-app.get("/redemptions", (req, res) => {
-  res.render("Redemptions");
-});
-
-// User Management
-app.get("/userman", (req, res) => {
-  res.render("UserManagement");
-});
-
 
 // Start server
 app.listen(port, () => {

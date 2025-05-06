@@ -15,17 +15,28 @@
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
         <a href="/dashboard" class="nav-item ">Dashboard</a>
-        <a href="/reports" class="nav-item ">Generate Reports</a>
-        <a href="/allocation" class="nav-item active">Points Allocation</a>
+         <div class="nav-item dropdown">
+            <span class="dropdown-toggle">Generate Reports</span>
+              <div class="dropdown-menu">
+                  <a href="/reports/sales">Sales</a>
+                  <a href="/reports/transactions">User Transactions</a>
+                  <a href="/reports/activity">User Activity</a>
+              </div>
+        </div>
         <a href="/transac" class="nav-item">Transactions</a>
-        <a href="/redemptions" class="nav-item">User Redemptions</a>
-        <a href="/userman" class="nav-item">User Management</a>
+        <div class="nav-item dropdown">
+            <span class="dropdown-toggle">Users</span>
+              <div class="dropdown-menu">
+                  <a href="/users/Redemptions">User Redemptions</a>
+                  <a href="/users/UserManagement">User Management</a>
+              </div>
+        </div>
       </nav>
     </aside>
 
     <main class="main-content">
       <div class="header">
-        <h1>Points Allocation</h1>
+        <h1>User Redemptions</h1>
         <div class="notif-container">
         <button id="notificationsBtn" class="notif-button">Notifications</button>
         <div id="notificationsDropdown" style="display: none;">
@@ -35,9 +46,8 @@
             <button type="submit" class="logout">Log out</button>
           </form>
         </div>
-          
       </div>
-      <div class="pts-alloc">
+      <div class="u-redemps">
         
       </div>
       <div class="support">
