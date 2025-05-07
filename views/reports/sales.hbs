@@ -7,45 +7,49 @@
   <link rel="stylesheet" href="/css/AdminStyles.css" />
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
+  <script src="/js/filter.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">SUKI Incorporation</div>
-        <nav class="nav">
-                  <a href="/dashboard" class="nav-item">
-                      <i class="fas fa-chart-line"></i>Dashboard
-                  </a>
-                  <div class="nav-item dropdown">
-                      <span class="dropdown-toggle">
-                      <i class="fas fa-file-alt"></i>Generate Reports
-                      </span>
-                          <div class="dropdown-menu">
-                              <a href="/reports/sales" class="dropdown-item active"><i class="fas fa-dollar-sign"></i>Sales</a>
-                              <a href="/reports/transactions" class="dropdown-item"><i class="fas fa-receipt"></i>User Transactions</a>
-                              <a href="/reports/activity" class="dropdown-item"><i class="fas fa-user-clock"></i>User Activity</a>
-                          </div>
-                  </div>
-                  <a href="/transac" class="nav-item">
-                      <i class="fas fa-exchange-alt"></i>Transactions
-                  </a>
-                  <div class="nav-item dropdown">
-                      <span class="dropdown-toggle">
-                          <i class="fas fa-users"></i>Users
-                      </span>
-                          <div class="dropdown-menu">
-                              <a href="/users/Redemptions"> <i class="fas fa-coins"></i>Redemptions</a>
-                              <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
-                          </div>
-                  </div>
-        </nav>
-      </aside>
+      <nav class="nav">
+        <a href="/dashboard" class="nav-item">
+          <i class="fas fa-chart-line"></i>Dashboard
+        </a>
+        <div class="nav-item dropdown">
+          <span class="dropdown-toggle">
+            <i class="fas fa-file-alt"></i>Generate Reports
+          </span>
+          <div class="dropdown-menu">
+            <a href="/reports/sales" class="dropdown-item active"><i class="fas fa-dollar-sign"></i>Sales</a>
+            <a href="/reports/transactions" class="dropdown-item"><i class="fas fa-receipt"></i>User Transactions</a>
+            <a href="/reports/activity" class="dropdown-item"><i class="fas fa-user-clock"></i>User Activity</a>
+          </div>
+        </div>
+        <a href="/transac" class="nav-item">
+          <i class="fas fa-exchange-alt"></i>Transactions
+        </a>
+        <div class="nav-item dropdown">
+          <span class="dropdown-toggle">
+            <i class="fas fa-users"></i>Users
+          </span>
+          <div class="dropdown-menu">
+            <a href="/users/Redemptions"><i class="fas fa-coins"></i>Redemptions</a>
+            <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
+      <!-- Header -->
       <div class="header">
-        <h1>Reports</h1>
+        <h1>Sales Reports</h1>
         <div class="notif-container">
           <button id="notificationsBtn" class="notif-button">Notifications</button>
           <div id="notificationsDropdown" style="display: none;">
@@ -55,13 +59,54 @@
             <button type="submit" class="logout">Log out</button>
           </form>
         </div>
-         
       </div>
-      <div class="report-buttons">
-        <button class="report-btn">Sales</button>
-        <button class="report-btn">User Engagement</button>
-        <button class="report-btn">Transaction Records</button>
+
+      <!-- Filters Container -->
+      <div class="filters-container" id="filtersContainer">
+        <div class="filter-group">
+          <label for="startDate">Date Range:</label>
+          <input type="date" id="startDate" name="startDate">
+          <span>to</span>
+          <input type="date" id="endDate" name="endDate" readonly>
+        </div>
+        <div class="filter-group">
+          <label for="storeFilter">Store:</label>
+          <select id="storeFilter" name="store">
+            <option value="">All Stores</option>
+            <!-- Populate dynamically -->
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="sortOrder">Sort By:</label>
+          <select id="sortOrder" name="sortOrder">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+        <button id="applyFilters" class="filter-btn">Apply Filters</button>
       </div>
+      <!-- Table -->
+      <div class="table-container">
+        <table id="salesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Store</th>
+              <th>Transaction ID</th>
+              <th>Items Sold</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table data will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Support Button -->
       <div class="support">
         <button class="support-btn">Support</button>
       </div>

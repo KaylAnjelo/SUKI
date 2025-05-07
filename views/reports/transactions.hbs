@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/AdminStyles.css" />
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
+  <script src="/js/reports.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -44,7 +45,7 @@
       </aside>
     <main class="main-content">
       <div class="header">
-        <h1>Reports</h1>
+        <h1>User Transaction Reports</h1>
         <div class="notif-container">
           <button id="notificationsBtn" class="notif-button">Notifications</button>
           <div id="notificationsDropdown" style="display: none;">
@@ -54,13 +55,58 @@
             <button type="submit" class="logout">Log out</button>
           </form>
         </div>
-         
       </div>
-      <div class="report-buttons">
-        <button class="report-btn">Sales</button>
-        <button class="report-btn">User Engagement</button>
-        <button class="report-btn">Transaction Records</button>
+
+      <!-- Filters Container -->
+      <div class="filters-container" id="filtersContainer">
+        <div class="filter-group">
+          <label for="startDate">Date Range:</label>
+          <input type="date" id="startDate" name="startDate">
+          <span>to</span>
+          <input type="date" id="endDate" name="endDate" readonly>
+        </div>
+
+        <div class="filter-group">
+          <label for="userFilter">User:</label>
+          <select id="userFilter" name="user">
+            <option value="">All Users</option>
+            <option value="">Student</option>
+            <option value="">Staff</option>
+            <option value="">Out-of-School</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="transactionType">Transaction Type:</label>
+          <select id="transactionType" name="transactionType">
+            <option value="">All Types</option>
+            <option value="purchase">Purchase</option>
+            <option value="redemption">Redemption</option>
+            <option value="refund">Refund</option>
+          </select>
+        </div>
+
+        <button id="applyFilters" class="filter-btn">Apply Filters</button>
       </div>
+
+      <div class="table-container">
+        <table id="transactionsTable">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>User</th>
+              <th>Transaction Type</th>
+              <th>Transaction ID</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table data will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
       <div class="support">
         <button class="support-btn">Support</button>
       </div>
