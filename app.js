@@ -23,13 +23,13 @@ app.set('view engine', 'hbs');
 const dashboardRoutes = require('./api/routes/dashboardRoutes');
 const authRoutes = require('./api/routes/authRoutes');
 const notificationRoutes = require('./api/routes/notificationRoutes');
-const reportsRouter = require('./api/routes/reports');
+const reportsRoutes = require('./api/routes/reports');
 const userRouter = require('./api/routes/users')
 
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
-app.use('/reports', reportsRouter);
+app.use('/reports', reportsRoutes);
 app.use('/users', userRouter);
 
 // Reports

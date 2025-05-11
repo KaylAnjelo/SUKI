@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Generate Reports</title>
+  <title>{{title}}</title>
   <link rel="stylesheet" href="/css/AdminStyles.css" />
+  <link rel="stylesheet" href="/css/sales.css" />
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/filter.js" defer></script>
@@ -51,7 +52,7 @@
       <div class="header">
         <h1>Sales Reports</h1>
         <div class="notif-container">
-          <button id="notificationsBtn" class="notif-button">Notifications</button>
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
           </div>
@@ -61,6 +62,15 @@
         </div>
       </div>
 
+      <!-- Download Buttons -->
+      <div class="download-buttons">
+        <button id="downloadCSV" class="download-btn">
+          <i class="fas fa-file-csv"></i> Download as CSV
+        </button>
+        <button id="downloadPDF" class="download-btn">
+          <i class="fas fa-file-pdf"></i> Download as PDF
+        </button>
+      </div>
       <!-- Filters Container -->
       <div class="filters-container" id="filtersContainer">
         <div class="filter-group">
@@ -72,11 +82,10 @@
         <div class="filter-group">
           <label for="storeFilter">Store:</label>
           <select id="storeFilter" name="store">
-            <option value="">All Stores</option>
-            <!-- Populate dynamically -->
+            {{{storeFilterOptions}}}
           </select>
         </div>
-
+        
         <div class="filter-group">
           <label for="sortOrder">Sort By:</label>
           <select id="sortOrder" name="sortOrder">
@@ -87,6 +96,9 @@
 
         <button id="applyFilters" class="filter-btn">Apply Filters</button>
       </div>
+
+      
+
       <!-- Table -->
       <div class="table-container">
         <table id="salesTable">
@@ -94,14 +106,14 @@
             <tr>
               <th>Date</th>
               <th>Store</th>
-              <th>Transaction ID</th>
-              <th>Items Sold</th>
+              <th>Reference Number</th>
+              <th>Products Sold</th>
               <th>Total Amount</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            <!-- Table data will be populated dynamically -->
+            {{{salesTableRows}}}
           </tbody>
         </table>
       </div>
@@ -112,5 +124,21 @@
       </div>
     </main>
   </div>
+
+  <script>
+    // Set default dates
+    document.addEventListener('DOMContentLoaded', function() {
+      const endDate = document.getElementById('endDate');
+      const startDate = document.getElementById('startDate');
+      
+      // Set end date to today
+      endDate.valueAsDate = new Date();
+      
+      // Set start date to 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      startDate.valueAsDate = thirtyDaysAgo;
+    });
+  </script>
 </body>
 </html>
