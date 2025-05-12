@@ -194,20 +194,6 @@ h1 {
   margin-bottom: 20px;
 }
 
-.support {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-}
-
-.support-btn {
-  background-color: #8b0000;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 30px;
-  cursor: pointer;
-}
 
 /* Download Buttons Styling */
 .download-buttons {
