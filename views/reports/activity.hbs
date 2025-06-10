@@ -8,6 +8,10 @@
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/reports.js" defer></script>
+  <script src="/js/download.js" defer></script>
+  <script src="/js/pagination.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -16,31 +20,31 @@
     <aside class="sidebar">
       <div class="logo">SUKI Incorporation</div>
         <nav class="nav">
-                  <a href="/dashboard" class="nav-item">
-                      <i class="fas fa-chart-line"></i>Dashboard
-                  </a>
-                  <div class="nav-item dropdown">
-                      <span class="dropdown-toggle active">
-                      <i class="fas fa-file-alt"></i>Generate Reports
-                      </span>
-                          <div class="dropdown-menu">
-                              <a href="/reports/sales" class="dropdown-link"><i class="fas fa-dollar-sign"></i>Sales</a>
-                              <a href="/reports/transactions" class="dropdown-link"><i class="fas fa-receipt"></i>User Transactions</a>
-                              <a href="/reports/activity" class="dropdown-link active"><i class="fas fa-user-clock"></i>User Activity</a>
-                          </div>
+          <a href="/dashboard" class="nav-item">
+              <i class="fas fa-chart-line"></i>Dashboard
+          </a>
+          <div class="nav-item dropdown">
+              <span class="dropdown-toggle active">
+              <i class="fas fa-file-alt"></i>Generate Reports
+              </span>
+                  <div class="dropdown-menu">
+                      <a href="/reports/sales" class="dropdown-link"><i class="fas fa-dollar-sign"></i>Sales</a>
+                      <a href="/reports/transactions" class="dropdown-link"><i class="fas fa-receipt"></i>User Transactions</a>
+                      <a href="/reports/activity" class="dropdown-link active"><i class="fas fa-user-clock"></i>User Activity</a>
                   </div>
-                  <a href="/transac" class="nav-item">
-                      <i class="fas fa-exchange-alt"></i>Transactions
-                  </a>
-                  <div class="nav-item dropdown">
-                      <span class="dropdown-toggle">
-                          <i class="fas fa-users"></i>Users
-                      </span>
-                          <div class="dropdown-menu">
-                              <a href="/users/Redemptions"> <i class="fas fa-coins"></i>Redemptions</a>
-                              <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
-                          </div>
+          </div>
+          <a href="/transac" class="nav-item">
+              <i class="fas fa-exchange-alt"></i>Transactions
+          </a>
+          <div class="nav-item dropdown">
+              <span class="dropdown-toggle">
+                  <i class="fas fa-users"></i>Users
+              </span>
+                  <div class="dropdown-menu">
+                      <a href="/users/Redemptions"> <i class="fas fa-coins"></i>Redemptions</a>
+                      <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
                   </div>
+          </div>
         </nav>
       </aside>
 
@@ -57,14 +61,18 @@
           </form>
         </div>
       </div>
-      <div class="download-buttons">
-        <button id="downloadCSV" class="download-btn">
-          <i class="fas fa-file-csv"></i> Download as CSV
-        </button>
-        <button id="downloadPDF" class="download-btn">
-          <i class="fas fa-file-pdf"></i> Download as PDF
-        </button>
-      </div>
+       <!-- Buttons -->
+        <button class = "dls" onclick="openModal('csv')"><i class="fa-solid fa-file-csv"></i>Download CSV</button>
+        <button class = "dls" onclick="openModal('pdf')"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
+        <!-- Modal -->
+        <div id="fileModal" class="modal">
+          <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Enter File Name</h3>
+            <input type="text" id="fileNameInput" placeholder="e.g., sales-report" />
+            <button onclick="downloadFile()">Download</button>
+          </div>
+        </div>
       <!-- Filters Container -->
       <div class="filters-container" id="filtersContainer">
         <div class="filter-group">
@@ -101,7 +109,7 @@
         <table id="activityTable">
           <thead>
             <tr>
-              <th>Date & Time</th>
+              <th>Date</th>
               <th>User</th>
               <th>Activity Type</th>
               <th>Details</th>
@@ -112,6 +120,19 @@
             <!-- Table data will be populated dynamically -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button id="prevPage" class="pagination-btn" disabled>
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <div class="page-numbers">
+          <span id="currentPage">1</span> of <span id="totalPages">1</span>
+        </div>
+        <button id="nextPage" class="pagination-btn" disabled>
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
     </main>
   </div>

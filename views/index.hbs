@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/style.css" />
   <script src="/js/actions.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="page-container">
@@ -24,18 +25,18 @@
       {{/if}}
       <form action="/login" method="POST">
         <div class="input-group">
-          <label for="username">Username</label>
-          <input type="text" name="username" placeholder="Enter your username" required />
+          <label for="text">Username</label>
+          <input type="text" name="username" autocomplete="username" placeholder="Enter your username" required />
         </div>
 
         <div class="input-group password-group">
           <label for="password">Password</label>
-          <input type="password" name="password" id="password" placeholder="Enter your password" required />
-          <span class="toggle-password" onclick="togglePassword()">👁️</span>
+          <input type="password" name="password" id="password" autocomplete="current-password" placeholder="Enter your password" required />
+          <span class="toggle-password" onclick="togglePassword()"><i id="toggleIcon" class="fas fa-eye"></i></span>
         </div>
 
         <div class="options">
-          <label><input type="checkbox"> Remember me</label>
+          <label id="checkbox"><input type="checkbox"> Remember me</label>
           <a href="#">Forgot password?</a>
         </div>
 

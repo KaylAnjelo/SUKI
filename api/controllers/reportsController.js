@@ -20,13 +20,12 @@ exports.getReports = async (req, res) => {
                     s.store_name,
                     t.reference_number,
                     STRING_AGG(p.product_name, ', ') AS products_sold,
-                    SUM(td.quantity * p.price) AS total_amount,
-                    t.status
+                    SUM(td.quantity * p.price) AS total_amount
                 FROM transactions t
                 JOIN stores s ON t.store_id = s.owner_id
                 JOIN transaction_details td ON t.id = td.transaction_id
                 JOIN products p ON td.product_id = p.id
-                GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number, t.status
+                GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number
                 ORDER BY t.transaction_date DESC
             `;
         const salesResult = await db.query(salesQuery);
@@ -42,7 +41,6 @@ exports.getReports = async (req, res) => {
                         <td>${sale.reference_number}</td>
                         <td>${sale.products_sold}</td>
                         <td>₱${parseFloat(sale.total_amount).toFixed(2)}</td>
-                        <td><span class="status-badge ${sale.status.toLowerCase()}">${sale.status}</span></td>
                     </tr>
                 `;
             });
@@ -74,12 +72,10 @@ exports.filterReports = async (req, res) => {
     try {
         const { startDate, endDate, store, user, activityType, transactionType, sortOrder } = req.body;
         
-        // Base query parts
         let query = '';
         let params = [];
         let paramIndex = 1;
 
-        // Determine which report type we're handling
         if (req.path.includes('/sales/filter')) {
             query = `
                 SELECT 
@@ -87,8 +83,7 @@ exports.filterReports = async (req, res) => {
                     s.store_name,
                     t.reference_number,
                     STRING_AGG(p.product_name, ', ') AS products_sold,
-                    SUM(td.quantity * p.price) AS total_amount,
-                    t.status
+                    SUM(td.quantity * p.price) AS total_amount
                 FROM transactions t
                 JOIN stores s ON t.store_id = s.owner_id
                 JOIN transaction_details td ON t.id = td.transaction_id
@@ -112,7 +107,7 @@ exports.filterReports = async (req, res) => {
                 paramIndex++;
             }
 
-            query += ` GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number, t.status`;
+            query += ` GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number`;
 
             // Add sorting
             if (sortOrder === 'oldest') {
@@ -127,8 +122,7 @@ exports.filterReports = async (req, res) => {
                     date_time,
                     user_name as user,
                     activity_type,
-                    details,
-                    status
+                    details
                 FROM user_activity
                 WHERE 1=1
             `;
@@ -168,8 +162,7 @@ exports.filterReports = async (req, res) => {
                     user_name as user,
                     transaction_type,
                     reference_number as transaction_id,
-                    amount,
-                    status
+                    amount 
                 FROM transactions
                 WHERE 1=1
             `;

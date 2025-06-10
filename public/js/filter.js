@@ -42,63 +42,6 @@ function validateDates() {
     }
 }
 
-// Function to apply filters
-async function applyFilters() {
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
-    
-    // Get additional filters based on the page type
-    let additionalFilters = {};
-    
-    // Check which page we're on and get the appropriate filters
-    if (document.getElementById('storeFilter')) {
-        additionalFilters.store = document.getElementById('storeFilter').value;
-    }
-    if (document.getElementById('userFilter')) {
-        additionalFilters.user = document.getElementById('userFilter').value;
-    }
-    if (document.getElementById('activityType')) {
-        additionalFilters.activityType = document.getElementById('activityType').value;
-    }
-    if (document.getElementById('transactionType')) {
-        additionalFilters.transactionType = document.getElementById('transactionType').value;
-    }
-    if (document.getElementById('sortOrder')) {
-        additionalFilters.sortOrder = document.getElementById('sortOrder').value;
-    }
-
-    try {
-        // Get the current page path
-        const currentPath = window.location.pathname;
-        
-        // Make the API call to get filtered data
-        const response = await fetch(`${currentPath}/filter`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                startDate,
-                endDate,
-                ...additionalFilters
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        
-        // Update the table with filtered data
-        updateTable(data);
-        
-    } catch (error) {
-        console.error('Error applying filters:', error);
-        // You might want to show an error message to the user here
-    }
-}
-
 // Function to update the table with filtered data
 function updateTable(data) {
     const tableBody = document.querySelector('table tbody');
@@ -109,7 +52,7 @@ function updateTable(data) {
 
     if (data.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6">No data available for the selected filters.</td>';
+        row.innerHTML = '<td colspan="6">No data available.</td>';
         tableBody.appendChild(row);
         return;
     }
@@ -125,7 +68,6 @@ function updateTable(data) {
                 <td>${item.reference_number}</td>
                 <td>${item.products_sold}</td>
                 <td>₱${parseFloat(item.total_amount).toFixed(2)}</td>
-                <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
             `;
         } else if (window.location.pathname.includes('/reports/activity')) {
             row.innerHTML = `
@@ -142,11 +84,54 @@ function updateTable(data) {
                 <td>${item.transaction_type}</td>
                 <td>${item.transaction_id}</td>
                 <td>₱${parseFloat(item.amount).toFixed(2)}</td>
-                <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
             `;
         }
         tableBody.appendChild(row);
     });
+}
+
+// Function to apply filters
+async function applyFilters() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const store = document.getElementById('storeFilter')?.value;
+    const user = document.getElementById('userFilter')?.value;
+    const activityType = document.getElementById('activityType')?.value;
+    const transactionType = document.getElementById('transactionType')?.value;
+    const sortOrder = document.getElementById('sortOrder')?.value;
+
+    try {
+        const response = await fetch('/reports/sales/filter', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                startDate,
+                endDate,
+                store,
+                user,
+                activityType,
+                transactionType,
+                sortOrder
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        
+        // Initialize pagination with filtered data
+        if (window.pagination) {
+            window.pagination.init(data);
+        } else {
+            updateTable(data);
+        }
+    } catch (error) {
+        console.error('Error applying filters:', error);
+    }
 }
 
 // Helper function to format dates
@@ -156,10 +141,13 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-US', options);
 }
 
-// Add event listener for the apply filters button
-if (applyFiltersBtn) {
-    applyFiltersBtn.addEventListener('click', applyFilters);
-}
+// Add event listener for filter button
+document.addEventListener('DOMContentLoaded', function() {
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyFilters);
+    }
+});
 
 // Initial validation
 validateDates();

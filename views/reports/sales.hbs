@@ -9,6 +9,10 @@
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/filter.js" defer></script>
+  <script src="/js/download.js" defer></script>
+  <script src="/js/pagination.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -62,15 +66,19 @@
         </div>
       </div>
 
-      <!-- Download Buttons -->
-      <div class="download-buttons">
-        <button id="downloadCSV" class="download-btn">
-          <i class="fas fa-file-csv"></i> Download as CSV
-        </button>
-        <button id="downloadPDF" class="download-btn">
-          <i class="fas fa-file-pdf"></i> Download as PDF
-        </button>
+      <!-- Buttons -->
+      <button class = "dls" onclick="openModal('csv')"><i class="fa-solid fa-file-csv"></i>Download CSV</button>
+      <button class = "dls" onclick="openModal('pdf')"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
+      <!-- Modal -->
+      <div id="fileModal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal()">&times;</span>
+          <h3>Enter File Name</h3>
+          <input type="text" id="fileNameInput" placeholder="e.g., sales-report" />
+          <button onclick="downloadFile()">Download</button>
+        </div>
       </div>
+
       <!-- Filters Container -->
       <div class="filters-container" id="filtersContainer">
         <div class="filter-group">
@@ -109,13 +117,25 @@
               <th>Reference Number</th>
               <th>Products Sold</th>
               <th>Total Amount</th>
-              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {{{salesTableRows}}}
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button id="prevPage" class="pagination-btn" disabled>
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <div class="page-numbers">
+          <span id="currentPage">1</span> of <span id="totalPages">1</span>
+        </div>
+        <button id="nextPage" class="pagination-btn" disabled>
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
 
   <script>
