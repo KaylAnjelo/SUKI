@@ -1,35 +1,46 @@
-const db = require('../../config/db');
+import supabase from '../../config/db.js';
 
-exports.login = (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+export const login = async (req, res) => {
+  const { username, password } = req.body;
 
   if (!username || !password) {
     return res.render('index', { error: 'Please enter both username and password' });
   }
 
-  const query = "SELECT * FROM admin WHERE Username = $1 AND Password = $2";
-  db.query(query, [username, password], (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
+  try {
+    const { data, error } = await supabase
+      .from('admin')
+      .select('*')
+      .eq('username', username)
+      .eq('password', password)
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
       return res.render('index', { error: 'An error occurred while checking your credentials.' });
     }
 
-    if (results.rows.length > 0) {
-      const logQuery = "INSERT INTO admin_logs (admin_name, login_time) VALUES ($1, NOW())";
-      db.query(logQuery, [username], (logErr) => {
-        if (logErr) {
-          console.error('Failed to log admin login:', logErr);
-        }
-      });
+    if (data) {
+      // Log the admin login
+      const logInsert = await supabase
+        .from('admin_logs')
+        .insert([{ admin_name: username, timestamp: new Date().toISOString() }]);
 
-      res.redirect('/Dashboard');
+      if (logInsert.error) {
+        console.error('Failed to log admin login:', logInsert.error);
+      }
+
+      return res.redirect('/Dashboard');
     } else {
-      res.render('index', { error: 'Invalid username or password, try again.' });
+      return res.render('index', { error: 'Invalid username or password, try again.' });
     }
-  });
+
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return res.render('index', { error: 'Server error. Please try again.' });
+  }
 };
 
-exports.logout = (req, res) => {
+export const logout = (req, res) => {
   res.redirect('/');
 };

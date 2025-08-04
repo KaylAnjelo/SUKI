@@ -1,6 +1,6 @@
-const db = require('../../config/db');
+import db from '../../config/db.js';
 
-exports.getNotifications = (req, res) => {
+export const getNotifications = (req, res) => {
   const notifQuery = `
     SELECT admin_name, login_time
     FROM admin_logs

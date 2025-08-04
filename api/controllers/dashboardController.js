@@ -1,13 +1,13 @@
-const db = require('../../config/db');
+import db from '../../config/db.js';
 
 // Helper
-function formatDate(dateString) {
+export function formatDate(dateString) {
   const date = new Date(dateString);
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return date.toLocaleDateString('en-US', options);
 }
 
-exports.getDashboard = async (req, res) => {
+export const getDashboard = async (req, res) => {
   try {
     const storeOwnersResult = await db.query('SELECT COUNT(*) FROM stores');
     const totalStoreOwners = parseInt(storeOwnersResult.rows[0].count, 10);

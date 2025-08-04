@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import * as reportsController from '../controllers/reportsController.js';
+
 const router = express.Router();
-const reportsController = require('../controllers/reportsController');
 
 router.get('/sales', reportsController.getReports);
 router.post('/sales/filter', reportsController.filterReports);
@@ -15,4 +16,4 @@ router.get('/activity', (req, res) => {
 });
 router.post('/activity/filter', reportsController.filterReports);
 
-module.exports = router;
+export default router;

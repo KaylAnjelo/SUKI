@@ -1,13 +1,13 @@
-const db = require('../../config/db');
+import db from '../../config/db.js';
 
 // Helper
-function formatDate(dateString) {
+export function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
 }
 
-exports.getReports = async (req, res) => {
+export const getReports = async (req, res) => {
     try {
         // Get all stores for the filter dropdown
         const storesResult = await db.query('SELECT store_name FROM stores');
@@ -68,7 +68,7 @@ exports.getReports = async (req, res) => {
 };
 
 // Add filter endpoint handler
-exports.filterReports = async (req, res) => {
+export const filterReports = async (req, res) => {
     try {
         const { startDate, endDate, store, user, activityType, transactionType, sortOrder } = req.body;
         

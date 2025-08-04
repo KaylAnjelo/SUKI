@@ -1,7 +1,20 @@
-const express = require('express');
-const path = require('path');
-const dotenv = require('dotenv');
-const db = require('./config/db');
+import express from 'express';
+import path from 'path';
+import dotenv from 'dotenv';
+import supabase from './config/db.js';
+
+import dashboardRoutes from './api/routes/dashboardRoutes.js';
+import authRoutes from './api/routes/authRoutes.js';
+import notificationRoutes from './api/routes/notificationRoutes.js';
+import reportsRoutes from './api/routes/reports.js';
+import userRouter from './api/routes/users.js';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// For __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config({ path: './.env' });
 
@@ -20,29 +33,35 @@ app.use(express.static(publicDirectory));
 app.set('view engine', 'hbs');
 
 // Routes
-const dashboardRoutes = require('./api/routes/dashboardRoutes');
-const authRoutes = require('./api/routes/authRoutes');
-const notificationRoutes = require('./api/routes/notificationRoutes');
-const reportsRoutes = require('./api/routes/reports');
-const userRouter = require('./api/routes/users')
-
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/users', userRouter);
 
-// Reports
+// Views
 app.get("/reports", (req, res) => {
   res.render("GenerateReports");
 });
 
-// Transactions
 app.get("/transac", (req, res) => {
   res.render("Transactions");
 });
 
-// Start server
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
 });
+
+async function run() {
+  const { data, error } = await supabase
+    .from('admin')
+    .select('*');
+
+  if (error) {
+    console.error('❌ Error:', error);
+  } else {
+    console.log('✅ Data:', data);
+  }
+}
+
+run();
