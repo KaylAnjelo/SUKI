@@ -1,4 +1,4 @@
-import db from '../../config/db.js';
+import supabase from '../../config/db.js';
 
 // Helper
 export function formatDate(dateString) {
@@ -9,44 +9,59 @@ export function formatDate(dateString) {
 
 export const getDashboard = async (req, res) => {
   try {
-    const storeOwnersResult = await db.query('SELECT COUNT(*) FROM stores');
-    const totalStoreOwners = parseInt(storeOwnersResult.rows[0].count, 10);
+    // Store Owners Count
+    const { count: totalStoreOwners, error: storeOwnersError } = await supabase
+      .from('stores')
+      .select('*', { count: 'exact', head: true });
+    if (storeOwnersError) throw storeOwnersError;
 
-    const customersResult = await db.query('SELECT COUNT(*) FROM users');
-    const totalCustomers = parseInt(customersResult.rows[0].count, 10);
+    // Customers Count
+    const { count: totalCustomers, error: customersError } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true });
+    if (customersError) throw customersError;
 
-    const totalpointsResult = await db.query('SELECT COALESCE(SUM(total_points), 0) AS total_points_sum FROM user_points');
-    const totalPoints = totalpointsResult.rows[0].total_points_sum;
+    // Total Points
+    const { data: totalPointsData, error: totalPointsError } = await supabase
+      .from('user_points')
+      .select('total_points');
+    if (totalPointsError) throw totalPointsError;
+    const totalPoints = totalPointsData?.reduce((sum, row) => sum + (row.total_points || 0), 0) || 0;
 
-    const redeempointsResult = await db.query('SELECT COALESCE(SUM(redeemed_points), 0) AS total_redeemed_points_sum FROM user_points');
-    const totalRedeem = redeempointsResult.rows[0].total_redeemed_points_sum;
+    // Total Redeemed Points
+    const { data: totalRedeemData, error: totalRedeemError } = await supabase
+      .from('user_points')
+      .select('redeemed_points');
+    if (totalRedeemError) throw totalRedeemError;
+    const totalRedeem = totalRedeemData?.reduce((sum, row) => sum + (row.redeemed_points || 0), 0) || 0;
 
-    const transactionQuery = `
-      SELECT t.transaction_date, u.username, t.points, s.store_name
-      FROM transactions t
-      JOIN users u ON t.user_id = u.user_id
-      JOIN stores s ON t.store_id = s.owner_id
-      ORDER BY t.transaction_date DESC
-      LIMIT 10;
-    `;
-    const transactionResult = await db.query(transactionQuery);
-    const transactions = transactionResult.rows;
+    // Recent Transactions (with user and store info)
+    const { data: transactions, error: transactionsError } = await supabase
+      .from('transactions')
+      .select('transaction_date, points, users(username), stores(store_name)')
+      .order('transaction_date', { ascending: false })
+      .limit(10);
+    if (transactionsError) throw transactionsError;
 
-    const storesResult = await db.query('SELECT store_name, location, is_active FROM stores');
-    const stores = storesResult.rows;
+    // Stores
+    const { data: stores, error: storesError } = await supabase
+      .from('stores')
+      .select('store_name, location, is_active');
+    if (storesError) throw storesError;
 
+    // Build HTML
     let transactionTableRowsHtml = '';
     let totalPointsCalc = 0;
     let storesTableRowsHtml = '';
 
-    if (transactions.length > 0) {
+    if (transactions && transactions.length > 0) {
       transactions.forEach(transaction => {
         transactionTableRowsHtml += `
           <tr>
             <td>${formatDate(transaction.transaction_date)}</td>
-            <td>${transaction.username}</td>
+            <td>${transaction.users?.username || ''}</td>
             <td>${transaction.points}</td>
-            <td>${transaction.store_name}</td>
+            <td>${transaction.stores?.store_name || ''}</td>
           </tr>
         `;
         totalPointsCalc += transaction.points;
@@ -55,13 +70,13 @@ export const getDashboard = async (req, res) => {
       transactionTableRowsHtml = '<tr><td colspan="4">No transactions available.</td></tr>';
     }
 
-    if (stores.length > 0) {
+    if (stores && stores.length > 0) {
       stores.forEach(store => {
         storesTableRowsHtml += `
           <tr>
             <td>${store.store_name}</td>
             <td>${store.location || 'N/A'}</td>
-            <td>${store.status || 'N/A'}</td>
+            <td>${store.is_active ? 'Active' : 'Inactive'}</td>
           </tr>
         `;
       });
@@ -71,8 +86,8 @@ export const getDashboard = async (req, res) => {
 
     res.render('Dashboard', {
       title: 'Dashboard',
-      total_owners: totalStoreOwners,
-      total_customers: totalCustomers,
+      total_owners: totalStoreOwners || 0,
+      total_customers: totalCustomers || 0,
       total_points: totalPointsCalc,
       redeemed_points: totalRedeem,
       transactionTableRows: transactionTableRowsHtml,

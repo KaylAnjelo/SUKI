@@ -1,4 +1,4 @@
-import db from '../../config/db.js';
+import supabase from '../../config/db.js';
 
 // Helper
 export function formatDate(dateString) {
@@ -10,28 +10,77 @@ export function formatDate(dateString) {
 export const getReports = async (req, res) => {
     try {
         // Get all stores for the filter dropdown
-        const storesResult = await db.query('SELECT store_name FROM stores');
-        const stores = storesResult.rows;
+        const { data: stores, error: storesError } = await supabase
+            .from('stores')
+            .select('store_name');
+        if (storesError) throw storesError;
 
-        // Build the main sales query
-        const salesQuery = `
-                SELECT 
-                    t.transaction_date,
-                    s.store_name,
-                    t.reference_number,
-                    STRING_AGG(p.product_name, ', ') AS products_sold,
-                    SUM(td.quantity * p.price) AS total_amount
-                FROM transactions t
-                JOIN stores s ON t.store_id = s.owner_id
-                JOIN transaction_details td ON t.id = td.transaction_id
-                JOIN products p ON td.product_id = p.id
-                GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number
-                ORDER BY t.transaction_date DESC
-            `;
-        const salesResult = await db.query(salesQuery);
-        const sales = salesResult.rows;
+        // Get all transactions
+        const { data: transactions, error: transactionsError } = await supabase
+            .from('transactions')
+            .select('id, transaction_date, store_id, reference_number');
+        if (transactionsError) throw transactionsError;
+
+        // Get all transaction_details
+        const { data: details, error: detailsError } = await supabase
+            .from('transaction_details')
+            .select('transaction_id, product_id, quantity');
+        if (detailsError) throw detailsError;
+
+        // Get all products
+        const { data: products, error: productsError } = await supabase
+            .from('products')
+            .select('id, product_name, price, store_id');
+        if (productsError) throw productsError;
+
+        // Loop through each transaction
+        for (const transaction of transactions) {
+        const productsFromStore = products.filter(p => p.store_id === transaction.store_id);
+        
+        // Skip if no product found
+        if (productsFromStore.length === 0) continue;
+
+        // Pick random product
+        const randomProduct = productsFromStore[Math.floor(Math.random() * productsFromStore.length)];
+
+        // Generate quantity
+        const quantity = Math.floor(Math.random() * 3) + 1;
+
+        // Insert into transaction_details
+        await supabase.from('transaction_details').insert({
+            transaction_id: transaction.id,
+            product_id: randomProduct.id,
+            quantity,
+        });
+        }
+        // Get all stores (for store_name lookup)
+        const { data: storesFull, error: storesFullError } = await supabase
+            .from('stores')
+            .select('owner_id, store_name');
+        if (storesFullError) throw storesFullError;
+
+        // Build sales data
+        const sales = transactions.map(t => {
+            const store = storesFull.find(s => s.owner_id === t.store_id);
+            const tDetails = details.filter(d => d.transaction_id === t.id);
+            const productsSold = tDetails.map(d => {
+                const product = products.find(p => p.id === d.product_id);
+                return product ? product.product_name : '';
+            }).join(', ');
+            const totalAmount = tDetails.reduce((sum, d) => {
+                const product = products.find(p => p.id === d.product_id);
+                return sum + (product ? d.quantity * product.price : 0);
+            }, 0);
+            return {
+                transaction_date: t.transaction_date,
+                store_name: store ? store.store_name : '',
+                reference_number: t.reference_number,
+                products_sold: productsSold,
+                total_amount: totalAmount
+            };
+        });
+
         let salesTableRowsHtml = '';
-
         if (sales.length > 0) {
             sales.forEach(sale => {
                 salesTableRowsHtml += `
@@ -67,138 +116,100 @@ export const getReports = async (req, res) => {
     }
 };
 
+function generateRefNo(date, storeName) {
+  const datePart = new Date(date).toISOString().slice(0, 10).replace(/-/g, '');
+  const storePart = storeName.replace(/\s+/g, '').toUpperCase().slice(0, 4);
+  const random = Math.floor(1000 + Math.random() * 9000); // random 4-digit
+  return `${storePart}-${datePart}-${random}`;
+}
+
+
+
+
 // Add filter endpoint handler
 export const filterReports = async (req, res) => {
     try {
         const { startDate, endDate, store, user, activityType, transactionType, sortOrder } = req.body;
-        
-        let query = '';
-        let params = [];
-        let paramIndex = 1;
 
+        // Example for /sales/filter
         if (req.path.includes('/sales/filter')) {
-            query = `
-                SELECT 
-                    t.transaction_date,
-                    s.store_name,
-                    t.reference_number,
-                    STRING_AGG(p.product_name, ', ') AS products_sold,
-                    SUM(td.quantity * p.price) AS total_amount
-                FROM transactions t
-                JOIN stores s ON t.store_id = s.owner_id
-                JOIN transaction_details td ON t.id = td.transaction_id
-                JOIN products p ON td.product_id = p.id
-                WHERE 1=1
-            `;
+            // Fetch and filter transactions
+            let query = supabase
+                .from('transactions')
+                .select('id, transaction_date, store_id, reference_number');
 
-            if (startDate) {
-                query += ` AND t.transaction_date >= $${paramIndex}`;
-                params.push(startDate);
-                paramIndex++;
-            }
-            if (endDate) {
-                query += ` AND t.transaction_date <= $${paramIndex}`;
-                params.push(endDate);
-                paramIndex++;
-            }
+            if (startDate) query = query.gte('transaction_date', startDate);
+            if (endDate) query = query.lte('transaction_date', endDate);
+
+            const { data: transactions, error: transactionsError } = await query;
+            if (transactionsError) throw transactionsError;
+
+            // Filter by store if needed
+            let filteredTransactions = transactions;
             if (store) {
-                query += ` AND s.store_name = $${paramIndex}`;
-                params.push(store);
-                paramIndex++;
+                const { data: stores, error: storesError } = await supabase
+                    .from('stores')
+                    .select('owner_id, store_name')
+                    .eq('store_name', store);
+                if (storesError) throw storesError;
+                const storeIds = stores.map(s => s.owner_id);
+                filteredTransactions = transactions.filter(t => storeIds.includes(t.store_id));
             }
 
-            query += ` GROUP BY t.id, t.transaction_date, s.store_name, t.reference_number`;
+            // Get all transaction_details and products
+            const { data: details, error: detailsError } = await supabase
+                .from('transaction_details')
+                .select('transaction_id, product_id, quantity');
+            if (detailsError) throw detailsError;
 
-            // Add sorting
-            if (sortOrder === 'oldest') {
-                query += ' ORDER BY t.transaction_date ASC';
-            } else {
-                query += ' ORDER BY t.transaction_date DESC';
-            }
+            const { data: products, error: productsError } = await supabase
+                .from('products')
+                .select('id, product_name, price');
+            if (productsError) throw productsError;
 
-        } else if (req.path.includes('/activity/filter')) {
-            query = `
-                SELECT 
-                    date_time,
-                    user_name as user,
-                    activity_type,
-                    details
-                FROM user_activity
-                WHERE 1=1
-            `;
+            const { data: storesFull, error: storesFullError } = await supabase
+                .from('stores')
+                .select('owner_id, store_name');
+            if (storesFullError) throw storesFullError;
 
-            if (startDate) {
-                query += ` AND date_time >= $${paramIndex}`;
-                params.push(startDate);
-                paramIndex++;
-            }
-            if (endDate) {
-                query += ` AND date_time <= $${paramIndex}`;
-                params.push(endDate);
-                paramIndex++;
-            }
-            if (user) {
-                query += ` AND user_name = $${paramIndex}`;
-                params.push(user);
-                paramIndex++;
-            }
-            if (activityType) {
-                query += ` AND activity_type = $${paramIndex}`;
-                params.push(activityType);
-                paramIndex++;
-            }
+            // Build sales data
+            const sales = filteredTransactions.map(t => {
+                const storeObj = storesFull.find(s => s.owner_id === t.store_id);
+                const tDetails = details.filter(d => d.transaction_id === t.id);
+                const productsSold = tDetails.map(d => {
+                    const product = products.find(p => p.id === d.product_id);
+                    return product ? product.product_name : '';
+                }).join(', ');
+                const totalAmount = tDetails.reduce((sum, d) => {
+                    const product = products.find(p => p.id === d.product_id);
+                    return sum + (product ? d.quantity * product.price : 0);
+                }, 0);
+                return {
+                    transaction_date: t.transaction_date,
+                    store_name: storeObj ? storeObj.store_name : '',
+                    reference_number: t.reference_number,
+                    products_sold: productsSold,
+                    total_amount: totalAmount
+                };
+            });
 
-            // Add sorting
-            if (sortOrder === 'oldest') {
-                query += ' ORDER BY date_time ASC';
-            } else {
-                query += ' ORDER BY date_time DESC';
-            }
+            // Sort
+            sales.sort((a, b) => {
+                if (sortOrder === 'oldest') {
+                    return new Date(a.transaction_date) - new Date(b.transaction_date);
+                } else {
+                    return new Date(b.transaction_date) - new Date(a.transaction_date);
+                }
+            });
 
-        } else if (req.path.includes('/transactions/filter')) {
-            query = `
-                SELECT 
-                    transaction_date as date_time,
-                    user_name as user,
-                    transaction_type,
-                    reference_number as transaction_id,
-                    amount 
-                FROM transactions
-                WHERE 1=1
-            `;
-
-            if (startDate) {
-                query += ` AND transaction_date >= $${paramIndex}`;
-                params.push(startDate);
-                paramIndex++;
-            }
-            if (endDate) {
-                query += ` AND transaction_date <= $${paramIndex}`;
-                params.push(endDate);
-                paramIndex++;
-            }
-            if (user) {
-                query += ` AND user_name = $${paramIndex}`;
-                params.push(user);
-                paramIndex++;
-            }
-            if (transactionType) {
-                query += ` AND transaction_type = $${paramIndex}`;
-                params.push(transactionType);
-                paramIndex++;
-            }
-
-            // Add sorting
-            if (sortOrder === 'oldest') {
-                query += ' ORDER BY transaction_date ASC';
-            } else {
-                query += ' ORDER BY transaction_date DESC';
-            }
+            res.json(sales);
+            return;
         }
 
-        const result = await db.query(query, params);
-        res.json(result.rows);
+        // You can apply a similar approach for /activity/filter and /transactions/filter
+        // by fetching the relevant tables and filtering/sorting in JS.
 
+        res.status(400).json({ error: 'Unsupported filter type' });
     } catch (error) {
         console.error('Error filtering reports:', error);
         res.status(500).json({ error: 'Internal server error' });

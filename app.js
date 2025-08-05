@@ -2,13 +2,11 @@ import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import supabase from './config/db.js';
-
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import authRoutes from './api/routes/authRoutes.js';
 import notificationRoutes from './api/routes/notificationRoutes.js';
 import reportsRoutes from './api/routes/reports.js';
 import userRouter from './api/routes/users.js';
-
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
