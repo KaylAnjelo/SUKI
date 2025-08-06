@@ -126,10 +126,10 @@
   const pointsPerDayChart = new Chart(pointsPerDayCtx, {
     type: 'bar',
     data: {
-      labels: {{pointsPerDayLabels}},
+      labels: {{{pointsPerDayLabels}}},
       datasets: [{
         label: 'Points Earned',
-        data: {{pointsPerDayData}},
+        data: {{{pointsPerDayData}}},
         backgroundColor: '#7D0006',
         borderColor: '#7D0006',
         borderWidth: 1
@@ -150,10 +150,10 @@
   const storeEngagementChart = new Chart(storeEngagementCtx, {
     type: 'pie',
     data: {
-      labels: {{storeLabels}},
+      labels: {{{storeLabels}}},
       datasets: [{
         label: 'Customer Engagement',
-        data: {{storeEngagementData}},
+        data: {{{storeEngagementData}}},
         backgroundColor: [
           '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
         ]
