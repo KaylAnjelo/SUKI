@@ -9,6 +9,7 @@
   <script src="/js/logout.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
@@ -58,6 +59,29 @@
       <div class="trans">
         
       </div>
+      <div class="chart-container" style="width:100%;max-width:600px;height:400px;margin:auto;">
+        <canvas id="dashboardChart"></canvas>
+      </div>
+      <script>
+  const ctx = document.getElementById('dashboardChart').getContext('2d');
+  const dashboardChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{{chartLabels}}},
+      datasets: [{
+        label: 'Points Earned',
+        data: {{{chartData}}},
+        backgroundColor: '#7D0006',
+        borderColor: '#7D0006',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+</script>
     </main>
   </div>
 </body>
