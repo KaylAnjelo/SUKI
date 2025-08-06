@@ -9,6 +9,7 @@
     <script src="/js/logout.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -111,7 +112,58 @@
                     </table>
                 </div>
             </div>
+            <div class="chart-container" style="width:100%;max-width:600px;margin:auto;">
+              <canvas id="pointsPerDayChart"></canvas>
+            </div>
+            <div class="chart-container" style="width:100%;max-width:600px;margin:auto;">
+              <canvas id="storeEngagementChart"></canvas>
+            </div>
         </main>
     </div>
+    <script>
+  // Bar Chart: Points Earned Per Day and Per Store
+  const pointsPerDayCtx = document.getElementById('pointsPerDayChart').getContext('2d');
+  const pointsPerDayChart = new Chart(pointsPerDayCtx, {
+    type: 'bar',
+    data: {
+      labels: {{pointsPerDayLabels}},
+      datasets: [{
+        label: 'Points Earned',
+        data: {{pointsPerDayData}},
+        backgroundColor: '#7D0006',
+        borderColor: '#7D0006',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { beginAtZero: true },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  // Pie Chart: Store Customer Engagement
+  const storeEngagementCtx = document.getElementById('storeEngagementChart').getContext('2d');
+  const storeEngagementChart = new Chart(storeEngagementCtx, {
+    type: 'pie',
+    data: {
+      labels: {{storeLabels}},
+      datasets: [{
+        label: 'Customer Engagement',
+        data: {{storeEngagementData}},
+        backgroundColor: [
+          '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+</script>
 </body>
 </html>
