@@ -1,5 +1,42 @@
 import supabase from '../../config/db.js';
 
+export const getSalesWithTotals = async (req, res) => {
+  try {
+    const { store_id, date } = req.query;
+
+    // Aggregate totals directly in Supabase
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        product_name,
+        quantity,
+        price
+      `)
+      .eq('store_id', store_id)
+      .eq('transaction_date', date);
+
+    if (error) throw error;
+
+    const totals = data.reduce(
+      (acc, item) => {
+        acc.totalQuantity += Number(item.quantity) || 0;
+        acc.totalAmount += (Number(item.quantity) || 0) * (Number(item.price) || 0);
+        return acc;
+      },
+      { totalQuantity: 0, totalAmount: 0 }
+    );
+
+    res.json({
+      sales: data,
+      totals
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Helper
 export function formatDate(dateString) {
     const date = new Date(dateString);
@@ -9,77 +46,37 @@ export function formatDate(dateString) {
 
 export const getReports = async (req, res) => {
     try {
-        // Get all stores for the filter dropdown
+        // 1. Get all stores for filter dropdown
         const { data: stores, error: storesError } = await supabase
             .from('stores')
             .select('store_name');
         if (storesError) throw storesError;
 
-        // Get all transactions
+        // 2. Get all transactions (now includes product details & total)
         const { data: transactions, error: transactionsError } = await supabase
             .from('transactions')
-            .select('id, transaction_date, store_id, reference_number');
+            .select('id, transaction_date, store_id, reference_number, product_name, quantity, total');
         if (transactionsError) throw transactionsError;
 
-        // Get all transaction_details
-        const { data: details, error: detailsError } = await supabase
-            .from('transaction_details')
-            .select('transaction_id, product_id, quantity');
-        if (detailsError) throw detailsError;
-
-        // Get all products
-        const { data: products, error: productsError } = await supabase
-            .from('products')
-            .select('id, product_name, price, store_id');
-        if (productsError) throw productsError;
-
-        // Loop through each transaction
-        for (const transaction of transactions) {
-        const productsFromStore = products.filter(p => p.store_id === transaction.store_id);
-        
-        // Skip if no product found
-        if (productsFromStore.length === 0) continue;
-
-        // Pick random product
-        const randomProduct = productsFromStore[Math.floor(Math.random() * productsFromStore.length)];
-
-        // Generate quantity
-        const quantity = Math.floor(Math.random() * 3) + 1;
-
-        // Insert into transaction_details
-        await supabase.from('transaction_details').insert({
-            transaction_id: transaction.id,
-            product_id: randomProduct.id,
-            quantity,
-        });
-        }
-        // Get all stores (for store_name lookup)
+        // 3. Get store info for store_name lookup
         const { data: storesFull, error: storesFullError } = await supabase
             .from('stores')
             .select('owner_id, store_name');
         if (storesFullError) throw storesFullError;
 
-        // Build sales data
+        // 4. Build sales data directly from transactions table
         const sales = transactions.map(t => {
             const store = storesFull.find(s => s.owner_id === t.store_id);
-            const tDetails = details.filter(d => d.transaction_id === t.id);
-            const productsSold = tDetails.map(d => {
-                const product = products.find(p => p.id === d.product_id);
-                return product ? product.product_name : '';
-            }).join(', ');
-            const totalAmount = tDetails.reduce((sum, d) => {
-                const product = products.find(p => p.id === d.product_id);
-                return sum + (product ? d.quantity * product.price : 0);
-            }, 0);
             return {
                 transaction_date: t.transaction_date,
                 store_name: store ? store.store_name : '',
                 reference_number: t.reference_number,
-                products_sold: productsSold,
-                total_amount: totalAmount
+                products_sold: t.product_name ? `${t.product_name} (x${t.quantity})` : 'N/A',
+                total_amount: t.total || 0
             };
         });
 
+        // 5. Generate HTML table rows
         let salesTableRowsHtml = '';
         if (sales.length > 0) {
             sales.forEach(sale => {
@@ -94,16 +91,16 @@ export const getReports = async (req, res) => {
                 `;
             });
         } else {
-            salesTableRowsHtml = '<tr><td colspan="6">No sales data available.</td></tr>';
+            salesTableRowsHtml = '<tr><td colspan="5">No sales data available.</td></tr>';
         }
 
-        // Generate HTML for store filter options
+        // 6. Store filter dropdown options
         let storeFilterOptionsHtml = '<option value="">All Stores</option>';
         stores.forEach(store => {
             storeFilterOptionsHtml += `<option value="${store.store_name}">${store.store_name}</option>`;
         });
 
-        // Render the sales page with the generated HTML
+        // 7. Render the page
         res.render('reports/sales', {
             title: 'Sales Reports',
             salesTableRows: salesTableRowsHtml,
@@ -124,13 +121,10 @@ function generateRefNo(date, storeName) {
 }
 
 
-
-
 // Add filter endpoint handler
 export const filterReports = async (req, res) => {
     try {
         const { startDate, endDate, store, user, activityType, transactionType, sortOrder } = req.body;
-
         // Example for /sales/filter
         if (req.path.includes('/sales/filter')) {
             // Fetch and filter transactions
@@ -155,12 +149,6 @@ export const filterReports = async (req, res) => {
                 const storeIds = stores.map(s => s.owner_id);
                 filteredTransactions = transactions.filter(t => storeIds.includes(t.store_id));
             }
-
-            // Get all transaction_details and products
-            const { data: details, error: detailsError } = await supabase
-                .from('transaction_details')
-                .select('transaction_id, product_id, quantity');
-            if (detailsError) throw detailsError;
 
             const { data: products, error: productsError } = await supabase
                 .from('products')
@@ -205,9 +193,6 @@ export const filterReports = async (req, res) => {
             res.json(sales);
             return;
         }
-
-        // You can apply a similar approach for /activity/filter and /transactions/filter
-        // by fetching the relevant tables and filtering/sorting in JS.
 
         res.status(400).json({ error: 'Unsupported filter type' });
     } catch (error) {

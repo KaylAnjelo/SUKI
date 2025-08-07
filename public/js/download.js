@@ -36,23 +36,21 @@ function downloadCSV(filename) {
     const cells = Array.from(row.cells);
 
     if (i === 0) {
-      // Header row: use all headers as-is
+      // Header row
       for (let cell of cells) {
         rowData.push(`"${cell.textContent.trim()}"`);
       }
     } else {
-      // Merge Date and Year into one cell
+      // Date (1st cell)
       const date = cells[0]?.textContent.trim();
-      const year = cells[1]?.textContent.trim();
-      const fullDate = `${date}-${year}`;
-      rowData.push(`"${fullDate}"`);
+      rowData.push(`"${date}"`);
 
-      // Add Store (3rd cell in table)
-      const store = cells[2]?.textContent.trim();
+      // Store (2nd cell)
+      const store = cells[1]?.textContent.trim();
       rowData.push(`"${store}"`);
 
-      // Add remaining columns: Reference, Products, Item, Amount
-      for (let j = 3; j < cells.length; j++) {
+      // Remaining cells (Reference Number, Product, Amount, etc.)
+      for (let j = 2; j < cells.length; j++) {
         rowData.push(`"${cells[j].textContent.trim()}"`);
       }
     }
