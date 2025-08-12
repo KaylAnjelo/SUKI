@@ -45,7 +45,21 @@ app.get("/reports", (req, res) => {
 });
 
 app.get("/transac", (req, res) => {
-  res.render("Transactions");
+  const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
+  const chartData = JSON.stringify([120, 150, 180]);
+  res.render("Transactions", {
+    chartLabels,
+    chartData,
+  });
+});
+
+app.get('/dashboard', async (req, res) => {
+  const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
+  const chartData = JSON.stringify([120, 150, 180]);
+  res.render('Dashboard', {
+    chartLabels,
+    chartData,
+  });
 });
 
 app.listen(port, () => {
