@@ -136,5 +136,14 @@
       </div>
     </main>
   </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Kick off an initial fetch to populate and initialize pagination
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    if (applyFiltersBtn) {
+      applyFiltersBtn.click();
+    }
+  });
+</script>
 </body>
 </html>

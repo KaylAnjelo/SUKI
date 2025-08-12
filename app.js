@@ -6,6 +6,7 @@ import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import authRoutes from './api/routes/authRoutes.js';
 import notificationRoutes from './api/routes/notificationRoutes.js';
 import reportsRoutes from './api/routes/reports.js';
+import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -35,6 +36,7 @@ app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
+app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 
 // Views

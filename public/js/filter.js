@@ -101,7 +101,16 @@ async function applyFilters() {
     const sortOrder = document.getElementById('sortOrder')?.value;
 
     try {
-        const response = await fetch('/reports/sales/filter', {
+        // Choose endpoint based on current page
+        let endpoint = '/reports/sales/filter';
+        const pathname = window.location.pathname || '';
+        if (pathname.includes('/reports/activity')) {
+            endpoint = '/reports/activity/filter';
+        } else if (pathname.includes('/reports/transactions')) {
+            endpoint = '/reports/transactions/filter';
+        }
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,9 +134,9 @@ async function applyFilters() {
         
         // Initialize pagination with filtered data
         if (window.pagination) {
-            window.pagination.init(data);
+            window.pagination.init(Array.isArray(data) ? data : []);
         } else {
-            updateTable(data);
+            updateTable(Array.isArray(data) ? data : []);
         }
     } catch (error) {
         console.error('Error applying filters:', error);

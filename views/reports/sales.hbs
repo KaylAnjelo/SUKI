@@ -151,6 +151,16 @@
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       startDate.valueAsDate = thirtyDaysAgo;
+
+      // Initialize pagination with initial sales data rendered by server
+      try {
+        const initialData = {{#if initialSalesData}}{{{initialSalesData}}}{{else}}[]{{/if}};
+        if (window.pagination && Array.isArray(initialData)) {
+          window.pagination.init(initialData);
+        }
+      } catch (e) {
+        console.error('Failed to init pagination with initial data:', e);
+      }
     });
   </script>
 </body>

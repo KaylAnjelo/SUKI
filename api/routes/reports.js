@@ -7,6 +7,8 @@ router.get('/sales-totals', getSalesWithTotals);
 
 router.get('/sales', reportsController.getReports);
 router.post('/sales/filter', reportsController.filterReports);
+router.get('/sales/export/csv', reportsController.exportSalesCsv);
+router.get('/sales/export/pdf', reportsController.exportSalesPdf);
 
 router.get('/transactions', (req, res) => {
   res.render('reports/transactions');

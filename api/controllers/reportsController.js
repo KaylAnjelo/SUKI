@@ -1,30 +1,29 @@
 import supabase from '../../config/db.js';
+import PDFDocument from 'pdfkit';
 
 export const getSalesWithTotals = async (req, res) => {
   try {
     const { store_id, date } = req.query;
 
-    // Aggregate totals directly in Supabase
+    // Aggregate directly in Supabase
     const { data, error } = await supabase
       .from('transactions')
       .select(`
         product_name,
         quantity,
-        price
+        price,
+        total
       `)
       .eq('store_id', store_id)
       .eq('transaction_date', date);
 
     if (error) throw error;
 
-    const totals = data.reduce(
-      (acc, item) => {
-        acc.totalQuantity += Number(item.quantity) || 0;
-        acc.totalAmount += (Number(item.quantity) || 0) * (Number(item.price) || 0);
-        return acc;
-      },
-      { totalQuantity: 0, totalAmount: 0 }
-    );
+    // Only calculate totals if you don't store them in DB
+    const totals = {
+      totalQuantity: data.reduce((sum, row) => sum + (Number(row.quantity) || 0), 0),
+      totalAmount: data.reduce((sum, row) => sum + (Number(row.total) || ((Number(row.quantity) || 0) * (Number(row.price) || 0))), 0)
+    };
 
     res.json({
       sales: data,
@@ -49,7 +48,7 @@ export const getReports = async (req, res) => {
         // 1. Get all stores for filter dropdown
         const { data: stores, error: storesError } = await supabase
             .from('stores')
-            .select('store_name');
+            .select('owner_id,store_name');
         if (storesError) throw storesError;
 
         // 2. Get all transactions (now includes product details & total)
@@ -58,15 +57,9 @@ export const getReports = async (req, res) => {
             .select('id, transaction_date, store_id, reference_number, product_name, quantity, total');
         if (transactionsError) throw transactionsError;
 
-        // 3. Get store info for store_name lookup
-        const { data: storesFull, error: storesFullError } = await supabase
-            .from('stores')
-            .select('owner_id, store_name');
-        if (storesFullError) throw storesFullError;
-
         // 4. Build sales data directly from transactions table
         const sales = transactions.map(t => {
-            const store = storesFull.find(s => s.owner_id === t.store_id);
+            const store = stores.find(s => s.owner_id === t.store_id);
             return {
                 transaction_date: t.transaction_date,
                 store_name: store ? store.store_name : '',
@@ -75,6 +68,9 @@ export const getReports = async (req, res) => {
                 total_amount: t.total || 0
             };
         });
+
+        // 4b. Default sort: newest first
+        sales.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
 
         // 5. Generate HTML table rows
         let salesTableRowsHtml = '';
@@ -104,7 +100,9 @@ export const getReports = async (req, res) => {
         res.render('reports/sales', {
             title: 'Sales Reports',
             salesTableRows: salesTableRowsHtml,
-            storeFilterOptions: storeFilterOptionsHtml
+            storeFilterOptions: storeFilterOptionsHtml,
+            // Provide initial data for client-side pagination
+            initialSalesData: JSON.stringify(sales)
         });
 
     } catch (error) {
@@ -112,6 +110,60 @@ export const getReports = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
+// Internal: build filtered sales dataset used by both API and exports
+async function buildFilteredSales({ startDate, endDate, store, sortOrder }) {
+    // 1) Base query
+    let query = supabase
+        .from('transactions')
+        .select('id, transaction_date, store_id, reference_number, product_name, quantity, total');
+
+    if (startDate) query = query.gte('transaction_date', startDate);
+    if (endDate) query = query.lte('transaction_date', endDate);
+
+    const { data: transactions, error: transactionsError } = await query;
+    if (transactionsError) throw transactionsError;
+
+    // 2) Filter by store name (maps to owner_id)
+    let filteredTransactions = transactions;
+    if (store) {
+        const { data: storeRows, error: storesError } = await supabase
+            .from('stores')
+            .select('owner_id, store_name')
+            .eq('store_name', store);
+        if (storesError) throw storesError;
+        const storeIds = (storeRows || []).map(s => s.owner_id);
+        filteredTransactions = transactions.filter(t => storeIds.includes(t.store_id));
+    }
+
+    // 3) Load store names for mapping
+    const { data: storesFull, error: storesFullError } = await supabase
+        .from('stores')
+        .select('owner_id, store_name');
+    if (storesFullError) throw storesFullError;
+
+    // 4) Build sales rows
+    const sales = filteredTransactions.map(t => {
+        const storeObj = storesFull.find(s => s.owner_id === t.store_id);
+        return {
+            transaction_date: t.transaction_date,
+            store_name: storeObj ? storeObj.store_name : '',
+            reference_number: t.reference_number,
+            products_sold: t.product_name ? `${t.product_name} (x${t.quantity})` : 'N/A',
+            total_amount: t.total || 0
+        };
+    });
+
+    // 5) Sort by date
+    sales.sort((a, b) => {
+        if (sortOrder === 'oldest') {
+            return new Date(a.transaction_date) - new Date(b.transaction_date);
+        }
+        return new Date(b.transaction_date) - new Date(a.transaction_date);
+    });
+
+    return sales;
+}
 
 function generateRefNo(date, storeName) {
   const datePart = new Date(date).toISOString().slice(0, 10).replace(/-/g, '');
@@ -125,72 +177,19 @@ function generateRefNo(date, storeName) {
 export const filterReports = async (req, res) => {
     try {
         const { startDate, endDate, store, user, activityType, transactionType, sortOrder } = req.body;
-        // Example for /sales/filter
         if (req.path.includes('/sales/filter')) {
-            // Fetch and filter transactions
-            let query = supabase
-                .from('transactions')
-                .select('id, transaction_date, store_id, reference_number');
-
-            if (startDate) query = query.gte('transaction_date', startDate);
-            if (endDate) query = query.lte('transaction_date', endDate);
-
-            const { data: transactions, error: transactionsError } = await query;
-            if (transactionsError) throw transactionsError;
-
-            // Filter by store if needed
-            let filteredTransactions = transactions;
-            if (store) {
-                const { data: stores, error: storesError } = await supabase
-                    .from('stores')
-                    .select('owner_id, store_name')
-                    .eq('store_name', store);
-                if (storesError) throw storesError;
-                const storeIds = stores.map(s => s.owner_id);
-                filteredTransactions = transactions.filter(t => storeIds.includes(t.store_id));
-            }
-
-            const { data: products, error: productsError } = await supabase
-                .from('products')
-                .select('id, product_name, price');
-            if (productsError) throw productsError;
-
-            const { data: storesFull, error: storesFullError } = await supabase
-                .from('stores')
-                .select('owner_id, store_name');
-            if (storesFullError) throw storesFullError;
-
-            // Build sales data
-            const sales = filteredTransactions.map(t => {
-                const storeObj = storesFull.find(s => s.owner_id === t.store_id);
-                const tDetails = details.filter(d => d.transaction_id === t.id);
-                const productsSold = tDetails.map(d => {
-                    const product = products.find(p => p.id === d.product_id);
-                    return product ? product.product_name : '';
-                }).join(', ');
-                const totalAmount = tDetails.reduce((sum, d) => {
-                    const product = products.find(p => p.id === d.product_id);
-                    return sum + (product ? d.quantity * product.price : 0);
-                }, 0);
-                return {
-                    transaction_date: t.transaction_date,
-                    store_name: storeObj ? storeObj.store_name : '',
-                    reference_number: t.reference_number,
-                    products_sold: productsSold,
-                    total_amount: totalAmount
-                };
-            });
-
-            // Sort
-            sales.sort((a, b) => {
-                if (sortOrder === 'oldest') {
-                    return new Date(a.transaction_date) - new Date(b.transaction_date);
-                } else {
-                    return new Date(b.transaction_date) - new Date(a.transaction_date);
-                }
-            });
-
+            const sales = await buildFilteredSales({ startDate, endDate, store, sortOrder });
             res.json(sales);
+            return;
+        }
+        if (req.path.includes('/transactions/filter')) {
+            const transactions = await buildFilteredUserTransactions({ startDate, endDate, user, transactionType, sortOrder });
+            res.json(transactions);
+            return;
+        }
+        if (req.path.includes('/activity/filter')) {
+            const activity = await buildFilteredActivity({ startDate, endDate, user, activityType, sortOrder });
+            res.json(activity);
             return;
         }
 
@@ -198,5 +197,174 @@ export const filterReports = async (req, res) => {
     } catch (error) {
         console.error('Error filtering reports:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Build transactions list for reports/transactions
+async function buildFilteredUserTransactions({ startDate, endDate, user, transactionType, sortOrder }) {
+    let query = supabase
+        .from('transactions')
+        .select('id, transaction_date, reference_number, total, product_name, quantity');
+
+    if (startDate) query = query.gte('transaction_date', startDate);
+    if (endDate) query = query.lte('transaction_date', endDate);
+
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    // TODO: apply user/transactionType filters when schema supports them
+
+    const mapped = (rows || []).map(t => ({
+        date_time: t.transaction_date,
+        user: '',
+        transaction_type: 'Transaction',
+        transaction_id: t.reference_number,
+        amount: t.total || 0,
+    }));
+
+    mapped.sort((a, b) => {
+        if (sortOrder === 'oldest') return new Date(a.date_time) - new Date(b.date_time);
+        return new Date(b.date_time) - new Date(a.date_time);
+    });
+
+    return mapped;
+}
+
+// Build activity list for reports/activity
+async function buildFilteredActivity({ startDate, endDate, user, activityType, sortOrder }) {
+    // For now, derive activity from transactions table
+    let query = supabase
+        .from('transactions')
+        .select('id, transaction_date, product_name, quantity');
+
+    if (startDate) query = query.gte('transaction_date', startDate);
+    if (endDate) query = query.lte('transaction_date', endDate);
+
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    const mapped = (rows || []).map(t => ({
+        date_time: t.transaction_date,
+        user: '',
+        activity_type: 'Transaction',
+        details: t.product_name ? `${t.product_name} (x${t.quantity || 0})` : 'N/A',
+        status: 'Completed',
+    }));
+
+    // Optional filtering by activityType
+    const filtered = activityType ? mapped.filter(a => a.activity_type.toLowerCase() === String(activityType).toLowerCase()) : mapped;
+
+    filtered.sort((a, b) => {
+        if (sortOrder === 'oldest') return new Date(a.date_time) - new Date(b.date_time);
+        return new Date(b.date_time) - new Date(a.date_time);
+    });
+
+    return filtered;
+}
+
+// CSV export for sales
+export const exportSalesCsv = async (req, res) => {
+    try {
+        const { startDate, endDate, store, sortOrder, filename } = req.query;
+        const sales = await buildFilteredSales({ startDate, endDate, store, sortOrder });
+
+        const safeName = (filename && String(filename).trim()) || 'sales-report';
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}.csv"`);
+
+        const header = ['Date', 'Store', 'Reference Number', 'Products Sold', 'Total Amount'];
+        const escapeCsv = (val) => {
+            const s = String(val ?? '');
+            const needsQuote = /[",\n]/.test(s);
+            const escaped = s.replace(/"/g, '""');
+            return needsQuote ? `"${escaped}"` : escaped;
+        };
+
+        const lines = [header.map(escapeCsv).join(',')].concat(
+            sales.map(row => [
+                escapeCsv(row.transaction_date),
+                escapeCsv(row.store_name),
+                escapeCsv(row.reference_number),
+                escapeCsv(row.products_sold),
+                escapeCsv(Number(row.total_amount).toFixed(2))
+            ].join(','))
+        );
+
+        // UTF-8 BOM for Excel compatibility
+        res.write('\uFEFF');
+        res.write(lines.join('\n'));
+        res.end();
+    } catch (error) {
+        console.error('Error exporting sales CSV:', error);
+        res.status(500).send('Failed to generate CSV');
+    }
+};
+
+// PDF export for sales
+export const exportSalesPdf = async (req, res) => {
+    try {
+        const { startDate, endDate, store, sortOrder, filename } = req.query;
+        const sales = await buildFilteredSales({ startDate, endDate, store, sortOrder });
+
+        const safeName = (filename && String(filename).trim()) || 'sales-report';
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
+
+        const doc = new PDFDocument({ margin: 40, size: 'A4' });
+        doc.pipe(res);
+
+        // Title
+        doc.fontSize(16).text('Sales Report', { align: 'center' });
+        doc.moveDown(0.5);
+
+        // Filters summary
+        const filtersSummary = [
+            startDate ? `Start: ${startDate}` : null,
+            endDate ? `End: ${endDate}` : null,
+            store ? `Store: ${store}` : null,
+            sortOrder ? `Sort: ${sortOrder}` : null
+        ].filter(Boolean).join(' | ');
+        if (filtersSummary) {
+            doc.fontSize(10).fillColor('#555').text(filtersSummary, { align: 'center' });
+            doc.moveDown(0.5);
+        }
+        doc.fillColor('#000');
+
+        // Table header
+        const headers = ['Date', 'Store', 'Reference #', 'Products Sold', 'Total'];
+        const columnWidths = [90, 100, 100, 180, 60];
+        const startX = doc.page.margins.left;
+        let y = doc.y + 10;
+
+        const drawRow = (cells, bold = false) => {
+            let x = startX;
+            cells.forEach((text, idx) => {
+                if (bold) doc.font('Helvetica-Bold'); else doc.font('Helvetica');
+                doc.fontSize(10).text(String(text ?? ''), x, y, { width: columnWidths[idx], continued: false });
+                x += columnWidths[idx];
+            });
+            y += 18;
+            if (y > doc.page.height - doc.page.margins.bottom - 40) {
+                doc.addPage();
+                y = doc.page.margins.top;
+            }
+        };
+
+        drawRow(headers, true);
+
+        sales.forEach(row => {
+            drawRow([
+                row.transaction_date,
+                row.store_name,
+                row.reference_number,
+                row.products_sold,
+                Number(row.total_amount).toFixed(2)
+            ]);
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error('Error exporting sales PDF:', error);
+        res.status(500).send('Failed to generate PDF');
     }
 };

@@ -26,49 +26,22 @@ function downloadFile() {
   }
 }
 
+function getCurrentSalesFilters() {
+  const startDate = document.getElementById('startDate')?.value || '';
+  const endDate = document.getElementById('endDate')?.value || '';
+  const store = document.getElementById('storeFilter')?.value || '';
+  const sortOrder = document.getElementById('sortOrder')?.value || '';
+  return { startDate, endDate, store, sortOrder };
+}
+
 function downloadCSV(filename) {
-  const table = document.getElementById('salesTable');
-  let csv = [];
-
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i];
-    let rowData = [];
-    const cells = Array.from(row.cells);
-
-    if (i === 0) {
-      // Header row
-      for (let cell of cells) {
-        rowData.push(`"${cell.textContent.trim()}"`);
-      }
-    } else {
-      // Date (1st cell)
-      const date = cells[0]?.textContent.trim();
-      rowData.push(`"${date}"`);
-
-      // Store (2nd cell)
-      const store = cells[1]?.textContent.trim();
-      rowData.push(`"${store}"`);
-
-      // Remaining cells (Reference Number, Product, Amount, etc.)
-      for (let j = 2; j < cells.length; j++) {
-        rowData.push(`"${cells[j].textContent.trim()}"`);
-      }
-    }
-
-    csv.push(rowData.join(','));
-  }
-
-  const csvContent = '\uFEFF' + csv.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${filename}.csv`;
-  link.click();
+  const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
+  const params = new URLSearchParams({ filename, startDate, endDate, store, sortOrder });
+  window.location.href = `/reports/sales/export/csv?${params.toString()}`;
 }
 
 function downloadPDF(filename) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.autoTable({ html: '#salesTable' });
-  doc.save(`${filename}.pdf`);
+  const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
+  const params = new URLSearchParams({ filename, startDate, endDate, store, sortOrder });
+  window.location.href = `/reports/sales/export/pdf?${params.toString()}`;
 }

@@ -67,6 +67,7 @@ body {
   padding: 40px;
   background-color: #fff;
   position: relative;
+  overflow: hidden;
 }
 
 .header {
@@ -225,4 +226,21 @@ h1 {
   background-color: #8b0000;
   color: white;
 }
+
+/* Dashboard table scroll handling */
+.table-container { margin-bottom: 20px; }
+.table-scroll {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+.table-scroll table { width: 100%; border-collapse: collapse; }
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f7f7;
+  z-index: 1;
+}
+.table-scroll tbody tr:nth-child(even) { background: #fafafa; }
 
