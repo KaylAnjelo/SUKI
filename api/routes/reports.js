@@ -1,7 +1,9 @@
 import express from 'express';
 import * as reportsController from '../controllers/reportsController.js';
-
+import { getSalesWithTotals } from '../controllers/reportsController.js';
 const router = express.Router();
+
+router.get('/sales-totals', getSalesWithTotals);
 
 router.get('/sales', reportsController.getReports);
 router.post('/sales/filter', reportsController.filterReports);
