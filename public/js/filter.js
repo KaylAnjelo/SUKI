@@ -1,4 +1,6 @@
 const today = new Date().toISOString().split('T')[0];
+// Track if filters were explicitly applied by the user
+window.filtersApplied = false;
 
 // Get date input elements
 const startDateInput = document.getElementById('startDate');
@@ -92,6 +94,8 @@ function updateTable(data) {
 
 // Function to apply filters
 async function applyFilters() {
+    // Mark that filters are now applied
+    window.filtersApplied = true;
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     const store = document.getElementById('storeFilter')?.value;

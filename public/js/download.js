@@ -36,12 +36,30 @@ function getCurrentSalesFilters() {
 
 function downloadCSV(filename) {
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
-  const params = new URLSearchParams({ filename, startDate, endDate, store, sortOrder });
+  const shouldIncludeFilters = window.filtersApplied === true;
+  const params = new URLSearchParams({ filename });
+  if (shouldIncludeFilters) {
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    if (store) params.set('store', store);
+    if (sortOrder) params.set('sortOrder', sortOrder);
+  } else {
+    if (sortOrder) params.set('sortOrder', sortOrder);
+  }
   window.location.href = `/reports/sales/export/csv?${params.toString()}`;
 }
 
 function downloadPDF(filename) {
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
-  const params = new URLSearchParams({ filename, startDate, endDate, store, sortOrder });
+  const shouldIncludeFilters = window.filtersApplied === true;
+  const params = new URLSearchParams({ filename });
+  if (shouldIncludeFilters) {
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    if (store) params.set('store', store);
+    if (sortOrder) params.set('sortOrder', sortOrder);
+  } else {
+    if (sortOrder) params.set('sortOrder', sortOrder);
+  }
   window.location.href = `/reports/sales/export/pdf?${params.toString()}`;
 }

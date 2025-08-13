@@ -65,17 +65,3 @@ app.get('/dashboard', async (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
 });
-
-async function run() {
-  const { data, error } = await supabase
-    .from('admin')
-    .select('*');
-
-  if (error) {
-    console.error('❌ Error:', error);
-  } else {
-    console.log('✅ Data:', data);
-  }
-}
-
-run();

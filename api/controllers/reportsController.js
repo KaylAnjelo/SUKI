@@ -43,6 +43,15 @@ export function formatDate(dateString) {
     return date.toLocaleDateString('en-US', options);
 }
 
+function formatDateMDY(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${mm}/${dd}/${yyyy}`;
+}
+
 export const getReports = async (req, res) => {
     try {
         // 1. Get all stores for filter dropdown
@@ -319,13 +328,13 @@ export const exportSalesPdf = async (req, res) => {
 
         // Filters summary
         const filtersSummary = [
-            startDate ? `Start: ${startDate}` : null,
-            endDate ? `End: ${endDate}` : null,
+            startDate ? `Start: ${formatDateMDY(startDate)}` : null,
+            endDate ? `End: ${formatDateMDY(endDate)}` : null,
             store ? `Store: ${store}` : null,
             sortOrder ? `Sort: ${sortOrder}` : null
         ].filter(Boolean).join(' | ');
         if (filtersSummary) {
-            doc.fontSize(10).fillColor('#555').text(filtersSummary, { align: 'center' });
+            doc.fontSize(8).fillColor('#555').text(filtersSummary, { align: 'center' });
             doc.moveDown(0.5);
         }
         doc.fillColor('#000');
@@ -340,7 +349,7 @@ export const exportSalesPdf = async (req, res) => {
             let x = startX;
             cells.forEach((text, idx) => {
                 if (bold) doc.font('Helvetica-Bold'); else doc.font('Helvetica');
-                doc.fontSize(10).text(String(text ?? ''), x, y, { width: columnWidths[idx], continued: false });
+                doc.fontSize(8).text(String(text ?? ''), x, y, { width: columnWidths[idx], continued: false });
                 x += columnWidths[idx];
             });
             y += 18;
@@ -354,7 +363,7 @@ export const exportSalesPdf = async (req, res) => {
 
         sales.forEach(row => {
             drawRow([
-                row.transaction_date,
+                formatDateMDY(row.transaction_date),
                 row.store_name,
                 row.reference_number,
                 row.products_sold,
