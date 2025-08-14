@@ -53,14 +53,7 @@ app.get("/transac", (req, res) => {
   });
 });
 
-app.get('/dashboard', async (req, res) => {
-  const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
-  const chartData = JSON.stringify([120, 150, 180]);
-  res.render('Dashboard', {
-    chartLabels,
-    chartData,
-  });
-});
+// Dashboard is handled by api/routes/dashboardRoutes.js → dashboardController.getDashboard
 
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
