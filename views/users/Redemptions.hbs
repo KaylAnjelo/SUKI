@@ -43,23 +43,69 @@
     <!-- Main Content -->
     <main class="main-content">
       <header class="top-bar" style="display:flex;justify-content:space-between;align-items:center;padding:20px;">
-        <h1 class="page-title" style="color:#B21700;font-weight:bold;">User Management</h1>
+        <h1 class="page-title" style="color:#B21700;font-weight:bold;">User Redemption</h1>
         <div class="top-actions" style="display:flex;align-items:center;gap:10px;">
           <i class="fas fa-bell" style="color:#B21700;"></i>
           <a href="/logout" id="logout" class="logout-link" style="color:#000;">Log out</a>
         </div>
       </header>
 
-      <section class="filter-search" style="margin-top:20px;">
-        <div style="display:flex;gap:10px;align-items:center;">
-          <select id="userType" style="padding:8px;border-radius:5px;border:1px solid #ccc;">
-            <option value="all">All</option>
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
-          </select>
-          <input type="text" id="searchUser" placeholder="Search for a user by their name or email" 
-                 style="flex:1;padding:8px;border-radius:5px;border:1px solid #ccc;">
-        </div>
+      <!-- Table -->
+      <section style="margin: 20px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background-color:#f8f8f8;text-align:left;">
+              <th style="padding:12px;">Customer Name</th>
+              <th style="padding:12px;">Redeemed Points</th>
+              <th style="padding:12px;">Transaction Number</th>
+              <th style="padding:12px;">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:12px;"><img src="/assets/user1.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Luna Valeria</td>
+              <td style="padding:12px;">85</td>
+              <td style="padding:12px;">00011</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr style="background-color:#f8faff;">
+              <td style="padding:12px;"><img src="/assets/user2.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Kalix Martinez</td>
+              <td style="padding:12px;">50</td>
+              <td style="padding:12px;">00010</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr>
+              <td style="padding:12px;"><img src="/assets/user3.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Yanna Fernandez</td>
+              <td style="padding:12px;">50</td>
+              <td style="padding:12px;">00009</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr style="background-color:#f8faff;">
+              <td style="padding:12px;"><img src="/assets/user4.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Hiro Juarez</td>
+              <td style="padding:12px;">60</td>
+              <td style="padding:12px;">00008</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr>
+              <td style="padding:12px;"><img src="/assets/user5.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Elyse Lodezana</td>
+              <td style="padding:12px;">30</td>
+              <td style="padding:12px;">00007</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr style="background-color:#f8faff;">
+              <td style="padding:12px;"><img src="/assets/user6.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Sevi Carmero</td>
+              <td style="padding:12px;">40</td>
+              <td style="padding:12px;">00006</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+            <tr>
+              <td style="padding:12px;"><img src="/assets/user7.png" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;"> Samantha Vera</td>
+              <td style="padding:12px;">25</td>
+              <td style="padding:12px;">00005</td>
+              <td style="padding:12px;">0992-992-3552</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </main>
   </div>

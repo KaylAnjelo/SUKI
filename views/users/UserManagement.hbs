@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUKI Incorporation - User Management</title>
-    <link rel="stylesheet" href="/css/AdminStyles.css">
-    <script src="/js/notifications.js" defer></script>
-    <script src="/js/logout.js" defer></script>
-    <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management</title>
+  <link rel="stylesheet" href="/css/AdminStyles.css" />
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar">
+  <div class="container">
+    <aside class="sidebar">
             <div class="logo">SUKI Incorporation</div>
             <nav class="nav">
                 <a href="/dashboard" class="nav-item">
@@ -22,195 +22,44 @@
                     <span class="dropdown-toggle">
                     <i class="fas fa-file-alt"></i>Generate Reports
                     </span>
-                    <div class="dropdown-menu">
-                        <a href="/reports/sales"><i class="fas fa-dollar-sign"></i>Sales</a>
-                        <a href="/reports/transactions"><i class="fas fa-receipt"></i>User Transactions</a>
-                        <a href="/reports/activity"><i class="fas fa-user-clock"></i>User Activity</a>
-                    </div>
+                        <div class="dropdown-menu">
+                            <a href="/reports/sales"><i class="fas fa-dollar-sign"></i>Sales</a>
+                            <a href="/reports/transactions"><i class="fas fa-receipt"></i>User Transactions</a>
+                            <a href="/reports/activity"><i class="fas fa-user-clock"></i>User Activity</a>
+                        </div>
                 </div>
                  <a href="/transac" class="nav-item">
                     <i class="fas fa-exchange-alt"></i>Transactions
                 </a>
-                <div class="nav-item dropdown active">
+                <div class="nav-item dropdown users active">
                     <span class="dropdown-toggle">
                         <i class="fas fa-users"></i>Users
                     </span>
-                    <div class="dropdown-menu">
-                        <a href="/users/Redemptions"><i class="fas fa-coins"></i>Redemptions</a>
-                        <a href="/users/UserManagement" class="nav-item active"><i class="fa-solid fa-fingerprint"></i>Management</a>
-                    </div>
+                        <div class="dropdown-menu">
+                            <a href="/users/Redemptions"> <i class="fas fa-coins"></i>Redemptions</a>
+                            <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
+                        </div>
                 </div>
             </nav>
         </aside>
+    <main class="main-content">
+      <div class="header">
+        <h1>User Management</h1>
+        <div class="notif-container">
+        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+        <div id="notificationsDropdown" style="display: none;">
+          <ul id="notificationsList"></ul>
+        </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+          
+      </div>
+      <div class="u-man">
 
-        <main class="main-content">
-            <div class="header">
-                <h1>User Management</h1>
-                <div class="notif-container">
-                    <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-                    <div id="notificationsDropdown" style="display: none;">
-                        <ul id="notificationsList"></ul>
-                    </div>
-                    <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-                        <button type="submit" class="logout">Log out</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="controls">
-                <select id="userTypeFilter">
-                    <option value="all">All</option>
-                    <option value="customer">Customer</option>
-                    <option value="store">Store</option>
-                    <option value="vendor">Vendor</option>
-                </select>
-
-                <input type="text" id="searchBar" placeholder="Search for a user by their name or email">
-            </div>
-
-            <div class="tables-section">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User Type</th>
-                                <th>Customer Name</th>
-                                <th>Email</th>
-                                <th>Date Created</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody">
-                            <tr>
-                                <td>Customer</td>
-                                <td>Yanna Fernandez</td>
-                                <td>yanna@example.com</td>
-                                <td>2024-01-15</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Customer</td>
-                                <td>Hiro Juarez</td>
-                                <td>hiro@example.com</td>
-                                <td>2024-01-20</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Store</td>
-                                <td>Luna Valeria</td>
-                                <td>luna@example.com</td>
-                                <td>2024-01-10</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Vendor</td>
-                                <td>Kalix Martinez</td>
-                                <td>kalix@example.com</td>
-                                <td>2024-01-25</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Customer</td>
-                                <td>Maria Santos</td>
-                                <td>maria@example.com</td>
-                                <td>2024-02-01</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Store</td>
-                                <td>Carlos Rodriguez</td>
-                                <td>carlos@example.com</td>
-                                <td>2024-01-30</td>
-                                <td>
-                                    <button class="action-btn edit-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        const userTypeFilter = document.getElementById('userTypeFilter');
-        const searchBar = document.getElementById('searchBar');
-        const tableBody = document.getElementById('userTableBody');
-
-        function handleUserTypeChange() {
-            const filterType = userTypeFilter.value.toLowerCase();
-            
-            // Navigate to specific pages based on selection
-            if (filterType === 'customer') {
-                window.location.href = '/users/Customer';
-            } else if (filterType === 'store') {
-                window.location.href = '/users/Store';
-            } else if (filterType === 'vendor') {
-                window.location.href = '/users/Vendor';
-            } else if (filterType === 'all') {
-                // Stay on current page and show all users
-                filterTable();
-            }
-        }
-
-        function filterTable() {
-            const filterType = userTypeFilter.value.toLowerCase();
-            const searchQuery = searchBar.value.toLowerCase();
-
-            for (let row of tableBody.rows) {
-                const type = row.cells[0].textContent.toLowerCase();
-                const name = row.cells[1].textContent.toLowerCase();
-                const email = row.cells[2].textContent.toLowerCase();
-
-                const matchesType = filterType === "all" || type === filterType;
-                const matchesSearch = name.includes(searchQuery) || email.includes(searchQuery);
-
-                row.style.display = matchesType && matchesSearch ? "" : "none";
-            }
-        }
-
-        userTypeFilter.addEventListener('change', handleUserTypeChange);
-        searchBar.addEventListener('input', filterTable);
-    </script>
+      </div>
+    </main>
+  </div>
 </body>
 </html>
