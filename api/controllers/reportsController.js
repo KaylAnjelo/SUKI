@@ -4,7 +4,6 @@ import PDFDocument from 'pdfkit';
 export const getSalesWithTotals = async (req, res) => {
   try {
     const { store_id, date } = req.query;
-
     // Aggregate directly in Supabase
     const { data, error } = await supabase
       .from('transactions')
@@ -213,7 +212,17 @@ export const filterReports = async (req, res) => {
 async function buildFilteredUserTransactions({ startDate, endDate, user, transactionType, sortOrder }) {
     let query = supabase
         .from('transactions')
-        .select('id, transaction_date, reference_number, total, product_name, quantity');
+        .select(`
+            id, 
+            transaction_date, 
+            reference_number, 
+            total, 
+            product_name, 
+            quantity,
+            store_id,
+            users(username),
+            stores(store_name)
+        `);
 
     if (startDate) query = query.gte('transaction_date', startDate);
     if (endDate) query = query.lte('transaction_date', endDate);
@@ -225,10 +234,12 @@ async function buildFilteredUserTransactions({ startDate, endDate, user, transac
 
     const mapped = (rows || []).map(t => ({
         date_time: t.transaction_date,
-        user: '',
+        user: t.users?.username || 'Unknown User',
         transaction_type: 'Transaction',
         transaction_id: t.reference_number,
         amount: t.total || 0,
+        store_name: t.stores?.store_name || 'Unknown Store',
+        product_details: t.product_name ? `${t.product_name} (x${t.quantity || 0})` : 'N/A'
     }));
 
     mapped.sort((a, b) => {
@@ -374,6 +385,118 @@ export const exportSalesPdf = async (req, res) => {
         doc.end();
     } catch (error) {
         console.error('Error exporting sales PDF:', error);
+        res.status(500).send('Failed to generate PDF');
+    }
+};
+
+// CSV export for transactions
+export const exportTransactionsCsv = async (req, res) => {
+    try {
+        const { startDate, endDate, user, transactionType, sortOrder, filename } = req.query;
+        const transactions = await buildFilteredUserTransactions({ startDate, endDate, user, transactionType, sortOrder });
+
+        const safeName = (filename && String(filename).trim()) || 'transactions-report';
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}.csv"`);
+
+        const header = ['Date', 'User', 'Transaction Type', 'Reference Number', 'Amount', 'Store', 'Product Details'];
+        const escapeCsv = (val) => {
+            const s = String(val ?? '');
+            const needsQuote = /[",\n]/.test(s);
+            const escaped = s.replace(/"/g, '""');
+            return needsQuote ? `"${escaped}"` : escaped;
+        };
+
+        const lines = [header.map(escapeCsv).join(',')].concat(
+            transactions.map(row => [
+                escapeCsv(formatDateMDY(row.date_time)),
+                escapeCsv(row.user),
+                escapeCsv(row.transaction_type),
+                escapeCsv(row.transaction_id),
+                escapeCsv(Number(row.amount).toFixed(2)),
+                escapeCsv(row.store_name),
+                escapeCsv(row.product_details)
+            ].join(','))
+        );
+
+        // UTF-8 BOM for Excel compatibility
+        res.write('\uFEFF');
+        res.write(lines.join('\n'));
+        res.end();
+    } catch (error) {
+        console.error('Error exporting transactions CSV:', error);
+        res.status(500).send('Failed to generate CSV');
+    }
+};
+
+// PDF export for transactions
+export const exportTransactionsPdf = async (req, res) => {
+    try {
+        const { startDate, endDate, user, transactionType, sortOrder, filename } = req.query;
+        const transactions = await buildFilteredUserTransactions({ startDate, endDate, user, transactionType, sortOrder });
+
+        const safeName = (filename && String(filename).trim()) || 'transactions-report';
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
+
+        const doc = new PDFDocument({ margin: 40, size: 'A4' });
+        doc.pipe(res);
+
+        // Title
+        doc.fontSize(16).text('User Transaction Report', { align: 'center' });
+        doc.moveDown(0.5);
+
+        // Filters summary
+        const filtersSummary = [
+            startDate ? `Start: ${formatDateMDY(startDate)}` : null,
+            endDate ? `End: ${formatDateMDY(endDate)}` : null,
+            user ? `User: ${user}` : null,
+            transactionType ? `Type: ${transactionType}` : null,
+            sortOrder ? `Sort: ${sortOrder}` : null
+        ].filter(Boolean).join(' | ');
+        if (filtersSummary) {
+            doc.fontSize(8).fillColor('#555').text(filtersSummary, { align: 'center' });
+            doc.moveDown(0.5);
+        }
+        doc.fillColor('#000');
+
+        // Table header
+        const headers = ['Date', 'User', 'Type', 'Reference #', 'Amount', 'Store', 'Details'];
+        const columnWidths = [70, 60, 60, 80, 50, 80, 120];
+        const startX = doc.page.margins.left;
+        let y = doc.y + 10;
+
+        const drawRow = (cells, bold = false) => {
+            let x = startX;
+            cells.forEach((text, idx) => {
+                if (bold) doc.font('Helvetica-Bold'); else doc.font('Helvetica');
+                doc.fontSize(8).text(String(text ?? ''), x, y, { width: columnWidths[idx], continued: false });
+                x += columnWidths[idx];
+            });
+            y += 18;
+            if (y > doc.page.height - doc.page.margins.bottom - 40) {
+                doc.addPage();
+                y = doc.page.margins.top;
+            }
+        };
+
+        drawRow(headers, true);
+
+        transactions.forEach(row => {
+            drawRow([
+                formatDateMDY(row.date_time),
+                row.user,
+                row.transaction_type,
+                row.transaction_id,
+                Number(row.amount).toFixed(2),
+                row.store_name,
+                row.product_details
+            ]);
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error('Error exporting transactions PDF:', error);
         res.status(500).send('Failed to generate PDF');
     }
 };

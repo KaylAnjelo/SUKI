@@ -8,6 +8,7 @@ import notificationRoutes from './api/routes/notificationRoutes.js';
 import reportsRoutes from './api/routes/reports.js';
 import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
+import userTransactionRoutes from './api/routes/userTransactionRoutes.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -38,6 +39,7 @@ app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
+app.use('/user-transactions', userTransactionRoutes);
 
 // Views
 app.get("/reports", (req, res) => {

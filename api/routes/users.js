@@ -6,7 +6,8 @@ router.get('/Redemptions', (req, res) => {
     res.render('users/Redemptions');
 });
 
-router.get('/UserManagement', (req, res) => {
+// User Management (support common aliases)
+router.get(['/UserManagement', '/usermanagement', '/user-management'], (req, res) => {
     res.render('users/UserManagement');
 });
 
@@ -20,6 +21,10 @@ router.get('/Store', (req, res) => {
 
 router.get('/Vendor', (req, res) => {
     res.render('users/Vendor');
+});
+
+router.get('/UserManagement/AddUser', (req, res) => {
+    res.render('users/AddUser');
 });
 
 export default router;

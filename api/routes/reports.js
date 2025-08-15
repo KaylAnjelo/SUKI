@@ -10,6 +10,10 @@ router.post('/sales/filter', reportsController.filterReports);
 router.get('/sales/export/csv', reportsController.exportSalesCsv);
 router.get('/sales/export/pdf', reportsController.exportSalesPdf);
 
+// Transaction export routes
+router.get('/transactions/export/csv', reportsController.exportTransactionsCsv);
+router.get('/transactions/export/pdf', reportsController.exportTransactionsPdf);
+
 router.get('/transactions', (req, res) => {
   res.render('reports/transactions');
 });
