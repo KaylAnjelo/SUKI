@@ -36,7 +36,7 @@
 
 .tables-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 13px;
   margin-top: 15px;
 }
@@ -57,13 +57,28 @@ table {
 
 th, td {
   text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
+  padding: 16px 12px;
+  border-bottom: none;
+}
+
+/* Alternating row colors */
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Remove hover effect to maintain clean look */
+table tbody tr:hover {
+  background-color: inherit;
 }
 
 th {
   font-size: 14px;
-  color: #555;
+  color: #333;
+  font-weight: 700;
 }
 
 td {
