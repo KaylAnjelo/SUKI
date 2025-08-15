@@ -18,15 +18,17 @@
                 <a href="/dashboard" class="nav-item">
                     <i class="fas fa-chart-line"></i>Dashboard
                 </a>
-                <div class="nav-item dropdown">
-                    <span class="dropdown-toggle">
-                    <i class="fas fa-file-alt"></i>Generate Reports
-                    </span>
-                        <div class="dropdown-menu">
-                            <a href="/reports/sales"><i class="fas fa-dollar-sign"></i>Sales</a>
-                            <a href="/reports/transactions"><i class="fas fa-receipt"></i>User Transactions</a>
-                            <a href="/reports/activity"><i class="fas fa-user-clock"></i>User Activity</a>
-                        </div>
+                
+    <div class="nav-item dropdown">
+        <span class="dropdown-toggle">
+            <i class="fas fa-users"></i> Users
+        </span>
+        <div class="dropdown-menu" style="display:block;">
+            <a href="/redemption" class="dropdown-item">Redemption</a>
+            <a href="/management" class="dropdown-item">Management</a>
+        </div>
+    </div>
+    
                 </div>
                  <a href="/transac" class="nav-item">
                     <i class="fas fa-exchange-alt"></i>Transactions
@@ -42,23 +44,27 @@
                 </div>
             </nav>
         </aside>
+    
     <main class="main-content">
-      <div class="header">
-        <h1>User Redemptions</h1>
-        <div class="notif-container">
-        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-        <div id="notificationsDropdown" style="display: none;">
-          <ul id="notificationsList"></ul>
-        </div>
-          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-            <button type="submit" class="logout">Log out</button>
-          </form>
-        </div>
-      </div>
-      <div class="u-redemps">
-        
-      </div>
+        <header class="top-bar">
+            <h1 class="page-title" style="color:#B21700;font-weight:bold;">User Management</h1>
+            <div class="top-actions">
+                <a href="#" id="logout" class="logout-link">Log out</a>
+            </div>
+        </header>
+        <section class="filter-search" style="margin-top:20px;">
+            <div style="display:flex;gap:10px;align-items:center;">
+                <select id="userType" style="padding:8px;border-radius:5px;border:1px solid #ccc;">
+                    <option value="all">All</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+                <input type="text" id="searchUser" placeholder="Search for a user by their name or email" 
+                       style="flex:1;padding:8px;border-radius:5px;border:1px solid #ccc;">
+            </div>
+        </section>
     </main>
+    
   </div>
 </body>
 </html>
