@@ -7,11 +7,13 @@
   <link rel="stylesheet" href="/css/AdminStyles.css" />
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
+  <script src="/js/filter.js" defer></script>
   <script src="/js/reports.js" defer></script>
   <script src="/js/download.js" defer></script>
   <script src="/js/pagination.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="/public/js/userTransactions.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -133,150 +135,16 @@
       </div>
     </main>
   </div>
-<script>
-  let currentExportType = '';
-
-  function openModal(type) {
-    currentExportType = type;
-    document.getElementById('fileModal').style.display = 'block';
-    document.getElementById('fileNameInput').value = `transactions-report-${new Date().toISOString().slice(0, 10)}`;
-  }
-
-  function closeModal() {
-    document.getElementById('fileModal').style.display = 'none';
-  }
-
-  function downloadFile() {
-    const filename = document.getElementById('fileNameInput').value || 'transactions-report';
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const user = document.getElementById('userFilter').value;
-    const transactionType = document.getElementById('transactionType').value;
-    const sortOrder = 'newest'; // Default sort
-
-    let url = '';
-    if (currentExportType === 'csv') {
-      url = `/reports/transactions/export/csv?filename=${encodeURIComponent(filename)}`;
-    } else if (currentExportType === 'pdf') {
-      url = `/reports/transactions/export/pdf?filename=${encodeURIComponent(filename)}`;
-    }
-
-    // Add filter parameters
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
-    if (user) url += `&user=${encodeURIComponent(user)}`;
-    if (transactionType) url += `&transactionType=${encodeURIComponent(transactionType)}`;
-    if (sortOrder) url += `&sortOrder=${sortOrder}`;
-
-    window.open(url, '_blank');
-    closeModal();
-  }
-
-  // Close modal when clicking outside
-  window.onclick = function(event) {
-    const modal = document.getElementById('fileModal');
-    if (event.target === modal) {
-      closeModal();
-    }
-  }
-
-  // Populate user dropdown
-  async function populateUserDropdown() {
-    try {
-      const response = await fetch('/user-transactions/users');
-      const users = await response.json();
-      
-      const userFilter = document.getElementById('userFilter');
-      userFilter.innerHTML = '<option value="">All Users</option>';
-      
-      users.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user;
-        option.textContent = user;
-        userFilter.appendChild(option);
-      });
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  }
-
-  // Display transactions in table
-  function displayTransactions(transactions) {
-    const tbody = document.querySelector('#transactionsTable tbody');
-    tbody.innerHTML = '';
-    
-    if (transactions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7">No transactions found</td></tr>';
-      return;
-    }
-    
-    transactions.forEach(transaction => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${transaction.date}</td>
-        <td>${transaction.user}</td>
-        <td>${transaction.transaction_type}</td>
-        <td>${transaction.reference_number}</td>
-        <td>₱${parseFloat(transaction.amount).toFixed(2)}</td>
-        <td>${transaction.store}</td>
-        <td>${transaction.product_details || 'N/A'}</td>
-      `;
-      tbody.appendChild(row);
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        if (typeof applyFilters === 'function') {
+          applyFilters();
+        }
+      } catch (e) {
+        console.error('Failed to fetch initial transactions:', e);
+      }
     });
-  }
-
-  // Apply filters and fetch data
-  async function applyFilters() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const user = document.getElementById('userFilter').value;
-    const transactionType = document.getElementById('transactionType').value;
-    const sortOrder = 'newest';
-
-    try {
-      const response = await fetch('/user-transactions/filter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          startDate,
-          endDate,
-          user,
-          transactionType,
-          sortOrder
-        })
-      });
-
-      const transactions = await response.json();
-      displayTransactions(transactions);
-    } catch (error) {
-      console.error('Error applying filters:', error);
-    }
-  }
-
-  // Add event listener to apply filters button
-  document.getElementById('applyFilters').addEventListener('click', applyFilters);
-
-  document.addEventListener('DOMContentLoaded', function() {
-    // Set default dates
-    const endDate = document.getElementById('endDate');
-    const startDate = document.getElementById('startDate');
-    
-    // Set end date to today
-    endDate.valueAsDate = new Date();
-    
-    // Set start date to 30 days ago
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    startDate.valueAsDate = thirtyDaysAgo;
-
-    // Populate user dropdown
-    populateUserDropdown();
-    
-    // Load initial data
-    applyFilters();
-  });
-</script>
+  </script>
 </body>
 </html>

@@ -46,50 +46,38 @@ function validateDates() {
 
 // Function to update the table with filtered data
 function updateTable(data) {
-    const tableBody = document.querySelector('table tbody');
-    if (!tableBody) return;
+    // Use a generic renderer per page context
+    const path = window.location.pathname || '';
 
-    // Clear existing table rows
-    tableBody.innerHTML = '';
-
-    if (data.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6">No data available.</td>';
-        tableBody.appendChild(row);
+    if (path.includes('/reports/sales')) {
+        renderTable(
+            data,
+            '#salesTable',
+            ['transaction_date', 'store_name', 'reference_number', 'products_sold', 'total_amount'],
+            'No sales data available.'
+        );
         return;
     }
 
-    // Add new rows based on the filtered data
-    data.forEach(item => {
-        const row = document.createElement('tr');
-        // Adjust the row content based on the page type
-        if (window.location.pathname.includes('/reports/sales')) {
-            row.innerHTML = `
-                <td>${formatDate(item.transaction_date)}</td>
-                <td>${item.store_name}</td>
-                <td>${item.reference_number}</td>
-                <td>${item.products_sold}</td>
-                <td>₱${parseFloat(item.total_amount).toFixed(2)}</td>
-            `;
-        } else if (window.location.pathname.includes('/reports/activity')) {
-            row.innerHTML = `
-                <td>${formatDate(item.date_time)}</td>
-                <td>${item.user}</td>
-                <td>${item.activity_type}</td>
-                <td>${item.details}</td>
-                <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
-            `;
-        } else if (window.location.pathname.includes('/reports/transactions')) {
-            row.innerHTML = `
-                <td>${formatDate(item.date_time)}</td>
-                <td>${item.user}</td>
-                <td>${item.transaction_type}</td>
-                <td>${item.transaction_id}</td>
-                <td>₱${parseFloat(item.amount).toFixed(2)}</td>
-            `;
-        }
-        tableBody.appendChild(row);
-    });
+    if (path.includes('/reports/transactions')) {
+        renderTable(
+            data,
+            '#transactionsTable',
+            ['date_time', 'user', 'transaction_type', 'transaction_id', 'amount', 'store_name', 'product_details'],
+            'No transactions found.'
+        );
+        return;
+    }
+
+    if (path.includes('/reports/activity')) {
+        renderTable(
+            data,
+            'table',
+            ['date_time', 'user', 'activity_type', 'details', 'status'],
+            'No activity found.'
+        );
+        return;
+    }
 }
 
 // Function to apply filters
@@ -152,6 +140,49 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
+}
+
+// Generic table renderer used across pages
+function renderTable(data, tableSelector, columns, emptyMessage) {
+    const tbody = document.querySelector(`${tableSelector} tbody`) || document.querySelector('table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        const colspan = Array.isArray(columns) && columns.length > 0 ? columns.length : 1;
+        tbody.innerHTML = `<tr><td colspan="${colspan}">${emptyMessage}</td></tr>`;
+        return;
+    }
+
+    data.forEach(item => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = columns.map(col => {
+            let value = item[col];
+
+            // Format currency
+            if (col.toLowerCase().includes('amount') || col.toLowerCase().includes('total')) {
+                const numeric = parseFloat(value);
+                value = isFinite(numeric) ? `₱${numeric.toFixed(2)}` : value;
+            }
+
+            // Format date
+            if (col.toLowerCase().includes('date') && value) {
+                value = formatDate(value);
+            }
+
+            // Status badge styling for activity if present
+            if (col.toLowerCase() === 'status' && typeof value === 'string') {
+                const css = value.toLowerCase();
+                return `<td><span class="status-badge ${css}">${value}</span></td>`;
+            }
+
+            return `<td>${value || 'N/A'}</td>`;
+        }).join('');
+
+        tbody.appendChild(row);
+    });
 }
 
 // Add event listener for filter button

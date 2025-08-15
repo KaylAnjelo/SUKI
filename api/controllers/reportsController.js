@@ -217,6 +217,7 @@ async function buildFilteredUserTransactions({ startDate, endDate, user, transac
             transaction_date, 
             reference_number, 
             total, 
+            transaction_type,
             product_name, 
             quantity,
             store_id,
@@ -235,7 +236,7 @@ async function buildFilteredUserTransactions({ startDate, endDate, user, transac
     const mapped = (rows || []).map(t => ({
         date_time: t.transaction_date,
         user: t.users?.username || 'Unknown User',
-        transaction_type: 'Transaction',
+        transaction_type: t.transaction_type || 'Purchase',
         transaction_id: t.reference_number,
         amount: t.total || 0,
         store_name: t.stores?.store_name || 'Unknown Store',
