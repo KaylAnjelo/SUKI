@@ -9,6 +9,7 @@ import reportsRoutes from './api/routes/reports.js';
 import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import userTransactionRoutes from './api/routes/userTransactionRoutes.js';
+import vendorRoutes from './api/routes/vendor.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -40,6 +41,7 @@ app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/user-transactions', userTransactionRoutes);
+app.use('/vendor', vendorRoutes);
 
 // Views
 app.get("/reports", (req, res) => {
@@ -54,8 +56,6 @@ app.get("/transac", (req, res) => {
     chartData,
   });
 });
-
-// Dashboard is handled by api/routes/dashboardRoutes.js → dashboardController.getDashboard
 
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
