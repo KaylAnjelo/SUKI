@@ -11,6 +11,7 @@
   <script src="/js/reports.js" defer></script>
   <script src="/js/download.js" defer></script>
   <script src="/js/pagination.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="/public/js/userTransactions.js" defer></script>
@@ -20,38 +21,29 @@
 <body>
   <div class="container">
     <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
       <div class="logo">SUKI Incorporation</div>
         <nav class="nav">
           <a href="/dashboard" class="nav-item">
-              <i class="fas fa-chart-line"></i>Dashboard
+              <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
           </a>
-          <div class="nav-item dropdown">
-            <span class="dropdown-toggle">
-            <i class="fas fa-file-alt"></i>Generate Reports
-            </span>
-              <div class="dropdown-menu">
-                  <a href="/reports/sales" class="dropdown-item "><i class="fas fa-dollar-sign"></i>Sales</a>
-                  <a href="/reports/transactions" class="dropdown-item active"><i class="fas fa-receipt"></i>User Transactions</a>
-                  <a href="/reports/activity" class="dropdown-item"><i class="fas fa-user-clock"></i>User Activity</a>
-              </div>
-          </div>
+          <a href="/reports" class="nav-item active">
+            <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+          </a>
           <a href="/transac" class="nav-item">
-            <i class="fas fa-exchange-alt"></i>Transactions
+            <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
           </a>
-          <div class="nav-item dropdown">
-            <span class="dropdown-toggle">
-                <i class="fas fa-users"></i>Users
-            </span>
-              <div class="dropdown-menu">
-                <a href="/users/Redemptions"> <i class="fas fa-coins"></i>Redemptions</a>
-                <a href="/users/UserManagement"><i class="fa-solid fa-fingerprint"></i>Management</a>
-              </div>
-          </div>
+          <a href="/users/UserManagement" class="nav-item">
+            <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+          </a>
         </nav>
       </aside>
     <main class="main-content">
       <div class="header">
-        <h1>User Transaction Reports</h1>
+        <div>
+          <a href="/reports"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
+          <h1>User Transaction Reports</h1>
+        </div>
         <div class="notif-container">
           <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
           <div id="notificationsDropdown" style="display: none;">
