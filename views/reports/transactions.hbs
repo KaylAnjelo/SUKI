@@ -14,7 +14,6 @@
   <script src="/js/sidebar.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="/public/js/userTransactions.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -128,7 +127,25 @@
     </main>
   </div>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        // Populate users dropdown
+        const res = await fetch('/reports/transactions/users');
+        if (res.ok) {
+          const users = await res.json();
+          const sel = document.getElementById('userFilter');
+          if (Array.isArray(users) && sel) {
+            users.forEach(u => {
+              const opt = document.createElement('option');
+              opt.value = u;
+              opt.textContent = u;
+              sel.appendChild(opt);
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Could not populate users list:', e);
+      }
       try {
         if (typeof applyFilters === 'function') {
           applyFilters();
