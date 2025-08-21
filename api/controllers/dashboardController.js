@@ -1,11 +1,5 @@
 import supabase from '../../config/db.js';
-
-// Helper
-export function formatDate(dateString) {
-  const date = new Date(dateString);
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return date.toLocaleDateString('en-US', options);
-}
+import { formatDate, getWeekStartUTC } from '../utils/date.js';
 
 export const getDashboard = async (req, res) => {
   try {
@@ -37,15 +31,7 @@ export const getDashboard = async (req, res) => {
 
     // Recent Transactions (with user and store info) - last 12 weeks for weekly chart
     const now = new Date();
-    const getWeekStart = (d) => {
-      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-      const day = date.getUTCDay(); // 0=Sun..6=Sat
-      const diffToMonday = (day === 0 ? -6 : 1) - day; // Monday as start of week
-      date.setUTCDate(date.getUTCDate() + diffToMonday);
-      date.setUTCHours(0, 0, 0, 0);
-      return date;
-    };
-    const currentWeekStart = getWeekStart(now);
+    const currentWeekStart = getWeekStartUTC(now);
     const startWeekStart = new Date(currentWeekStart);
     startWeekStart.setUTCDate(startWeekStart.getUTCDate() - 11 * 7); // 12 weeks window
     const startOfWindow = startWeekStart.toISOString().slice(0, 10);
@@ -86,7 +72,7 @@ export const getDashboard = async (req, res) => {
 
         // Aggregate points per week (week starts Monday)
         const txDate = new Date(transaction.transaction_date);
-        const weekStart = getWeekStart(txDate);
+        const weekStart = getWeekStartUTC(txDate);
         const weekKey = weekStart.toISOString().slice(0, 10); // YYYY-MM-DD
         const currentPoints = pointsPerWeekMap.get(weekKey) || 0;
         pointsPerWeekMap.set(weekKey, currentPoints + (Number(transaction.points) || 0));

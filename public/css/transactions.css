@@ -1,0 +1,35 @@
+.status-success { 
+    background-color: #d1e7dd; 
+    color: #0f5132; 
+    padding: 4px 12px; 
+    border-radius: 12px; 
+    font-size: 0.9rem; 
+}
+
+.status-error { 
+    background-color: #f8d7da; 
+    color: #842029; 
+    padding: 4px 12px; 
+    border-radius: 12px; 
+    font-size: 0.9rem; 
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+thead th, tbody td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+thead th { 
+    background-color: #f7f7f7; 
+    position: sticky; 
+    top: 0; 
+}
+
+tbody tr:nth-child(even) { 
+    background: #fafafa; 
+}

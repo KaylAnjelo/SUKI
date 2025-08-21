@@ -21,10 +21,10 @@ export const login = async (req, res) => {
     }
 
     if (data) {
-      // Log the admin login
+      // Log the admin login (column is login_time in DB)
       const logInsert = await supabase
         .from('admin_logs')
-        .insert([{ admin_name: username, timestamp: new Date().toISOString() }]);
+        .insert([{ admin_name: username, login_time: new Date().toISOString() }]);
 
       if (logInsert.error) {
         console.error('Failed to log admin login:', logInsert.error);

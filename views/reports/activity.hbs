@@ -8,6 +8,7 @@
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/reports.js" defer></script>
+  <script src="/js/filter.js" defer></script>
   <script src="/js/download.js" defer></script>
   <script src="/js/pagination.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
@@ -78,10 +79,6 @@
           <label for="userFilter">User:</label>
           <select id="userFilter" name="user">
             <option value="">All Users</option>
-            <option value="">Student</option>
-            <option value="">Staff</option>
-            <option value="">Out-of-School</option>
-            <!-- Populate dynamically -->
           </select>
         </div>
 
@@ -89,7 +86,7 @@
           <label for="activityType">Activity Type:</label>
           <select id="activityType" name="activityType">
             <option value="">All Activities</option>
-            <option value="transaction">Transaction</option>
+            <option value="purchase">Purchase</option>
             <option value="redemption">Redemption</option>
           </select>
         </div>
@@ -129,7 +126,23 @@
     </main>
   </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Populate users dropdown
+    try {
+      const res = await fetch('/reports/activity/users');
+      if (res.ok) {
+        const users = await res.json();
+        const sel = document.getElementById('userFilter');
+        if (Array.isArray(users) && sel) {
+          users.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u;
+            opt.textContent = u;
+            sel.appendChild(opt);
+          });
+        }
+      }
+    } catch (_) {}
     // Kick off an initial fetch to populate and initialize pagination
     const applyFiltersBtn = document.getElementById('applyFilters');
     if (applyFiltersBtn) {

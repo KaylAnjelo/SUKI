@@ -35,7 +35,11 @@ function getCurrentSalesFilters() {
 }
 
 function downloadCSV(filename) {
+  const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
+  const user = document.getElementById('userFilter')?.value || '';
+  const activityType = document.getElementById('activityType')?.value || '';
+  const transactionType = document.getElementById('transactionType')?.value || '';
   const shouldIncludeFilters = window.filtersApplied === true;
   const params = new URLSearchParams({ filename });
   if (shouldIncludeFilters) {
@@ -43,14 +47,24 @@ function downloadCSV(filename) {
     if (endDate) params.set('endDate', endDate);
     if (store) params.set('store', store);
     if (sortOrder) params.set('sortOrder', sortOrder);
+    if (user) params.set('user', user);
+    if (activityType) params.set('activityType', activityType);
+    if (transactionType) params.set('transactionType', transactionType);
   } else {
     if (sortOrder) params.set('sortOrder', sortOrder);
   }
-  window.location.href = `/reports/sales/export/csv?${params.toString()}`;
+  let endpoint = '/reports/sales/export/csv';
+  if (path.includes('/reports/transactions')) endpoint = '/reports/transactions/export/csv';
+  if (path.includes('/reports/activity')) endpoint = '/reports/activity/export/csv';
+  window.location.href = `${endpoint}?${params.toString()}`;
 }
 
 function downloadPDF(filename) {
+  const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
+  const user = document.getElementById('userFilter')?.value || '';
+  const activityType = document.getElementById('activityType')?.value || '';
+  const transactionType = document.getElementById('transactionType')?.value || '';
   const shouldIncludeFilters = window.filtersApplied === true;
   const params = new URLSearchParams({ filename });
   if (shouldIncludeFilters) {
@@ -58,8 +72,14 @@ function downloadPDF(filename) {
     if (endDate) params.set('endDate', endDate);
     if (store) params.set('store', store);
     if (sortOrder) params.set('sortOrder', sortOrder);
+    if (user) params.set('user', user);
+    if (activityType) params.set('activityType', activityType);
+    if (transactionType) params.set('transactionType', transactionType);
   } else {
     if (sortOrder) params.set('sortOrder', sortOrder);
   }
-  window.location.href = `/reports/sales/export/pdf?${params.toString()}`;
+  let endpoint = '/reports/sales/export/pdf';
+  if (path.includes('/reports/transactions')) endpoint = '/reports/transactions/export/pdf';
+  if (path.includes('/reports/activity')) endpoint = '/reports/activity/export/pdf';
+  window.location.href = `${endpoint}?${params.toString()}`;
 }
