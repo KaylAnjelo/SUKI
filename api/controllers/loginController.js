@@ -1,46 +1,54 @@
-import supabase from '../../config/db.js';
+import bcrypt from "bcrypt";
+import supabase from "../../config/db.js";
 
 export const login = async (req, res) => {
-  const { username, password } = req.body;
+  const username = req.body.username?.trim();
+  const password = req.body.password?.trim();
 
   if (!username || !password) {
-    return res.render('index', { error: 'Please enter both username and password' });
+    return res.render("index", { error: "Please enter both username and password" });
   }
 
   try {
-    const { data, error } = await supabase
-      .from('admin')
-      .select('*')
-      .eq('username', username)
-      .eq('password', password)
-      .single();
+    const { data: user, error } = await supabase
+      .from("admin")
+      .select("id, username, password")
+      .eq("username", username)
+      .maybeSingle();
 
     if (error) {
-      console.error('Database error:', error);
-      return res.render('index', { error: 'An error occurred while checking your credentials.' });
+      console.error("Database error:", error);
+      return res.render("index", { error: "Error checking credentials" });
     }
 
-    if (data) {
-      // Log the admin login (column is login_time in DB)
-      const logInsert = await supabase
-        .from('admin_logs')
-        .insert([{ admin_name: username, login_time: new Date().toISOString() }]);
-
-      if (logInsert.error) {
-        console.error('Failed to log admin login:', logInsert.error);
-      }
-
-      return res.redirect('/Dashboard');
-    } else {
-      return res.render('index', { error: 'Invalid username or password, try again.' });
+    if (!user) {
+      return res.render("index", { error: "Invalid username or password" });
     }
 
+    console.log("🔎 User from DB:", user);
+
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
+      return res.render("index", { error: "Invalid username or password" });
+    }
+
+    // Optional: store session
+    req.session.user = { id: user.id, username: user.username };
+
+    await supabase.from("admin_logs").insert([
+      { admin_name: username, login_time: new Date().toISOString() }
+    ]);
+
+    return res.redirect("/Dashboard");
   } catch (err) {
-    console.error('Unexpected error:', err);
-    return res.render('index', { error: 'Server error. Please try again.' });
+    console.error("Unexpected error:", err);
+    return res.render("index", { error: "Server error. Please try again." });
   }
 };
 
 export const logout = (req, res) => {
-  res.redirect('/');
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
 };

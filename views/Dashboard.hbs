@@ -106,6 +106,8 @@
                     </div>
                 </div>
             </div>
+
+			<!-- Charts -->
 			<div class="charts-row">
 				<div class="chart-container">
 				  <canvas id="pointsPerDayChart"></canvas>
@@ -116,74 +118,121 @@
 			</div>
         </main>
     </div>
+
     <script>
-  // Safely hydrate chart data
-  const pointsPerDayLabels = {{#if pointsPerDayLabels}}{{{pointsPerDayLabels}}}{{else}}[]{{/if}};
-  const pointsPerDayData = {{#if pointsPerDayData}}{{{pointsPerDayData}}}{{else}}[]{{/if}};
-  const storeLabels = {{#if storeLabels}}{{{storeLabels}}}{{else}}[]{{/if}};
-  const storeEngagementData = {{#if storeEngagementData}}{{{storeEngagementData}}}{{else}}[]{{/if}};
+      // Safely hydrate chart data
+      const pointsPerDayLabels = {{#if pointsPerDayLabels}}{{{pointsPerDayLabels}}}{{else}}[]{{/if}};
+      const pointsPerDayData = {{#if pointsPerDayData}}{{{pointsPerDayData}}}{{else}}[]{{/if}};
+      const storeLabels = {{#if storeLabels}}{{{storeLabels}}}{{else}}[]{{/if}};
+      const storeEngagementData = {{#if storeEngagementData}}{{{storeEngagementData}}}{{else}}[]{{/if}};
 
-  // Register DataLabels plugin for Chart.js
-  if (window.Chart && window.ChartDataLabels) {
-    Chart.register(ChartDataLabels);
-  }
-
-  // Bar Chart: Points Earned Per Day
-  const pointsPerDayCtx = document.getElementById('pointsPerDayChart').getContext('2d');
-  const pointsPerDayChart = new Chart(pointsPerDayCtx, {
-    type: 'bar',
-    data: {
-      labels: pointsPerDayLabels,
-      datasets: [{
-        label: 'Points Earned',
-        data: pointsPerDayData,
-        backgroundColor: '#7D0006',
-        borderColor: '#7D0006',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { beginAtZero: true },
-        y: { beginAtZero: true }
+      // Register DataLabels plugin
+      if (window.Chart && window.ChartDataLabels) {
+        Chart.register(ChartDataLabels);
       }
-    }
-  });
 
-  const storeEngagementCtx = document.getElementById('storeEngagementChart').getContext('2d');
-  const storeEngagementChart = new Chart(storeEngagementCtx, {
-    type: 'pie',
-    data: {
-      labels: storeLabels,
-      datasets: [{
-        label: 'Customer Engagement',
-        data: storeEngagementData,
-        backgroundColor: [
-          '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
-        ]
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'right' },
-        datalabels: {
-          color: '#fff',
-          font: { weight: 'bold' },
-          formatter: (value, ctx) => {
-            const label = ctx.chart?.data?.labels?.[ctx.dataIndex] || '';
-            const data = ctx.dataset?.data || [];
-            const total = data.reduce((a, b) => a + (Number(b) || 0), 0);
-            const pct = total ? (value / total * 100).toFixed(1) : 0;
-            return `${label}: ${value} (${pct}%)`;
+      // ===== Points Per Day Chart =====
+      const pointsPerDayCtx = document.getElementById('pointsPerDayChart').getContext('2d');
+      const gradient = pointsPerDayCtx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, '#C72C41');
+      gradient.addColorStop(1, '#7D0006');
+
+      new Chart(pointsPerDayCtx, {
+        type: 'bar',
+        data: {
+          labels: pointsPerDayLabels,
+          datasets: [{
+            label: 'Points Earned',
+            data: pointsPerDayData,
+            backgroundColor: gradient,
+            borderColor: '#7D0006',
+            borderWidth: 2,
+            hoverBackgroundColor: '#F8C471'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 1200,
+            easing: 'easeOutBounce'
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 5 }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { font: { size: 14, weight: 'bold' }, color: '#333' }
+            },
+            tooltip: {
+              backgroundColor: '#333',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} pts`
+              }
+            },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#333',
+              font: { size: 12, weight: 'bold' }
+            }
           }
         }
-      }
-    }
-  });
-</script>
+      });
+
+      // ===== Store Engagement Chart =====
+      const storeEngagementCtx = document.getElementById('storeEngagementChart').getContext('2d');
+      new Chart(storeEngagementCtx, {
+        type: 'pie',
+        data: {
+          labels: storeLabels,
+          datasets: [{
+            label: 'Customer Engagement',
+            data: storeEngagementData,
+            backgroundColor: [
+              '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { size: 13, weight: 'bold' }, color: '#444' }
+            },
+            tooltip: {
+              backgroundColor: '#222',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: (ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                  return `${ctx.label}: ${ctx.raw} (${pct}%)`;
+                }
+              }
+            },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (value, ctx) => {
+                const total = ctx.dataset?.data?.reduce((a, b) => a + b, 0);
+                const pct = total ? (value / total * 100).toFixed(1) : 0;
+                return `${pct}%`;
+              }
+            }
+          }
+        }
+      });
+    </script>
 </body>
 </html>
