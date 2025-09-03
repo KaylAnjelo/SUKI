@@ -1,5 +1,8 @@
 import express from 'express';
+import multer from 'multer';
+import * as UserManagementController from "../controllers/UserManagementController.js";
 
+const upload = multer();
 const router = express.Router();
 
 router.get('/Redemptions', (req, res) => {
@@ -11,13 +14,13 @@ router.get(['/UserManagement', '/usermanagement', '/user-management'], (req, res
     res.render('users/UserManagement');
 });
 
-router.get('/Customer', (req, res) => {
-    res.render('users/Customer');
-});
+// Customers (fetch + render table)
+router.get('/customers', UserManagementController.getCustomers);
 
-router.get('/Store', (req, res) => {
-    res.render('users/Store');
-});
+router.get('/stores', UserManagementController.getStores);
+router.post('/stores/add', upload.single('storeImage'), UserManagementController.addStore);
+router.post('/stores/delete/:id', UserManagementController.deleteStore);
+
 
 router.get('/Vendor', (req, res) => {
     res.render('users/Vendor');

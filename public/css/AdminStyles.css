@@ -491,6 +491,32 @@ h1 {
   font-size: 16px;
 }
 
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #b71c1c; /* dark red */
+    font-size: 18px;
+    transition: color 0.2s ease;
+}
+
+.icon-btn:hover {
+    color: #ff4444; /* lighter red on hover */
+}
+
+.store-thumbnail {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* circular frame */
+    object-fit: cover; /* crop to fit nicely */
+}
+
+.store-placeholder {
+    font-size: 20px;
+    color: #ccc;
+}
+
+
 /* --- Responsive Filters --- */
 .filters-container {
   display: flex;

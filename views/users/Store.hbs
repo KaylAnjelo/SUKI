@@ -8,6 +8,7 @@
     <script src="/js/notifications.js" defer></script>
     <script src="/js/logout.js" defer></script>
     <script src="/js/sidebar.js" defer></script>
+    <script src = "/js/stores.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -51,74 +52,103 @@
             
             <div class="tables-section">
                 <div class="table-container">
+                    {{#if stores.length}}
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Store Name</th>
+                                <th>Owner Name</th>
+                                <th>Contact Info</th>
+                                <th>Store Code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each stores}}
+                            <tr>
+                               <td>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    {{#if this.store_image}}
+                                        <img src="{{this.store_image}}" alt="Store Image" class="store-thumbnail">
+                                    {{else}}
+                                        <i class="fas fa-store store-placeholder"></i>
+                                    {{/if}}
+                                    <span>{{this.store_name}}</span>
+                                </div>
+                                </td>
+                                <td>{{this.owner_name}}</td>
+                                <td>{{this.owner_contact}}</td>
+                                <td>{{this.store_code}}</td>
+                                <td>
+                                    <!-- Delete Form -->
+                                    <form action="/users/Store/delete/{{this.owner_id}}" method="POST" style="display:inline;" onsubmit = "return confirmDelete(this);">
+                                        <button type="submit" class="icon-btn" title="Delete Store">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td> 
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                    {{else}}
                     <div style="text-align: center; padding: 60px 20px; color: #666;">
                         <i class="fas fa-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
                         <h2 style="margin: 0; color: #333;">No stores available at this time</h2>
                         <p style="margin: 10px 0 0 0; color: #666;">Start by adding your first store.</p>
                     </div>
+                    {{/if}}
                 </div>
             </div>
-            
             <div style="text-align: right; margin-top: 20px;">
                 <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
                     <i class="fas fa-plus"></i>Add Store
                 </button>
             </div>
 
-            <!-- Add Store Modal -->
+           <!-- Add Store Modal -->
             <div id="addStoreModal" class="modal" style="display: none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2>Add Store</h2>
-                        <span class="close" onclick="closeAddStoreForm()">&times;</span>
+                        <span class="close" onclick="closeModal()">&times;</span>
                     </div>
-                    <form class="add-store-form">
+
+                    <form class="add-store-form" action="/users/stores/add" method="POST" enctype="multipart/form-data">
+                        
                         <div class="form-group">
                             <label for="storeName">Store Name</label>
                             <input type="text" id="storeName" name="storeName" required>
                         </div>
+
                         <div class="form-group">
                             <label for="ownerName">Owner's Name</label>
                             <input type="text" id="ownerName" name="ownerName" required>
                         </div>
+
                         <div class="form-group">
                             <label for="contactInfo">Contact Information</label>
                             <input type="text" id="contactInfo" name="contactInfo" required>
                         </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="storeImage">Store Image</label>
+                            <input type="file" id="storeImage" name="storeImage" accept="image/*">
+                        </div>
+
                         <div class="form-actions">
-                            <button type="button" class="cancel-btn" onclick="closeAddStoreForm()">Cancel</button>
+                            <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
                             <button type="submit" class="submit-btn">Add Store</button>
                         </div>
+
                     </form>
                 </div>
             </div>
         </main>
     </div>
-
-    <script>
-        function showAddStoreForm() {
-            document.getElementById('addStoreModal').style.display = 'block';
-        }
-
-        function closeAddStoreForm() {
-            document.getElementById('addStoreModal').style.display = 'none';
-        }
-
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modal = document.getElementById('addStoreModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Handle form submission
-        document.querySelector('.add-store-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Here you would typically send the data to your server
-            alert('Store added successfully!');
-            closeAddStoreForm();
-        });
-    </script>
 </body>
 </html> 
