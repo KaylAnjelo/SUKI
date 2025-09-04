@@ -40,7 +40,7 @@ export const login = async (req, res) => {
       { admin_name: username, login_time: new Date().toISOString() }
     ]);
 
-    return res.redirect("/Dashboard");
+    return res.redirect("/dashboard");
   } catch (err) {
     console.error("Unexpected error:", err);
     return res.render("index", { error: "Server error. Please try again." });

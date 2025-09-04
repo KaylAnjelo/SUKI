@@ -18,6 +18,9 @@ router.get(['/UserManagement', '/usermanagement', '/user-management'], (req, res
 router.get('/customers', UserManagementController.getCustomers);
 
 router.get('/stores', UserManagementController.getStores);
+// Add the missing route for /users/Store
+router.get('/Store', UserManagementController.getStores);
+router.get('/test-connection', UserManagementController.testConnection);
 router.post('/stores/add', upload.single('storeImage'), UserManagementController.addStore);
 router.post('/stores/delete/:id', UserManagementController.deleteStore);
 

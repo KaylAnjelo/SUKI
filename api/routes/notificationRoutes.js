@@ -3,6 +3,6 @@ import * as notificationController from '../controllers/notificationController.j
 
 const router = express.Router();
 
-router.get('/notifications', notificationController.getNotifications);
+router.get('AdminSide/notifications', notificationController.getNotifications);
 
 export default router;

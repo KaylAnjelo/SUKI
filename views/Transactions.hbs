@@ -79,20 +79,71 @@
           </div>
         </div>
 
-        <!-- Details Modal -->
+        <!-- Receipt Modal -->
         <div id="detailsModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <span class="close" onclick="closeDetailsModal()">&times;</span>
-            <h3>Transaction Details</h3>
-            <div class="details-grid">
-              <div><strong>Account Name:</strong> <span id="dUser"></span></div>
-              <div><strong>Reference #:</strong> <span id="dRef"></span></div>
-              <div><strong>Amount:</strong> <span id="dAmount"></span></div>
-              <div><strong>Points:</strong> <span id="dPoints"></span></div>
-              <div><strong>Type:</strong> <span id="dType"></span></div>
-              <div><strong>Date:</strong> <span id="dDate"></span></div>
-              <div><strong>Store:</strong> <span id="dStore"></span></div>
-              <div><strong>Product:</strong> <span id="dProduct"></span></div>
+          <div class="modal-content receipt-modal">
+            <div class="receipt-header">
+              <div class="receipt-logo">
+                <i class="fas fa-store"></i>
+                <span>SUKI Incorporation</span>
+              </div>
+              <span class="close" onclick="closeDetailsModal()">&times;</span>
+            </div>
+            
+            <div class="receipt-body">
+              <div class="receipt-title">
+                <h2>Transaction Receipt</h2>
+                <div class="receipt-number">Ref: #<span id="dRef"></span></div>
+              </div>
+              
+              <div class="receipt-info">
+                <div class="info-row">
+                  <span class="label">Date & Time:</span>
+                  <span class="value" id="dDate"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Customer:</span>
+                  <span class="value" id="dUser"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Store:</span>
+                  <span class="value" id="dStore"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Transaction Type:</span>
+                  <span class="value" id="dType"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-items">
+                <div class="item-header">
+                  <span>Item Details</span>
+                </div>
+                <div class="item-row">
+                  <span class="item-name" id="dProduct"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-summary">
+                <div class="summary-row">
+                  <span class="label">Amount:</span>
+                  <span class="value amount" id="dAmount"></span>
+                </div>
+                <div class="summary-row">
+                  <span class="label">Points Earned:</span>
+                  <span class="value points" id="dPoints"></span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-row total">
+                  <span class="label">Total Points:</span>
+                  <span class="value" id="dPoints"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-footer">
+                <p>Thank you for your purchase!</p>
+                <p class="footer-note">Keep this receipt for your records</p>
+              </div>
             </div>
           </div>
         </div>
@@ -144,7 +195,7 @@
               store: link.dataset.store,
               product: link.dataset.product,
             });
-          }, { once: true });
+          });
         } catch (e) {
           console.error(e);
         }

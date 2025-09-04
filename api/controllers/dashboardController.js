@@ -3,17 +3,27 @@ import { formatDate, getWeekStartUTC } from '../utils/date.js';
 
 export const getDashboard = async (req, res) => {
   try {
+    console.log('🔍 Starting dashboard data fetch...');
+    
     // Store Owners Count
     const { count: totalStoreOwners, error: storeOwnersError } = await supabase
       .from('stores')
       .select('*', { count: 'exact', head: true });
-    if (storeOwnersError) throw storeOwnersError;
+    if (storeOwnersError) {
+      console.error('❌ Store owners error:', storeOwnersError);
+      throw storeOwnersError;
+    }
+    console.log('✅ Store owners count:', totalStoreOwners);
 
     // Customers Count
     const { count: totalCustomers, error: customersError } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true });
-    if (customersError) throw customersError;
+    if (customersError) {
+      console.error('❌ Customers error:', customersError);
+      throw customersError;
+    }
+    console.log('✅ Customers count:', totalCustomers);
 
     // Total Points
     const { data: totalPointsData, error: totalPointsError } = await supabase
@@ -121,8 +131,8 @@ export const getDashboard = async (req, res) => {
     const storeLabels = Array.from(storeEngagementMap.keys());
     const storeEngagementData = storeLabels.map(s => storeEngagementMap.get(s) || 0);
 
-    res.render('Dashboard', {
-      title: 'Dashboard',
+    res.render('AdminDashboard', {
+      title: 'AdminDashboard',
       total_owners: totalStoreOwners || 0,
       total_customers: totalCustomers || 0,
       total_points: totalPointsCalc,

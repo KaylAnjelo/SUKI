@@ -31,6 +31,7 @@ app.use(express.static(publicDirectory));
 
 // View engine
 app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
