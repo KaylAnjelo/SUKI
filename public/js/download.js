@@ -34,7 +34,47 @@ function getCurrentSalesFilters() {
   return { startDate, endDate, store, sortOrder };
 }
 
-function downloadCSV(filename) {
+function suggestName(prefix) {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+  return `${prefix}_${stamp}`;
+}
+
+async function quickDownloadCSV() {
+  const base = suggestName('report');
+  await downloadCSV(base);
+}
+
+async function quickDownloadPDF() {
+  const base = suggestName('report');
+  await downloadPDF(base);
+}
+
+async function saveBlobWithPicker(suggestedName, mimeType, ext, blob) {
+  if (window.showSaveFilePicker) {
+    const handle = await window.showSaveFilePicker({
+      suggestedName,
+      types: [
+        { description: mimeType, accept: { [mimeType]: [ext] } }
+      ]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function downloadCSV(filename) {
   const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
   const user = document.getElementById('userFilter')?.value || '';
@@ -56,10 +96,14 @@ function downloadCSV(filename) {
   let endpoint = '/reports/sales/export/csv';
   if (path.includes('/reports/transactions')) endpoint = '/reports/transactions/export/csv';
   if (path.includes('/reports/activity')) endpoint = '/reports/activity/export/csv';
-  window.location.href = `${endpoint}?${params.toString()}`;
+
+  const res = await fetch(`${endpoint}?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) { alert('Failed to generate CSV'); return; }
+  const blob = await res.blob();
+  await saveBlobWithPicker(`${filename}.csv`, 'text/csv', '.csv', blob);
 }
 
-function downloadPDF(filename) {
+async function downloadPDF(filename) {
   const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
   const user = document.getElementById('userFilter')?.value || '';
@@ -81,5 +125,9 @@ function downloadPDF(filename) {
   let endpoint = '/reports/sales/export/pdf';
   if (path.includes('/reports/transactions')) endpoint = '/reports/transactions/export/pdf';
   if (path.includes('/reports/activity')) endpoint = '/reports/activity/export/pdf';
-  window.location.href = `${endpoint}?${params.toString()}`;
+
+  const res = await fetch(`${endpoint}?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) { alert('Failed to generate PDF'); return; }
+  const blob = await res.blob();
+  await saveBlobWithPicker(`${filename}.pdf`, 'application/pdf', '.pdf', blob);
 }

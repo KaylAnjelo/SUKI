@@ -53,17 +53,10 @@
           </form>
         </div>
       </div>
-      <button class="dls" onclick="openModal('csv')"><i class="fa-solid fa-file-csv"></i>Download CSV</button>
-      <button class="dls" onclick="openModal('pdf')"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
+      <button class="dls" onclick="quickDownloadCSV()"><i class="fa-solid fa-file-csv"></i>Download CSV</button>
+      <button class="dls" onclick="quickDownloadPDF()"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
       <!-- Modal -->
-      <div id="fileModal" class="modal">
-        <div class="modal-content">
-          <span class="close" onclick="closeModal()">&times;</span>
-          <h3>Enter File Name</h3>
-          <input type="text" id="fileNameInput" placeholder="e.g., transactions-report" />
-          <button onclick="downloadFile()">Download</button>
-        </div>
-      </div>
+      
       <!-- Filters Container -->
       <div class="filters-container" id="filtersContainer">
         <div class="filter-group">

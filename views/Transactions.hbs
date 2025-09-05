@@ -9,6 +9,7 @@
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
+  <script src="/js/transactions.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   </head>
@@ -67,9 +68,9 @@
                 <tr>
                   
                   <th>Account Name</th>
-                  <th>Amount</th>
-                  <th>Accumulated Reward</th>
-                  <th>Transaction Date</th>
+                  <th class="sortable" data-key="amount">Amount</th>
+                  <th class="sortable" data-key="points">Accumulated Reward</th>
+                  <th class="sortable" data-key="date_time">Transaction Date</th>
                   <th>Status</th>
                   <th>Details</th>
                 </tr>
@@ -149,94 +150,6 @@
         </div>
       </main>
     </div>
-    <script>
-      async function loadUsersIntoDropdown() {
-        // Static options already in markup; keep for API parity
-        return Promise.resolve();
-      }
-
-      async function loadTransactions() {
-        const selectedType = document.getElementById('userFilterTrans').value;
-        try {
-          const response = await fetch('/reports/transactions/filter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userType: selectedType })
-          });
-          if (!response.ok) throw new Error('Failed to fetch transactions');
-          const rows = await response.json();
-          const tbody = document.getElementById('transactionsBody');
-          tbody.innerHTML = '';
-          rows.forEach((t) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${t.user}</td>
-              <td>${t.amount}</td>
-              <td>${t.points ?? 0}</td>
-              <td>${t.date_time}</td>
-              <td>${t.transaction_type}</td>
-              <td><a href=\"#\" class=\"view-details\" data-user=\"${t.user}\" data-transaction=\"${t.transaction_id}\" data-amount=\"${t.amount}\" data-points=\"${t.points ?? 0}\" data-date=\"${t.date_time}\" data-type=\"${t.transaction_type}\" data-store=\"${t.store_name}\" data-product=\"${t.product_details}\">View Details</a></td>
-            `;
-            tbody.appendChild(tr);
-          });
-
-          // Wire up details modal clicks (event delegation)
-          tbody.addEventListener('click', function(e) {
-            const link = e.target.closest('.view-details');
-            if (!link) return;
-            e.preventDefault();
-            openDetailsModal({
-              user: link.dataset.user,
-              ref: link.dataset.transaction,
-              amount: link.dataset.amount,
-              points: link.dataset.points,
-              type: link.dataset.type,
-              date: link.dataset.date,
-              store: link.dataset.store,
-              product: link.dataset.product,
-            });
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        loadUsersIntoDropdown().then(loadTransactions);
-        document.getElementById('applyFiltersTrans').addEventListener('click', loadTransactions);
-      });
-
-      function openDetailsModal(data) {
-        const m = document.getElementById('detailsModal');
-        document.getElementById('dUser').textContent = data.user || '';
-        document.getElementById('dRef').textContent = data.ref || '';
-        document.getElementById('dAmount').textContent = formatCurrency(data.amount);
-        document.getElementById('dPoints').textContent = String(data.points ?? 0);
-        document.getElementById('dType').textContent = data.type || '';
-        document.getElementById('dDate').textContent = formatDateHuman(data.date);
-        document.getElementById('dStore').textContent = data.store || '';
-        document.getElementById('dProduct').textContent = data.product || '';
-        m.style.display = 'block';
-        // Close when clicking outside content
-        m.addEventListener('click', function onBg(e){ if (e.target === m) { closeDetailsModal(); m.removeEventListener('click', onBg); } });
-      }
-
-      function closeDetailsModal() {
-        const m = document.getElementById('detailsModal');
-        m.style.display = 'none';
-      }
-
-      function formatCurrency(v) {
-        const n = Number(v);
-        return isFinite(n) ? `₱${n.toFixed(2)}` : (v ?? '');
-      }
-
-      function formatDateHuman(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-      }
-    </script>
+    
   </body>
   </html>

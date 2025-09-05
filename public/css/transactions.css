@@ -252,6 +252,27 @@ tbody tr:nth-child(even) {
     font-style: italic;
 }
 
+.view-details {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: #7D0006;
+}
+
+.view-details:hover {
+    color: #6b0005
+}
+.view-details i {
+    font-size: 16px;
+}
+
+th.sortable { cursor: pointer; user-select: none;}
+th.sortable::after { content: ' ⬍'; opacity: 1; font-size: 1em; }
+th.sortable.asc::after { content: ' ↑'; }
+th.sortable.desc::after { content: ' ↓'; }
+
 /* Responsive Design */
 @media (max-width: 600px) {
     .receipt-modal {
@@ -283,4 +304,28 @@ tbody tr:nth-child(even) {
         text-align: left;
         font-weight: 700;
     }
+}
+
+.main-content .table-scroll {
+    height: calc(100vh - 1in - 180px) !important; /* adjust 180px to fit your header/filters */
+    overflow: auto;
+}
+/* Stop page/main from scrolling */
+.main-content { overflow: hidden; }
+
+/* Put the scrollbar on the table wrapper only */
+.table-container { display: flex; min-height: 0; }
+.table-scroll {
+  flex: 1;
+  max-height: 70vh;    /* adjust as needed or use calc(...) */
+  overflow-y: auto;    /* vertical scroll on table only */
+  overflow-x: auto;    /* optional: horizontal scroll */
+}
+
+/* Keep the header visible while body scrolls */
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f7f7;
+  z-index: 1;
 }
