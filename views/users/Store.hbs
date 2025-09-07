@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SUKI Incorporation - Store Management</title>
+
+  <!-- Keep original Admin stylesheet (do not replace) -->
   <link rel="stylesheet" href="/css/AdminStyles.css">
-  <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
 
   <!-- Font Awesome -->
@@ -77,13 +78,11 @@
                   </div>
                 </td>
                 <td>{{this.ownerFirstName}} {{#if this.ownerMiddleName}}{{this.ownerMiddleName}} {{/if}}{{this.ownerLastName}}</td>
-                <td>
-                  <a href="tel:{{this.owner_contact}}" class="link">{{this.owner_contact}}</a>
-                </td>
+                <td><a class="link" href="tel:{{this.owner_contact}}">{{this.owner_contact}}</a></td>
                 <td>{{this.store_code}}</td>
                 <td>
                   <form action="/users/stores/delete/{{this.owner_id}}" method="POST" style="display:inline;" onsubmit="return confirmDelete(this);">
-                    <button type="submit" class="btn-icon" title="Delete Store"><i class="fas fa-trash"></i></button>
+                    <button type="submit" class="icon-btn" title="Delete Store"><i class="fas fa-trash"></i></button>
                   </form>
                 </td>
               </tr>
@@ -92,7 +91,7 @@
           </table>
           {{else}}
           <div style="text-align: center; padding: 60px 20px; color: #666;">
-            <i class="fas fa-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
+            <i class="fas a-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
             <h2 style="margin: 0; color: #333;">No stores available at this time</h2>
             <p style="margin: 10px 0 0 0; color: #666;">Start by adding your first store.</p>
           </div>
@@ -100,61 +99,61 @@
         </div>
       </div>
 
-      <!-- Add Store Button -->
+      <!-- Add Store Button (original class) -->
       <div style="text-align: right; margin-top: 20px;">
-        <button class="btn-primary" onclick="showAddStoreForm()">
+        <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
           <i class="fas fa-plus"></i> Add Store
         </button>
       </div>
 
-      <!-- Add Store Modal -->
+      <!-- Add Store Modal (original class names) -->
       <div id="addStoreModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-animate">
           <div class="modal-header">
             <h2>Add Store</h2>
             <span class="close" onclick="closeModal()">&times;</span>
           </div>
 
           <form class="add-store-form" action="/users/stores/add" method="POST" enctype="multipart/form-data">
-            <div class="input-group">
+            <div class="form-group">
               <label for="storeName">Store Name</label>
               <input type="text" id="storeName" name="storeName" required>
             </div>
 
-            <!-- Owner's Name -->
-            <div class="input-group">
+            <!-- Owner's Name with +/− middle name -->
+            <div class="form-group">
               <label>Owner's Name</label>
-              <div class="owner-name-group">
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <input type="text" id="ownerFirstName" name="ownerFirstName" placeholder="First Name" required>
-                <input type="text" id="ownerMiddleName" name="ownerMiddleName" placeholder="Middle Name" style="display:none;">
+                <input type="text" id="ownerMiddleName" name="ownerMiddleName" placeholder="Middle Name (optional)" style="display:none;">
                 <input type="text" id="ownerLastName" name="ownerLastName" placeholder="Last Name" required>
-                <button type="button" id="addMiddleNameBtn" class="btn-icon small"><i class="fas fa-plus"></i></button>
+                <button type="button" id="addMiddleNameBtn" class="icon-btn" title="Add middle name">+</button>
               </div>
             </div>
 
-            <div class="input-group">
+            <div class="form-group">
               <label for="ownerEmail">Owner's Email</label>
               <input type="email" id="ownerEmail" name="ownerEmail" required>
             </div>
 
-            <div class="input-group">
+            <div class="form-group">
               <label for="contactInfo">Contact Information</label>
               <input type="text" id="contactInfo" name="contactInfo" required>
             </div>
 
-            <div class="input-group">
+            <div class="form-group">
               <label for="location">Location</label>
               <input type="text" id="location" name="location" required>
             </div>
 
-            <div class="input-group">
+            <div class="form-group">
               <label for="storeImage">Store Logo</label>
               <input type="file" id="storeImage" name="storeImage" accept="image/*">
             </div>
 
             <div class="form-actions">
-              <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-              <button type="submit" class="btn-primary">Add Store</button>
+              <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+              <button type="submit" class="submit-btn">Add Store</button>
             </div>
           </form>
         </div>
@@ -163,16 +162,17 @@
   </div>
 
   <script>
-    // Toggle Middle Name
-    document.getElementById("addMiddleNameBtn").addEventListener("click", function() {
-      const middleName = document.getElementById("ownerMiddleName");
-      if (middleName.style.display === "none" || middleName.style.display === "") {
-        middleName.style.display = "inline-block";
-        this.innerHTML = "<i class='fas fa-minus'></i>";
-      } else {
-        middleName.style.display = "none";
-        this.innerHTML = "<i class='fas fa-plus'></i>";
-        middleName.value = "";
+    // Middle name toggle (uses original-ish classes)
+    document.addEventListener("DOMContentLoaded", function () {
+      const btn = document.getElementById("addMiddleNameBtn");
+      const mid = document.getElementById("ownerMiddleName");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          const hidden = mid.style.display === "none" || mid.style.display === "";
+          mid.style.display = hidden ? "inline-block" : "none";
+          btn.textContent = hidden ? "−" : "+";
+          if (!hidden) mid.value = "";
+        });
       }
     });
   </script>

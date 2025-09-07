@@ -1,66 +1,41 @@
-const addStoreModal = document.getElementById('addStoreModal');
-
-// Show modal
+// Store Modal Logic
 function showAddStoreForm() {
-  addStoreModal.style.display = 'flex';
-  setTimeout(() => addStoreModal.classList.add('show'), 10);
+  const modal = document.getElementById("addStoreModal");
+  if (modal) {
+    modal.style.display = "flex";
+  }
 }
 
-// Close modal
 function closeModal() {
-  addStoreModal.classList.remove('show');
-  setTimeout(() => {
-    addStoreModal.style.display = 'none';
-  }, 300);
+  const modal = document.getElementById("addStoreModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
 }
 
 // Close modal when clicking outside
-window.onclick = function(event) {
-  if (event.target === addStoreModal) {
-    closeModal();
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("addStoreModal");
+  if (event.target === modal) {
+    modal.style.display = "none";
   }
-};
+});
 
-// Confirm deletion
+// Delete Confirmation
 function confirmDelete(form) {
-  return confirm('Are you sure you want to delete this store? This action cannot be undone.');
+  return confirm("Are you sure you want to delete this store?");
 }
 
-// Handle form submission
-document.addEventListener("DOMContentLoaded", () => {
-  const addStoreForm = addStoreModal.querySelector('form');
-
-  if (addStoreForm) {
-    addStoreForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const formData = new FormData(addStoreForm);
-      const submitBtn = addStoreForm.querySelector('.submit-btn');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Adding...';
-      submitBtn.disabled = true;
-
-      try {
-        const response = await fetch(addStoreForm.action, {
-          method: addStoreForm.method,
-          body: formData
-        });
-
-        if (response.ok) {
-          alert('Store added successfully!');
-          closeModal();
-          addStoreForm.reset();
-          window.location.reload();
-        } else {
-          const errorText = await response.text();
-          alert(`Failed to add store. ${errorText}`);
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      } finally {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      }
+// Middle Name Toggle (if present in the form)
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("addMiddleNameBtn");
+  const mid = document.getElementById("ownerMiddleName");
+  if (btn && mid) {
+    btn.addEventListener("click", function () {
+      const hidden = mid.style.display === "none" || mid.style.display === "";
+      mid.style.display = hidden ? "inline-block" : "none";
+      btn.textContent = hidden ? "−" : "+";
+      if (!hidden) mid.value = "";
     });
   }
 });
