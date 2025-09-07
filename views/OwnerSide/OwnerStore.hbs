@@ -109,21 +109,6 @@
           <input type="text" id="ownerFirstName" name="ownerFirstName" required>
         </div>
 
-        <!-- Owner's Second Name (toggleable) -->
-        <div class="input-group">
-          <label for="ownerSecondName">Owner's Second Name (Optional)</label>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" id="ownerSecondName" name="ownerSecondName" placeholder="Second Name (Optional)" style="display:none;">
-            <button type="button" id="toggleSecondNameBtn" class="yes-btn" style="padding:6px 10px;">+</button>
-          </div>
-        </div>
-
-        <!-- Owner's Middle Initial -->
-        <div class="input-group">
-          <label for="ownerMiddleInitial">Owner's Middle Initial (Optional)</label>
-          <input type="text" id="ownerMiddleInitial" name="ownerMiddleInitial" maxlength="1" placeholder="M">
-        </div>
-
         <!-- Owner's Last Name -->
         <div class="input-group">
           <label for="ownerLastName">Owner's Last Name</label>
@@ -169,18 +154,25 @@
   <script src="/sidebar.js"></script>
   <script src="/stores.js"></script>
   <script>
-    // Toggle optional Owner's Second Name
-    document.addEventListener("DOMContentLoaded", function () {
-      const toggleBtn = document.getElementById("toggleSecondNameBtn");
-      const secondName = document.getElementById("ownerSecondName");
+    // Toggle modal visibility
+    document.querySelector('.add-store-btn').addEventListener('click', function() {
+      document.getElementById('addStoreModal').style.display = 'block';
+    });
 
-      if (toggleBtn && secondName) {
-        toggleBtn.addEventListener("click", function () {
-          const hidden = secondName.style.display === "none" || secondName.style.display === "";
-          secondName.style.display = hidden ? "inline-block" : "none";
-          toggleBtn.textContent = hidden ? "−" : "+";
-          if (!hidden) secondName.value = "";
-        });
+    document.querySelector('.store-close').addEventListener('click', function() {
+      document.getElementById('addStoreModal').style.display = 'none';
+    });
+
+    // Preview uploaded store logo
+    document.getElementById("storeImage").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const previewDiv = document.getElementById("imagePreview");
+          previewDiv.innerHTML = `<img src="${e.target.result}" alt="Store Logo" style="max-width: 200px; max-height: 200px; object-fit: cover;">`;
+        };
+        reader.readAsDataURL(file);
       }
     });
   </script>
