@@ -1,4 +1,5 @@
 import supabase from "../../config/db.js";
+import bcrypt from "bcrypt";
 
 // Test database connection
 export const testConnection = async (req, res) => {
@@ -39,6 +40,7 @@ export const getCustomers = async (req, res) => {
     const { data: customers, error } = await supabase
       .from('users')
       .select('user_id, username, contact_number, user_email')
+      .eq('role', 'customer')
       .order('user_id', { ascending: true });
 
     if (error) throw error;
@@ -56,8 +58,8 @@ export const getStores = async (req, res) => {
   try {
     const { data: stores, error } = await supabase
       .from('stores')
-      .select('owner_id, store_name, is_active, store_code, owner_name, owner_contact, store_image')
-      .order('owner_id', { ascending: true });
+      .select('owner_id, store_name, is_active, store_code, owner_name, owner_contact, store_image, location')
+      .order('store_id', { ascending: true });
 
     if (error) throw error;
 
@@ -70,7 +72,31 @@ export const getStores = async (req, res) => {
 
 export const addStore = async (req, res) => {
   try {
-    const { storeName, ownerName, contactInfo, location } = req.body;
+    const { storeName, ownerName, contactInfo, location, ownerEmail } = req.body;
+
+    // Validate required fields
+    if (!storeName || !ownerName || !ownerEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'Store name, owner name, and owner email are required'
+      });
+    }
+
+    // Check if owner email already exists
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('user_email', ownerEmail)
+      .single();
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email already exists',
+        message: 'A user with this email already exists'
+      });
+    }
 
     let storeImage = null;
     if (req.file) {
@@ -117,28 +143,80 @@ export const addStore = async (req, res) => {
       }
     }
 
-    // Insert store without manually setting store_code
-    const { error } = await supabase.from('stores').insert([{
+    // Get the next store_id by finding the max and adding 1
+    const { data: maxStore, error: maxError } = await supabase
+      .from('stores')
+      .select('store_id')
+      .order('store_id', { ascending: false })
+      .limit(1)
+      .single();
+
+    const nextStoreId = maxStore ? maxStore.store_id + 1 : 1;
+
+    // First, create the store to get the store_code
+    const { data: newStore, error: storeError } = await supabase.from('stores').insert([{
+      store_id: nextStoreId,
       store_name: storeName,
       owner_name: ownerName,
       owner_contact: contactInfo,
       store_image: storeImage,
-      location: location || "Unknown",  // default if not provided
-      is_active: true                   // default active
-    }]);
+      location: location || "Unknown",
+      is_active: true,
+      owner_id: 1  // Temporary placeholder, will be updated after user creation
+    }]).select().single();
 
-    if (error) throw error;
+    if (storeError) throw storeError;
 
-    console.log("✅ Store added successfully");
-    // Return JSON response instead of redirecting
+    // Hash the store_code to use as initial password
+    const hashedPassword = await bcrypt.hash(newStore.store_code, 10);
+
+    // Create user account with store_code as password
+    const { data: newUser, error: userError } = await supabase.from('users').insert([{
+      username: ownerName,
+      user_email: ownerEmail,
+      contact_number: contactInfo,
+      password: hashedPassword,
+      role: 'owner'  // Store owners are vendors
+    }]).select().single();
+
+    if (userError) {
+      // If user creation fails, delete the store to maintain consistency
+      await supabase.from('stores').delete().eq('store_id', newStore.store_id);
+      throw userError;
+    }
+
+    // Update the store with the correct owner_id
+    const { error: updateError } = await supabase
+      .from('stores')
+      .update({ owner_id: newUser.user_id })
+      .eq('store_id', newStore.store_id);
+
+    if (updateError) {
+      // If update fails, clean up both records
+      await supabase.from('users').delete().eq('user_id', newUser.user_id);
+      await supabase.from('stores').delete().eq('store_id', newStore.store_id);
+      throw updateError;
+    }
+
+    console.log("✅ Store and owner account created successfully");
+    // Return JSON response with the created store data
     res.json({ 
       success: true, 
-      message: 'Store added successfully',
+      message: 'Store and owner account created successfully',
       store: {
-        store_name: storeName,
-        owner_name: ownerName,
-        owner_contact: contactInfo,
-        location: location || "Unknown"
+        store_id: newStore.store_id,
+        store_name: newStore.store_name,
+        store_code: newStore.store_code,
+        owner_name: newStore.owner_name,
+        owner_contact: newStore.owner_contact,
+        location: newStore.location,
+        owner_id: newUser.user_id
+      },
+      owner: {
+        user_id: newUser.user_id,
+        username: newUser.username,
+        user_email: newUser.user_email,
+        initial_password: newStore.store_code  // Return the store code as initial password
       }
     });
   } catch (error) {
@@ -155,7 +233,17 @@ export const addStore = async (req, res) => {
 export const deleteStore = async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase.from('stores').delete().eq("owner_id", id);
+    
+    // Validate that store_id is provided
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing store ID',
+        message: 'Store ID is required for deletion'
+      });
+    }
+
+    const { error } = await supabase.from('stores').delete().eq("store_id", id);
 
     if (error) throw error;
 

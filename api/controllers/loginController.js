@@ -1,6 +1,10 @@
 import bcrypt from "bcrypt";
 import supabase from "../../config/db.js";
 
+console.log("🔎 URL:", process.env.SUPABASE_URL);
+console.log("🔎 Key length:", process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
+
+
 export const login = async (req, res) => {
   const username = req.body.username?.trim();
   const password = req.body.password?.trim();
