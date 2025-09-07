@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SUKI Incorporation - Store Management</title>
 
-  <!-- Keep original Admin stylesheet (do not replace) -->
   <link rel="stylesheet" href="/css/AdminStyles.css">
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
 
@@ -17,6 +16,28 @@
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
   <script src="/js/stores.js" defer></script>
+
+  <style>
+    .add-store-form-horizontal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .add-store-form-horizontal .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .add-store-form-horizontal .form-actions {
+      grid-column: span 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -77,7 +98,12 @@
                     <span>{{this.store_name}}</span>
                   </div>
                 </td>
-                <td>{{this.ownerFirstName}} {{#if this.ownerMiddleName}}{{this.ownerMiddleName}} {{/if}}{{this.ownerLastName}}</td>
+                <td>
+                  {{this.ownerFirstName}}
+                  {{#if this.ownerSecondName}} {{this.ownerSecondName}}{{/if}}
+                  {{#if this.ownerMiddleInitial}} {{this.ownerMiddleInitial}}.{{/if}}
+                  {{this.ownerLastName}}
+                </td>
                 <td><a class="link" href="tel:{{this.owner_contact}}">{{this.owner_contact}}</a></td>
                 <td>{{this.store_code}}</td>
                 <td>
@@ -91,7 +117,7 @@
           </table>
           {{else}}
           <div style="text-align: center; padding: 60px 20px; color: #666;">
-            <i class="fas a-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
+            <i class="fas fa-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
             <h2 style="margin: 0; color: #333;">No stores available at this time</h2>
             <p style="margin: 10px 0 0 0; color: #666;">Start by adding your first store.</p>
           </div>
@@ -99,14 +125,14 @@
         </div>
       </div>
 
-      <!-- Add Store Button (original class) -->
+      <!-- Add Store Button -->
       <div style="text-align: right; margin-top: 20px;">
         <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
           <i class="fas fa-plus"></i> Add Store
         </button>
       </div>
 
-      <!-- Add Store Modal (original class names) -->
+      <!-- Add Store Modal -->
       <div id="addStoreModal" class="modal">
         <div class="modal-content modal-animate">
           <div class="modal-header">
@@ -114,43 +140,62 @@
             <span class="close" onclick="closeModal()">&times;</span>
           </div>
 
-          <form class="add-store-form" action="/users/stores/add" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
+          <form class="add-store-form-horizontal" action="/users/stores/add" method="POST" enctype="multipart/form-data">
+            <!-- Store Name -->
+            <div class="form-row">
               <label for="storeName">Store Name</label>
               <input type="text" id="storeName" name="storeName" required>
             </div>
 
-            <!-- Owner's Name with +/− middle name -->
-            <div class="form-group">
-              <label>Owner's Name</label>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                <input type="text" id="ownerFirstName" name="ownerFirstName" placeholder="First Name" required>
-                <input type="text" id="ownerMiddleName" name="ownerMiddleName" placeholder="Middle Name (optional)" style="display:none;">
-                <input type="text" id="ownerLastName" name="ownerLastName" placeholder="Last Name" required>
-                <button type="button" id="addMiddleNameBtn" class="icon-btn" title="Add middle name">+</button>
-              </div>
+            <!-- Owner's First Name -->
+            <div class="form-row">
+              <label for="ownerFirstName">Owner's First Name</label>
+              <input type="text" id="ownerFirstName" name="ownerFirstName" required>
             </div>
 
-            <div class="form-group">
+            <!-- Owner's Second Name -->
+            <div class="form-row">
+              <label for="ownerSecondName">Owner's Second Name (Optional)</label>
+              <input type="text" id="ownerSecondName" name="ownerSecondName">
+            </div>
+
+            <!-- Owner's Middle Initial -->
+            <div class="form-row">
+              <label for="ownerMiddleInitial">Owner's Middle Initial (Optional)</label>
+              <input type="text" id="ownerMiddleInitial" name="ownerMiddleInitial" maxlength="1">
+            </div>
+
+            <!-- Owner's Last Name -->
+            <div class="form-row">
+              <label for="ownerLastName">Owner's Last Name</label>
+              <input type="text" id="ownerLastName" name="ownerLastName" required>
+            </div>
+
+            <!-- Owner's Email -->
+            <div class="form-row">
               <label for="ownerEmail">Owner's Email</label>
               <input type="email" id="ownerEmail" name="ownerEmail" required>
             </div>
 
-            <div class="form-group">
+            <!-- Contact Information -->
+            <div class="form-row">
               <label for="contactInfo">Contact Information</label>
               <input type="text" id="contactInfo" name="contactInfo" required>
             </div>
 
-            <div class="form-group">
+            <!-- Location -->
+            <div class="form-row">
               <label for="location">Location</label>
               <input type="text" id="location" name="location" required>
             </div>
 
-            <div class="form-group">
+            <!-- Store Logo -->
+            <div class="form-row">
               <label for="storeImage">Store Logo</label>
               <input type="file" id="storeImage" name="storeImage" accept="image/*">
             </div>
 
+            <!-- Actions -->
             <div class="form-actions">
               <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
               <button type="submit" class="submit-btn">Add Store</button>
@@ -160,21 +205,5 @@
       </div>
     </main>
   </div>
-
-  <script>
-    // Middle name toggle (uses original-ish classes)
-    document.addEventListener("DOMContentLoaded", function () {
-      const btn = document.getElementById("addMiddleNameBtn");
-      const mid = document.getElementById("ownerMiddleName");
-      if (btn) {
-        btn.addEventListener("click", function () {
-          const hidden = mid.style.display === "none" || mid.style.display === "";
-          mid.style.display = hidden ? "inline-block" : "none";
-          btn.textContent = hidden ? "−" : "+";
-          if (!hidden) mid.value = "";
-        });
-      }
-    });
-  </script>
 </body>
 </html>
