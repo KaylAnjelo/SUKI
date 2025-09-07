@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{appName}} - Redemption Management</title>
+
+  <link rel="stylesheet" href="/styles.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <h2>{{appName}}</h2>
+      </div>
+      <nav class="nav-menu">
+        <ul>
+          <li>
+            <a href="/dashboard">
+              <i class="fas fa-chart-line"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="has-submenu">
+            <a href="#reports" class="menu-toggle">
+              <i class="fas fa-file-alt"></i>
+              <span>Generate Reports</span>
+              <i class="fas fa-chevron-right"></i>
+            </a>
+            <ul class="submenu">
+              <li><a href="/sales"><i class="fas fa-circle"></i><span>Sales</span></a></li>
+              <li><a href="/user-transactions"><i class="fas fa-circle"></i><span>User Transactions</span></a></li>
+              <li><a href="/user-activity"><i class="fas fa-circle"></i><span>User Activity</span></a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="/transactions">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Transactions</span>
+            </a>
+          </li>
+          <li class="active">
+            <a href="/users">
+              <i class="fas fa-fingerprint"></i>
+              <span>Users</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="header">
+        <h1>{{pageTitle}}</h1>
+        <div class="header-actions">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="notification-dot"></span>
+          </div>
+          <span class="logout">Log out</span>
+        </div>
+      </header>
+
+      <a href="/users" class="back-link"><i class="fas fa-arrow-left"></i></a>
+
+      {{#if redemptions.length}}
+        <div class="report-table-container">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>User</th>
+                <th>Item</th>
+                <th>Points Used</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each redemptions}}
+                <tr>
+                  <td>{{this.date}}</td>
+                  <td>{{this.user}}</td>
+                  <td>{{this.item}}</td>
+                  <td>{{this.points}}</td>
+                  <td>{{this.status}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      {{else}}
+        <div class="empty-panel">
+          <div class="empty-icon"><i class="fas fa-coins"></i></div>
+          <div class="empty-title">No redemptions at this time</div>
+          <div class="empty-subtitle">Start redeeming points now.</div>
+        </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-text">Are you sure you want to logout?</div>
+      <div class="modal-buttons">
+        <button class="modal-btn yes-btn">YES</button>
+        <button class="modal-btn no-btn">NO</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
