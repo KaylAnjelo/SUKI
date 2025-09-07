@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management</title>
+  <link rel="stylesheet" href="/css/AdminStyles.css" />
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+            <div class="logo">SUKI Incorporation</div>
+            <nav class="nav">
+                <a href="/dashboard" class="nav-item">
+                    <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+                </a>
+                <a href="/reports" class="nav-item">
+                    <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+                </a>
+                 <a href="/transac" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+                </a>
+                <a href="/users/UserManagement" class="nav-item active">
+                    <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+                </a>
+            </nav>
+        </aside>
+    <main class="main-content">
+      <div class="header">
+        <h1>User Management</h1>
+        <div class="notif-container">
+        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+        <div id="notificationsDropdown" style="display: none;">
+          <ul id="notificationsList"></ul>
+        </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+          
+      </div>
+      <div class="u-man">
+        <div class="management-intro">
+          <h2>Manage Users</h2>
+          <p>Select a section to manage.</p>
+        </div>
+        <div class="management-cards">
+          <a class="management-card" href="/users/customers">
+            <i class="fas fa-user"></i>
+            <h3>Customers</h3>
+            <span>View and manage customers</span>
+          </a>
+          <a class="management-card" href="/users/stores">
+            <i class="fas fa-store"></i>
+            <h3>Stores</h3>
+            <span>Manage store information</span>
+          </a>
+          <a class="management-card" href="/users/Vendor">
+            <i class="fas fa-truck"></i>
+            <h3>Vendors</h3>
+            <span>Manage vendor partners</span>
+          </a>
+          <a class="management-card" href="/users/Redemptions">
+            <i class="fas fa-coins"></i>
+            <h3>Redemptions</h3>
+            <span>Review and track redemptions</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUKI Incorporation - Store Management</title>
+
+  <link rel="stylesheet" href="/css/AdminStyles.css">
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- JS -->
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script src="/js/stores.js" defer></script>
+
+  <style>
+    .add-store-form-horizontal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .add-store-form-horizontal .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .add-store-form-horizontal .form-actions {
+      grid-column: span 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i><span class="label">Dashboard</span></a>
+        <a href="/reports" class="nav-item"><i class="fas fa-file-alt"></i><span class="label">Reports</span></a>
+        <a href="/transac" class="nav-item"><i class="fas fa-exchange-alt"></i><span class="label">Transactions</span></a>
+        <a href="/users/UserManagement" class="nav-item active"><i class="fa-solid fa-fingerprint"></i><span class="label">Users</span></a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="header">
+        <div>
+          <a href="/users/UserManagement"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
+          <h1>Store Management</h1>
+        </div>
+        <div class="notif-container">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Stores Table -->
+      <div class="tables-section">
+        <div class="table-container">
+          {{#if stores.length}}
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Store Name</th>
+                <th>Owner Name</th>
+                <th>Contact Info</th>
+                <th>Store Code</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each stores}}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    {{#if this.store_image}}
+                      <img src="{{this.store_image}}" alt="Store Image" class="store-thumbnail">
+                    {{else}}
+                      <i class="fas fa-store store-placeholder"></i>
+                    {{/if}}
+                    <span>{{this.store_name}}</span>
+                  </div>
+                </td>
+                <td>
+                  {{this.ownerFirstName}}
+                  {{#if this.ownerSecondName}} {{this.ownerSecondName}}{{/if}}
+                  {{#if this.ownerMiddleInitial}} {{this.ownerMiddleInitial}}.{{/if}}
+                  {{this.ownerLastName}}
+                </td>
+                <td><a class="link" href="tel:{{this.owner_contact}}">{{this.owner_contact}}</a></td>
+                <td>{{this.store_code}}</td>
+                <td>
+                  <form action="/users/stores/delete/{{this.owner_id}}" method="POST" style="display:inline;" onsubmit="return confirmDelete(this);">
+                    <button type="submit" class="icon-btn" title="Delete Store"><i class="fas fa-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+          {{else}}
+          <div style="text-align: center; padding: 60px 20px; color: #666;">
+            <i class="fas fa-store" style="font-size: 64px; margin-bottom: 20px; color: #ccc;"></i>
+            <h2 style="margin: 0; color: #333;">No stores available at this time</h2>
+            <p style="margin: 10px 0 0 0; color: #666;">Start by adding your first store.</p>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Add Store Button -->
+      <div style="text-align: right; margin-top: 20px;">
+        <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
+          <i class="fas fa-plus"></i> Add Store
+        </button>
+      </div>
+
+      <!-- Add Store Modal -->
+      <div id="addStoreModal" class="modal">
+        <div class="modal-content modal-animate">
+          <div class="modal-header">
+            <h2>Add Store</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+          </div>
+
+          <form class="add-store-form-horizontal" action="/users/stores/add" method="POST" enctype="multipart/form-data">
+            <!-- Store Name -->
+            <div class="form-row">
+              <label for="storeName">Store Name</label>
+              <input type="text" id="storeName" name="storeName" required>
+            </div>
+
+            <!-- Owner's First Name -->
+            <div class="form-row">
+              <label for="ownerFirstName">Owner's First Name</label>
+              <input type="text" id="ownerFirstName" name="ownerFirstName" required>
+            </div>
+
+            <!-- Owner's Second Name -->
+            <div class="form-row">
+              <label for="ownerSecondName">Owner's Second Name (Optional)</label>
+              <input type="text" id="ownerSecondName" name="ownerSecondName">
+            </div>
+
+            <!-- Owner's Middle Initial -->
+            <div class="form-row">
+              <label for="ownerMiddleInitial">Owner's Middle Initial (Optional)</label>
+              <input type="text" id="ownerMiddleInitial" name="ownerMiddleInitial" maxlength="1">
+            </div>
+
+            <!-- Owner's Last Name -->
+            <div class="form-row">
+              <label for="ownerLastName">Owner's Last Name</label>
+              <input type="text" id="ownerLastName" name="ownerLastName" required>
+            </div>
+
+            <!-- Owner's Email -->
+            <div class="form-row">
+              <label for="ownerEmail">Owner's Email</label>
+              <input type="email" id="ownerEmail" name="ownerEmail" required>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="form-row">
+              <label for="contactInfo">Contact Information</label>
+              <input type="text" id="contactInfo" name="contactInfo" required>
+            </div>
+
+            <!-- Location -->
+            <div class="form-row">
+              <label for="location">Location</label>
+              <input type="text" id="location" name="location" required>
+            </div>
+
+            <!-- Store Logo -->
+            <div class="form-row">
+              <label for="storeImage">Store Logo</label>
+              <input type="file" id="storeImage" name="storeImage" accept="image/*">
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+              <button type="submit" class="submit-btn">Add Store</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

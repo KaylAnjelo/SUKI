@@ -1,0 +1,93 @@
+.stats-cards {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 13px;
+}
+
+.card {
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  flex: 1 1 220px;
+  min-width: 200px;
+  text-align: center;
+}
+
+.card p {
+  margin: 0;
+  font-size: 32px;
+  font-weight: bold;
+  color: #7c0f0f;
+}
+
+.card h3 {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+
+.card span {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tables-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 13px;
+  margin-top: 15px;
+}
+
+/* --- Table Container Styling --- */
+.table-container {
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Table Styling --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px 12px;
+  border-bottom: none;
+}
+
+/* Alternating row colors */
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Remove hover effect to maintain clean look */
+table tbody tr:hover {
+  background-color: inherit;
+}
+
+th {
+  font-size: 14px;
+  color: #333;
+  font-weight: 700;
+}
+
+td {
+  font-size: 13px;
+}
+
+/* --- Adjust Notification and Logout buttons spacing --- */
+.notif-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

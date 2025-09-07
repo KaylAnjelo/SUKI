@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/AdminStyles.css" />
+  <link rel="stylesheet" href="/css/sales.css" />
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/filter.js" defer></script>
+  <script src="/js/download.js" defer></script>
+  <script src="/js/pagination.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/dashboard" class="nav-item">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/reports" class="nav-item">
+          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+        </a>
+        <a href="/transac" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/users/UserManagement" class="nav-item">
+          <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <div class="header">
+        <div>
+          <a href="/reports"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
+          <h1>Sales Reports</h1>
+        </div>
+        <div class="notif-container">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <button class = "dls" onclick="quickDownloadCSV()"><i class="fa-solid fa-file-csv"></i>Download CSV</button>
+      <button class = "dls" onclick="quickDownloadPDF()"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
+      <!-- Modal -->
+      
+
+      <!-- Filters Container -->
+      <div class="filters-container" id="filtersContainer">
+        <div class="filter-group">
+          <label for="startDate">Date Range:</label>
+          <input type="date" id="startDate" name="startDate">
+          <span>to</span>
+          <input type="date" id="endDate" name="endDate" readonly>
+        </div>
+        <div class="filter-group">
+          <label for="storeFilter">Store:</label>
+          <select id="storeFilter" name="store">
+            {{{storeFilterOptions}}}
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="sortOrder">Sort By:</label>
+          <select id="sortOrder" name="sortOrder">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+        <button id="applyFilters" class="filter-btn">Apply Filters</button>
+        <button type="button" class="filter-btn" onclick="window.filtersApplied=false;">Clear Filters</button>
+      </div>
+
+      
+
+      <!-- Table -->
+      <div class="table-container">
+        <table id="salesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Store</th>
+              <th>Reference Number</th>
+              <th>Products Sold</th>
+              <th>Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{{salesTableRows}}}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button id="prevPage" class="pagination-btn" disabled>
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <div class="page-numbers">
+          <span id="currentPage">1</span> of <span id="totalPages">1</span>
+        </div>
+        <button id="nextPage" class="pagination-btn" disabled>
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+  <script>
+    // Set default dates
+    document.addEventListener('DOMContentLoaded', function() {
+      const endDate = document.getElementById('endDate');
+      const startDate = document.getElementById('startDate');
+      
+      // Set end date to today
+      endDate.valueAsDate = new Date();
+      
+      // Set start date to 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      startDate.valueAsDate = thirtyDaysAgo;
+
+      // Initialize pagination with initial sales data rendered by server
+      try {
+        const initialData = {{#if initialSalesData}}{{{initialSalesData}}}{{else}}[]{{/if}};
+        if (window.pagination && Array.isArray(initialData)) {
+          window.pagination.init(initialData);
+        }
+      } catch (e) {
+        console.error('Failed to init pagination with initial data:', e);
+      }
+    });
+  </script>
+</body>
+</html>

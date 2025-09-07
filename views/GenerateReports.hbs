@@ -4,44 +4,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Generate Reports</title>
-  <link rel="stylesheet" href="/css/style-page2.css" />
+  <link rel="stylesheet" href="/css/AdminStyles.css" />
   <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
     <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
       <div class="logo">SUKI Incorporation</div>
-      <nav class="nav">
-        <a href="#" class="nav-item">Dashboard</a>
-        <a href="#" class="nav-item active">Generate Reports</a>
-        <a href="#" class="nav-item">Points Allocation</a>
-        <a href="#" class="nav-item">Transactions</a>
-        <a href="#" class="nav-item">User Redemptions</a>
-        <a href="#" class="nav-item">User Management</a>
-      </nav>
-    </aside>
+        <nav class="nav">
+          <a href="/dashboard" class="nav-item">
+              <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+          </a>
+          <a href="/reports" class="nav-item active">
+              <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+          </a>
+          <a href="/transac" class="nav-item">
+              <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+          </a>
+          <a href="/users/UserManagement" class="nav-item">
+              <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+          </a>
+        </nav>
+      </aside>
 
     <main class="main-content">
       <div class="header">
-        <button class="add-store">Add Store</button>
+        <h1>Reports</h1>
         <div class="notif-container">
-        <button id="notificationsBtn" class="notif-button">Notifications</button>
-        <div id="notificationsDropdown" style="display: none;">
-          <ul id="notificationsList"></ul>
-        </div>
-        </div>
-          <form action="/logout" method="POST" style="display: inline;">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>
+        </div>
+         
       </div>
-      <h1>Reports</h1>
-      <div class="report-buttons">
-        <button class="report-btn">Sales</button>
-        <button class="report-btn">User Engagement</button>
-        <button class="report-btn">Transaction Records</button>
-      </div>
-      <div class="support">
-        <button class="support-btn">Support</button>
+      <div class="u-man">
+        <div class="management-intro">
+          <h2>Browse Reports</h2>
+          <p>Select a report to view and download.</p>
+        </div>
+        <div class="management-cards">
+          <a class="management-card" href="/reports/sales">
+            <i class="fas fa-dollar-sign"></i>
+            <h3>Sales Reports</h3>
+            <span>Totals and line items by date/store</span>
+          </a>
+          <a class="management-card" href="/reports/transactions">
+            <i class="fas fa-receipt"></i>
+            <h3>User Transactions</h3>
+            <span>Filter and export transaction records</span>
+          </a>
+          <a class="management-card" href="/reports/activity">
+            <i class="fas fa-user-clock"></i>
+            <h3>User Activity</h3>
+            <span>Engagement and activity breakdown</span>
+          </a>
+        </div>
       </div>
     </main>
   </div>

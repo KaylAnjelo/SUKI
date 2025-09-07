@@ -1,8 +1,20 @@
-const express = require('express');
-const path = require('path');
-const pg = require("pg");
-const dotenv = require('dotenv');
-const { error } = require('console');
+import express from 'express';
+import path from 'path';
+import dotenv from 'dotenv';
+import session from 'express-session';
+import supabase from './config/db.js';
+import dashboardRoutes from './api/routes/dashboardRoutes.js';
+import authRoutes from './api/routes/authRoutes.js';
+import notificationRoutes from './api/routes/notificationRoutes.js';
+import reportsRoutes from './api/routes/reports.js';
+import transactionsRoutes from './api/routes/transactions.js';
+import userRouter from './api/routes/users.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// For __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config({ path: './.env' });
 
@@ -11,119 +23,49 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 const port = process.env.PORT || 5000;
+process.env.TZ = 'Asia/Manila';
 
-let db;
-
-if (process.env.DATABASE_URL) {
-  db = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  });
-  console.log("Connecting to Railway PostgreSQL using connection string");
-} else{
-  db = new pg.Pool({
-      user: process.env.PGUSER,
-      host: process.env.PGHOST,
-      database: process.env.PGDATABASE,
-      password: String(process.env.PGPASSWORD),
-      port: Number(process.env.PGPORT),
-      ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized : false} : false
-  });
-  console.log("LOCAL")
-}
-
-console.log("🔐 ENV:", {
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  host: process.env.PGHOST,
-  db: process.env.PGDATABASE,
-  port: process.env.PGPORT
-});
-db.connect()
-.then(()=>{
-  console.log("🎉 Connected to PostgreSQL database");
-})
-.catch((err)=>{
-  console.error("😭 Connection error", err.stack);
-});
-
-// Static file directory
+// Static files
 const publicDirectory = path.join(__dirname, './public');
 app.use(express.static(publicDirectory));
 
-// View engine setup
-app.set("view engine", "hbs");
+// View engine
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false}
+}));
 
-// Home page
-app.get("/", (req, res) => {
-  res.render("index");
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+// Routes
+app.use('/', authRoutes);
+app.use('/', dashboardRoutes);
+app.use('/', notificationRoutes);
+app.use('/reports', reportsRoutes);
+app.use('/transactions', transactionsRoutes);
+app.use('/users', userRouter);
+
+// Views
+app.get("/reports", (req, res) => {
+  res.render("GenerateReports");
 });
 
-// Login route with admin login logging
-// Login route with admin login logging
-app.post('/login', (req, res) => {
-  const username = req.body["username"];
-  const password = req.body["password"];
-
-  console.log('Login attempt:', username);
-
-  if (!username || !password) {
-    return res.render('index', { error: 'Please enter both username and password' });
-  }
-
-  const query = "SELECT * FROM admin WHERE Username = $1 AND Password = $2";
-  db.query(query, [username, password], (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.render('index', { error: 'An error occurred while checking your credentials.' });
-    }
-
-    if (results.rows.length > 0) {
-      console.log('✅ Login successful for:', username);
-
-      // Log the admin login in admin_logs table
-      const logQuery = "INSERT INTO admin_logs (admin_name) VALUES ($1)";
-      db.query(logQuery, [username], (logErr) => {
-        if (logErr) {
-          console.error('⚠️ Failed to log admin login:', logErr);
-        }
-      });
-
-      res.render('GenerateReports');
-    } else {
-      console.log('❌ Invalid login attempt for:', username);
-      res.render('index', { error: 'Invalid username or password, try again.' });
-    }
+app.get("/transac", (req, res) => {
+  const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
+  const chartData = JSON.stringify([120, 150, 180]);
+  res.render("Transactions", {
+    chartLabels,
+    chartData,
   });
 });
 
-
-// Logout route
-app.post('/logout', (req, res) => {
-  res.redirect('/');
-});
-
-// GET /notifications route (fetch recent admin logins)
-app.get('/notifications', (req, res) => {
-  const notifQuery = `
-    SELECT admin_name, login_time
-    FROM admin_logs
-    ORDER BY login_time DESC
-    LIMIT 1
-  `;
-
-  db.query(notifQuery, (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching notifications:', err);
-      return res.status(500).json({ error: 'Failed to fetch notifications' });
-    }
-
-    res.json(results.rows);  // PostgreSQL result access
-  });
-});
-
-
-app.listen(5000, () => {
-  console.log('🚀 Server started on port 5000');
+app.listen(port, () => {
+  console.log(`🚀 Server started on port ${port}`);
 });

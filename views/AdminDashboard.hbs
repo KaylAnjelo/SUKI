@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/AdminStyles.css">
+    <script src="/js/notifications.js" defer></script>
+    <script src="/js/logout.js" defer></script>
+    <script src="/js/sidebar.js" defer></script>
+    <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+            <div class="logo">SUKI Incorporation</div>
+            <nav class="nav">
+                <a href="/dashboard" class="nav-item active">
+                    <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+                </a>
+                <a href="/reports" class="nav-item">
+                    <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+                </a>
+                <a href="/transac" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+                </a>
+                <a href="/users/UserManagement" class="nav-item">
+                    <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="notif-container">
+                    <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+                    <div id="notificationsDropdown" style="display: none;">
+                        <ul id="notificationsList"></ul>
+                    </div>
+                    <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+                        <button type="submit" class="logout">Log out</button>
+                    </form>
+                </div>
+            </div>
+           <div class="dash">
+                <div class="stats-cards">
+                    <div class="card">
+                        <p>{{total_owners}}</p>
+                        <h3>Total Store Owners</h3>
+                    </div>
+                    <div class="card">
+                        <p>{{total_customers}}</p>
+                        <h3>Total Customers</h3>
+                    </div>
+                    <div class="card">
+                        <p>{{total_points}}</p>
+                        <h3>Total Points Earned</h3>
+                    </div>
+                    <div class="card">
+                        <p>{{redeemed_points}}</p>
+                        <h3>Total Points Redeemed</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tables-section">
+                <div class="table-container">
+                    <h2>Stores</h2>
+                    <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Store</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{{storesTableRows}}}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h2>Recent Transactions</h2>
+                    <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Points</th>
+                                <th>Store</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{{transactionTableRows}}} 
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+
+			<!-- Charts -->
+			<div class="charts-row">
+				<div class="chart-container">
+				  <canvas id="pointsPerDayChart"></canvas>
+				</div>
+				<div class="chart-container">
+				  <canvas id="storeEngagementChart"></canvas>
+				</div>
+			</div>
+        </main>
+    </div>
+
+    <script>
+      // Safely hydrate chart data
+      const pointsPerDayLabels = {{#if pointsPerDayLabels}}{{{pointsPerDayLabels}}}{{else}}[]{{/if}};
+      const pointsPerDayData = {{#if pointsPerDayData}}{{{pointsPerDayData}}}{{else}}[]{{/if}};
+      const storeLabels = {{#if storeLabels}}{{{storeLabels}}}{{else}}[]{{/if}};
+      const storeEngagementData = {{#if storeEngagementData}}{{{storeEngagementData}}}{{else}}[]{{/if}};
+
+      // Register DataLabels plugin
+      if (window.Chart && window.ChartDataLabels) {
+        Chart.register(ChartDataLabels);
+      }
+
+      // ===== Points Per Day Chart =====
+      const pointsPerDayCtx = document.getElementById('pointsPerDayChart').getContext('2d');
+      const gradient = pointsPerDayCtx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, '#C72C41');
+      gradient.addColorStop(1, '#7D0006');
+
+      new Chart(pointsPerDayCtx, {
+        type: 'bar',
+        data: {
+          labels: pointsPerDayLabels,
+          datasets: [{
+            label: 'Points Earned',
+            data: pointsPerDayData,
+            backgroundColor: gradient,
+            borderColor: '#7D0006',
+            borderWidth: 2,
+            hoverBackgroundColor: '#F8C471'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 1200,
+            easing: 'easeOutBounce'
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 5 }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { font: { size: 14, weight: 'bold' }, color: '#333' }
+            },
+            tooltip: {
+              backgroundColor: '#333',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} pts`
+              }
+            },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#333',
+              font: { size: 12, weight: 'bold' }
+            }
+          }
+        }
+      });
+
+      // ===== Store Engagement Chart =====
+      const storeEngagementCtx = document.getElementById('storeEngagementChart').getContext('2d');
+      new Chart(storeEngagementCtx, {
+        type: 'pie',
+        data: {
+          labels: storeLabels,
+          datasets: [{
+            label: 'Customer Engagement',
+            data: storeEngagementData,
+            backgroundColor: [
+              '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { size: 13, weight: 'bold' }, color: '#444' }
+            },
+            tooltip: {
+              backgroundColor: '#222',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: (ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                  return `${ctx.label}: ${ctx.raw} (${pct}%)`;
+                }
+              }
+            },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (value, ctx) => {
+                const total = ctx.dataset?.data?.reduce((a, b) => a + b, 0);
+                const pct = total ? (value / total * 100).toFixed(1) : 0;
+                return `${pct}%`;
+              }
+            }
+          }
+        }
+      });
+    </script>
+</body>
+</html>

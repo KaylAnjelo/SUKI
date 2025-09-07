@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions</title>
+  <link rel="stylesheet" href="/css/AdminStyles.css">
+  <link rel="stylesheet" href="/css/transactions.css">
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script src="/js/transactions.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+        <div class="logo">SUKI Incorporation</div>
+        <nav class="nav">
+          <a href="/dashboard" class="nav-item">
+            <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+          </a>
+          <a href="/reports" class="nav-item">
+            <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+          </a>
+          <a href="/transac" class="nav-item active">
+            <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+          </a>
+          <a href="/users/UserManagement" class="nav-item">
+            <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <div class="header">
+          <h1>Transactions</h1>
+          <div class="notif-container">
+            <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+            <div id="notificationsDropdown" style="display: none;">
+              <ul id="notificationsList"></ul>
+            </div>
+            <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+              <button type="submit" class="logout">Log out</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="filters-container" id="filtersContainer">
+          <div class="filter-group">
+            <label for="userFilterTrans">User Type:</label>
+            <select id="userFilterTrans" name="userType">
+              <option value="">All Types</option>
+              <option value="Student">Student</option>
+              <option value="Staff">Staff</option>
+              <option value="Out-of-School">Out-of-School</option>
+            </select>
+          </div>
+          <button id="applyFiltersTrans" class="filter-btn">Apply Filters</button>
+        </div>
+
+        <div class="table-container">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  
+                  <th>Account Name</th>
+                  <th class="sortable" data-key="amount">Amount</th>
+                  <th class="sortable" data-key="points">Accumulated Reward</th>
+                  <th class="sortable" data-key="date_time">Transaction Date</th>
+                  <th>Status</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Receipt Modal -->
+        <div id="detailsModal" class="modal" style="display:none;">
+          <div class="modal-content receipt-modal">
+            <div class="receipt-header">
+              <div class="receipt-logo">
+                <i class="fas fa-store"></i>
+                <span>SUKI Incorporation</span>
+              </div>
+              <span class="close" onclick="closeDetailsModal()">&times;</span>
+            </div>
+            
+            <div class="receipt-body">
+              <div class="receipt-title">
+                <h2>Transaction Receipt</h2>
+                <div class="receipt-number">Ref: #<span id="dRef"></span></div>
+              </div>
+              
+              <div class="receipt-info">
+                <div class="info-row">
+                  <span class="label">Date & Time:</span>
+                  <span class="value" id="dDate"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Customer:</span>
+                  <span class="value" id="dUser"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Store:</span>
+                  <span class="value" id="dStore"></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Transaction Type:</span>
+                  <span class="value" id="dType"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-items">
+                <div class="item-header">
+                  <span>Item Details</span>
+                </div>
+                <div class="item-row">
+                  <span class="item-name" id="dProduct"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-summary">
+                <div class="summary-row">
+                  <span class="label">Amount:</span>
+                  <span class="value amount" id="dAmount"></span>
+                </div>
+                <div class="summary-row">
+                  <span class="label">Points Earned:</span>
+                  <span class="value points" id="dPoints"></span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-row total">
+                  <span class="label">Total Points:</span>
+                  <span class="value" id="dPoints"></span>
+                </div>
+              </div>
+              
+              <div class="receipt-footer">
+                <p>Thank you for your purchase!</p>
+                <p class="footer-note">Keep this receipt for your records</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    
+  </body>
+  </html>
