@@ -21,6 +21,36 @@ window.onclick = function(event) {
   }
 };
 
+function onImageSelected(event) {
+  const file = event.target.files && event.target.files[0];
+  const preview = document.getElementById('imagePreview');
+  const fileName = document.getElementById('fileName');
+  if (!file) {
+    preview.innerHTML = '<i class="fas fa-image" style="font-size:48px;color:#c7c7c7;"></i>';
+    fileName.textContent = 'No file chosen';
+    return;
+  }
+  fileName.textContent = file.name;
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+  img.onload = () => URL.revokeObjectURL(img.src);
+  preview.innerHTML = '';
+  preview.appendChild(img);
+}
+
+function nextStep(step) {
+  // Switch form steps
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + step).classList.add('active');
+
+  // Update progress
+  document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
+  for (let i = 1; i <= step; i++) {
+    document.getElementById('progress-step-' + i).classList.add('active');
+  }
+}
+
+
 // Confirm deletion
 function confirmDelete(form) {
   return confirm('Are you sure you want to delete this store? This action cannot be undone.');

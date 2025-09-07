@@ -671,6 +671,230 @@ h1 {
   .modal .modal-content { max-width: 95vw; }
 }
 
+/* Modal wrapper */
+#addStoreModal .modal-content {
+  max-width: 960px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Body: side-by-side layout */
+#addStoreModal .modal-body {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  padding: 24px;
+  overflow: hidden; /* removes scroll */
+}
+
+/* Left uploader */
+#addStoreModal .uploader {
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  min-width: 280px;
+  max-width: 300px;
+  flex: 0 0 300px;
+}
+
+/* Right form using grid */
+#addStoreModal .right-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns */
+  gap: 18px 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Full-width rows */
+#addStoreModal .full {
+  grid-column: 1 / -1;
+}
+
+/* Labels & inputs */
+#addStoreModal .form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+#addStoreModal label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+  text-align: left;
+}
+
+#addStoreModal input {
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+#addStoreModal input:focus {
+  border-color: #7c0f0f;
+  box-shadow: 0 0 0 2px #7c0f0f;
+}
+
+/* Hide native file input; we trigger it via custom button */
+#addStoreModal .file-input { display: none; }
+
+/* Actions row */
+#addStoreModal .form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#addStoreModal .cancel-btn,
+#addStoreModal .submit-btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#addStoreModal .cancel-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #333;
+}
+#addStoreModal .cancel-btn:hover { background: #f3f4f6; }
+
+#addStoreModal .submit-btn {
+  border: none;
+  background: #7c0f0f;
+  color: #fff;
+  font-weight: 600;
+}
+#addStoreModal .submit-btn:hover { background: #5a0000; }
+
+/* Next / Back buttons */
+#addStoreModal .next-btn,
+#addStoreModal .back-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.15s ease;
+}
+#addStoreModal .next-btn {
+  background: #7c0f0f;
+  color: #fff;
+}
+#addStoreModal .next-btn:hover { background: #5a0000; }
+#addStoreModal .next-btn:active { transform: translateY(1px); }
+
+#addStoreModal .back-btn {
+  background: #fff;
+  color: #333;
+  border-color: #d1d5db;
+}
+#addStoreModal .back-btn:hover { background: #f3f4f6; }
+#addStoreModal .back-btn:active { transform: translateY(1px); }
+
+/* Step transitions */
+#addStoreModal .form-step {
+  display: none;
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+#addStoreModal .form-step.active,
+#addStoreModal .form-step.animating {
+  display: flex;
+}
+#addStoreModal .form-step.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.form-step {
+  display: none;
+  height: 100%;
+}
+.form-step.active {
+  display: flex;
+  flex: 1;
+  gap: 24px;
+}
+
+.progress-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+  font-family: sans-serif;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  text-align: center;
+}
+
+.progress-step .circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ddd;
+  color: #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 6px;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active .circle {
+  background: #7c0f0f;
+  color: #fff;
+}
+
+.progress-step .label {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.progress-step.active .label {
+  color: #7c0f0f;
+  font-weight: 600;
+}
+
+.line {
+  flex: 0 0 60px;
+  height: 3px;
+  background: #ddd;
+  margin: 0 8px;
+  transition: background 0.3s ease;
+}
+
+.progress-step.active + .line {
+  background: #7c0f0f;
+}
+
+
+
 /* Charts layout */
 .charts-row {
   display: flex;
