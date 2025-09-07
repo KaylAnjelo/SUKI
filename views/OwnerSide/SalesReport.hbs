@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{appName}} - Sales Report</title>
+
+  <link rel="stylesheet" href="/styles.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <h2>{{appName}}</h2>
+      </div>
+      <nav class="nav-menu">
+        <ul>
+          <li>
+            <a href="/dashboard">
+              <i class="fas fa-chart-line"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="active has-submenu">
+            <a href="#reports" class="menu-toggle">
+              <i class="fas fa-file-alt"></i>
+              <span>Generate Reports</span>
+              <i class="fas fa-chevron-right"></i>
+            </a>
+            <ul class="submenu">
+              <li class="active">
+                <a href="/sales">
+                  <i class="fas fa-circle"></i>
+                  <span>Sales</span>
+                </a>
+              </li>
+              <li>
+                <a href="/user-transactions">
+                  <i class="fas fa-circle"></i>
+                  <span>User Transactions</span>
+                </a>
+              </li>
+              <li>
+                <a href="/user-activity">
+                  <i class="fas fa-circle"></i>
+                  <span>User Activity</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="/transactions">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Transactions</span>
+            </a>
+          </li>
+          <li>
+            <a href="/users">
+              <i class="fas fa-fingerprint"></i>
+              <span>Users</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1>{{pageTitle}}</h1>
+        <div class="header-actions">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="notification-dot"></span>
+          </div>
+          <span class="logout">Log out</span>
+        </div>
+      </header>
+
+      <!-- Download Options -->
+      <div class="download-options">
+        <button class="download-btn">
+          <i class="fas fa-file-csv"></i>
+          <span>Download as CSV</span>
+        </button>
+        <button class="download-btn">
+          <i class="fas fa-file-pdf"></i>
+          <span>Download as PDF</span>
+        </button>
+      </div>
+
+      <!-- Filter Section -->
+      <div class="filter-section">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Date Range</label>
+            <div class="input-with-icon">
+              <input type="text" placeholder="Select date"/>
+              <i class="fas fa-calendar"></i>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>To</label>
+            <input type="text" placeholder="Select date"/>
+          </div>
+          <div class="filter-group">
+            <label>Store</label>
+            <select>
+              <option>All Stores</option>
+              {{#each stores}}
+                <option>{{this}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select>
+              <option>Newest</option>
+              <option>Oldest</option>
+              <option>Amount</option>
+            </select>
+          </div>
+          <button class="apply-filter-btn">Apply Filter</button>
+        </div>
+      </div>
+
+      <!-- Report Table -->
+      <div class="report-table-container">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Store</th>
+              <th>Reference Number</th>
+              <th>Product Sold</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each sales}}
+              <tr>
+                <td>{{this.date}}</td>
+                <td>{{this.store}}</td>
+                <td>{{this.reference}}</td>
+                <td>{{this.product}}</td>
+                <td>{{this.amount}}</td>
+                <td>{{this.status}}</td>
+              </tr>
+            {{else}}
+              <tr>
+                <td colspan="6">No sales records available.</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-text">Are you sure you want to logout?</div>
+      <div class="modal-buttons">
+        <button class="modal-btn yes-btn">YES</button>
+        <button class="modal-btn no-btn">NO</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
