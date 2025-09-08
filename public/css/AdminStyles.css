@@ -68,7 +68,7 @@ body {
 
 .main-content {
   flex-grow: 1;
-  padding: 40px;
+  padding: 30px;
   background-color: #fff;
   position: relative;
   overflow-y: auto;
@@ -80,6 +80,73 @@ body {
   justify-content: space-between; 
   align-items: center;     
   padding-right: 40px;
+  margin-bottom: 20px;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.date-display {
+  margin: 3px 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.search-icon {
+  color: #666;
+  font-size: 16px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  background: #7c0f0f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #666;
 }
 
 
@@ -270,9 +337,9 @@ h1 {
 }
 
 /* Dashboard table scroll handling */
-.table-container { margin-bottom: 20px; }
+.table-container { margin-bottom: 15px; }
 .table-scroll {
-  max-height: 280px;
+  max-height: 200px;
   overflow-y: auto;
   border: 1px solid #eee;
   border-radius: 6px;
@@ -287,50 +354,324 @@ h1 {
 .table-scroll tbody tr:nth-child(even) { background: #fafafa; }
 
 
-/* --- Stats Cards (Responsive) --- */
-.stats-cards {
+/* --- Metrics Layout --- */
+.metrics-row-1 {
   display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
-  gap: 13px;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
+.metrics-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* --- Metric Cards --- */
+.metric-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.metric-card.total-sales {
+  background: linear-gradient(135deg, #7c0f0f, #C72C41);
+  color: white;
+}
+
+.metric-card.total-sales .card-icon {
+  color: white;
+}
+
+.metric-card.total-sales .metric-value {
+  color: white;
+}
+
+.metric-card.total-sales .metric-comparison {
+  color: rgba(255,255,255,0.8);
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #7c0f0f;
+  margin-bottom: 10px;
+}
+
+.card-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.metric-comparison {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.metric-change {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metric-change.positive {
+  color: #27AE60;
+}
+
+.metric-change.negative {
+  color: #E74C3C;
+}
+
+/* --- Product Stats Card --- */
+.metric-card.product-stats {
+  grid-column: span 1;
+}
+
+.card-header {
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.card-header p {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.time-dropdown {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+}
+
+.donut-chart-container {
+  position: relative;
+  height: 150px;
+  margin-bottom: 15px;
+}
+
+.chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.center-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 3px;
+}
+
+.center-label {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 3px;
+}
+
+.center-change {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+}
+
+.category-name {
+  color: #333;
+  font-weight: 500;
+}
+
+.category-value {
+  color: #666;
+  font-weight: 600;
+}
+
+/* --- Chart Cards --- */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+  margin-bottom: 15px;
+}
+
+.chart-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-header p {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.seen-product {
+  background: #E5E5E5;
+}
+
+.legend-dot.sales {
+  background: #7c0f0f;
+}
+
+.chart-container {
+  height: 200px;
+  position: relative;
+}
+
+.bubble-chart-container {
+  position: relative;
+  height: 150px;
+}
+
+.country-list {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.country-flag {
+  font-size: 12px;
+}
+
+/* --- Responsive Design --- */
 @media (max-width: 1400px) {
-  .stats-cards {
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  .metrics-row-1 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  
+  .metric-card.product-stats {
+    grid-column: span 2;
   }
 }
 
 @media (max-width: 992px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  .metrics-row-1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
-}
-
-@media (max-width: 576px) {
-  .stats-cards {
+  
+  .metric-card.product-stats {
+    grid-column: span 1;
+  }
+  
+  .metrics-row-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .charts-row {
     grid-template-columns: 1fr;
   }
 }
 
-.card {
-  background-color: #f5f5f5;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.card p {
-  margin: 0;
-  font-size: 32px;
-  font-weight: bold;
-  color: #7c0f0f;
-}
-
-.card h3 {
-  margin-top: 8px;
-  font-size: 16px;
-  color: #333;
+@media (max-width: 576px) {
+  .header-right {
+    gap: 10px;
+  }
+  
+  .user-profile {
+    display: none;
+  }
+  
+  .search-container {
+    display: none;
+  }
 }
 
 /* Center table section headings on small devices */
