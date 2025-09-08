@@ -74,12 +74,8 @@
                         <h3>Total Store Owners</h3>
                         <div class="metric-value">{{total_owners}}</div>
                         <div class="metric-comparison">Stores vs last month</div>
-                        <div class="metric-change {{#if (gt owners_growth 0)}}positive{{else}}negative{{/if}}">
-                            {{#if (gt owners_growth 0)}}
-                                <i class="fas fa-arrow-up"></i>
-                            {{else}}
-                                <i class="fas fa-arrow-down"></i>
-                            {{/if}}
+                        <div class="metric-change {{owners_growth_class}}">
+                            <i class="fas {{owners_icon}}"></i>
                             {{owners_growth}}%
                         </div>
                     </div>
@@ -93,12 +89,8 @@
                         <h3>Total Customers</h3>
                         <div class="metric-value">{{total_customers}}</div>
                         <div class="metric-comparison">Customers vs last month</div>
-                        <div class="metric-change {{#if (gt customers_growth 0)}}positive{{else}}negative{{/if}}">
-                            {{#if (gt customers_growth 0)}}
-                                <i class="fas fa-arrow-up"></i>
-                            {{else}}
-                                <i class="fas fa-arrow-down"></i>
-                            {{/if}}
+                        <div class="metric-change {{customers_growth_class}}">
+                            <i class="fas {{customers_icon}}"></i>
                             {{customers_growth}}%
                         </div>
                     </div>
@@ -121,12 +113,8 @@
                         <div class="chart-center">
                             <div class="center-value">{{total_points}}</div>
                             <div class="center-label">Total Points</div>
-                            <div class="metric-change {{#if (gt product_growth 0)}}positive{{else}}negative{{/if}}">
-                                {{#if (gt product_growth 0)}}
-                                    <i class="fas fa-arrow-up"></i>
-                                {{else}}
-                                    <i class="fas fa-arrow-down"></i>
-                                {{/if}}
+                            <div class="metric-change {{product_growth_class}}">
+                                <i class="fas {{product_icon}}"></i>
                                 {{product_growth}}%
                             </div>
                         </div>
@@ -152,12 +140,8 @@
                         <h3>Total Points Earned</h3>
                         <div class="metric-value">{{total_points}}</div>
                         <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change {{#if (gt points_growth 0)}}positive{{else}}negative{{/if}}">
-                            {{#if (gt points_growth 0)}}
-                                <i class="fas fa-arrow-up"></i>
-                            {{else}}
-                                <i class="fas fa-arrow-down"></i>
-                            {{/if}}
+                        <div class="metric-change {{points_growth_class}}">
+                            <i class="fas {{points_icon}}"></i>
                             {{points_growth}}%
                         </div>
                     </div>
@@ -171,12 +155,8 @@
                         <h3>Total Points Redeemed</h3>
                         <div class="metric-value">{{redeemed_points}}</div>
                         <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change {{#if (gt redeemed_growth 0)}}positive{{else}}negative{{/if}}">
-                            {{#if (gt redeemed_growth 0)}}
-                                <i class="fas fa-arrow-up"></i>
-                            {{else}}
-                                <i class="fas fa-arrow-down"></i>
-                            {{/if}}
+                        <div class="metric-change {{redeemed_growth_class}}">
+                            <i class="fas {{redeemed_icon}}"></i>
                             {{redeemed_growth}}%
                         </div>
                     </div>
