@@ -37,8 +37,7 @@
         <main class="main-content">
             <div class="header">
                 <div class="header-left">
-                    <h1>Sales Report</h1>
-                    <p class="date-display">Friday, December 15th 2023</p>
+                    <h1 style="color:#7D0006;">Dashboard</h1>
                 </div>
                 <div class="header-right">
                     <div class="search-container">
@@ -75,7 +74,14 @@
                         <h3>Total Store Owners</h3>
                         <div class="metric-value">{{total_owners}}</div>
                         <div class="metric-comparison">Stores vs last month</div>
-                        <div class="metric-change positive">+2.08%</div>
+                        <div class="metric-change {{#if (gt owners_growth 0)}}positive{{else}}negative{{/if}}">
+                            {{#if (gt owners_growth 0)}}
+                                <i class="fas fa-arrow-up"></i>
+                            {{else}}
+                                <i class="fas fa-arrow-down"></i>
+                            {{/if}}
+                            {{owners_growth}}%
+                        </div>
                     </div>
                 </div>
                 
@@ -87,7 +93,14 @@
                         <h3>Total Customers</h3>
                         <div class="metric-value">{{total_customers}}</div>
                         <div class="metric-comparison">Customers vs last month</div>
-                        <div class="metric-change positive">+12.4%</div>
+                        <div class="metric-change {{#if (gt customers_growth 0)}}positive{{else}}negative{{/if}}">
+                            {{#if (gt customers_growth 0)}}
+                                <i class="fas fa-arrow-up"></i>
+                            {{else}}
+                                <i class="fas fa-arrow-down"></i>
+                            {{/if}}
+                            {{customers_growth}}%
+                        </div>
                     </div>
                 </div>
                 
@@ -108,7 +121,14 @@
                         <div class="chart-center">
                             <div class="center-value">{{total_points}}</div>
                             <div class="center-label">Total Points</div>
-                            <div class="center-change positive">+5.34%</div>
+                            <div class="metric-change {{#if (gt product_growth 0)}}positive{{else}}negative{{/if}}">
+                                {{#if (gt product_growth 0)}}
+                                    <i class="fas fa-arrow-up"></i>
+                                {{else}}
+                                    <i class="fas fa-arrow-down"></i>
+                                {{/if}}
+                                {{product_growth}}%
+                            </div>
                         </div>
                     </div>
                     <div class="category-list">
@@ -116,7 +136,6 @@
                         <div class="category-item">
                             <span class="category-name">{{this}}</span>
                             <span class="category-value">{{lookup ../storeEngagementData @index}}</span>
-                            <span class="category-change positive">+{{#if @first}}1.8{{else if @last}}2.3{{else}}1.5{{/if}}%</span>
                         </div>
                         {{/each}}
                     </div>
@@ -133,7 +152,14 @@
                         <h3>Total Points Earned</h3>
                         <div class="metric-value">{{total_points}}</div>
                         <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change positive">+2.08%</div>
+                        <div class="metric-change {{#if (gt points_growth 0)}}positive{{else}}negative{{/if}}">
+                            {{#if (gt points_growth 0)}}
+                                <i class="fas fa-arrow-up"></i>
+                            {{else}}
+                                <i class="fas fa-arrow-down"></i>
+                            {{/if}}
+                            {{points_growth}}%
+                        </div>
                     </div>
                 </div>
                 
@@ -145,7 +171,14 @@
                         <h3>Total Points Redeemed</h3>
                         <div class="metric-value">{{redeemed_points}}</div>
                         <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change positive">+12.1%</div>
+                        <div class="metric-change {{#if (gt redeemed_growth 0)}}positive{{else}}negative{{/if}}">
+                            {{#if (gt redeemed_growth 0)}}
+                                <i class="fas fa-arrow-up"></i>
+                            {{else}}
+                                <i class="fas fa-arrow-down"></i>
+                            {{/if}}
+                            {{redeemed_growth}}%
+                        </div>
                     </div>
                 </div>
             </div>
