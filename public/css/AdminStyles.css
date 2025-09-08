@@ -72,6 +72,7 @@ body {
   background-color: #fff;
   position: relative;
   overflow-y: hidden; /* lock page height to avoid scrolling */
+  overflow-y: hidden; /* lock page height to avoid scrolling */
   overflow-x: hidden;
 }
 
@@ -333,7 +334,9 @@ h1 {
 
 /* Dashboard table scroll handling */
 .table-container { margin-bottom: 15px; }
+.table-container { margin-bottom: 15px; }
 .table-scroll {
+  max-height: 200px;
   max-height: 200px;
   overflow-y: auto;
   border: 1px solid #eee;
@@ -351,7 +354,220 @@ h1 {
 
 /* --- Metrics Layout --- */
 .metrics-row-1 {
+/* --- Metrics Layout --- */
+
   display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.metrics-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* --- Metric Cards --- */
+.metric-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.metric-card.total-sales {
+  background: linear-gradient(135deg, #7c0f0f, #C72C41);
+  color: white;
+}
+
+.metric-card.total-sales .card-icon {
+  color: white;
+}
+
+.metric-card.total-sales .metric-value {
+  color: white;
+}
+
+.metric-card.total-sales .metric-comparison {
+  color: rgba(255,255,255,0.8);
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #7c0f0f;
+  margin-bottom: 10px;
+}
+
+.card-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.metric-comparison {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.metric-change {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metric-change.positive {
+  color: #27AE60;
+}
+
+.metric-change.negative {
+  color: #E74C3C;
+}
+
+/* --- Product Stats Card --- */
+.metric-card.product-stats {
+  grid-column: span 1;
+}
+
+.card-header {
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.card-header p {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.time-dropdown {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+}
+
+.donut-chart-container {
+  position: relative;
+  height: 150px;
+  margin-bottom: 15px;
+}
+
+.chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.center-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 3px;
+}
+
+.center-label {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 3px;
+}
+
+.center-change {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+}
+
+.category-name {
+  color: #333;
+  font-weight: 500;
+}
+
+.category-value {
+  color: #666;
+  font-weight: 600;
+}
+
+/* --- Chart Cards --- */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+  margin-bottom: 15px;
+}
+
+.chart-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-header p {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  color: #666;
   grid-template-columns: 1fr 1fr 1.5fr;
   gap: 15px;
   margin-bottom: 15px;
@@ -625,7 +841,74 @@ h1 {
 }
 
 /* --- Responsive Design --- */
+.chart-legend {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.seen-product {
+  background: #E5E5E5;
+}
+
+.legend-dot.sales {
+  background: #7c0f0f;
+}
+
+.chart-container {
+  height: 200px;
+  position: relative;
+}
+
+.bubble-chart-container {
+  position: relative;
+  height: 150px;
+}
+
+.country-list {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.country-flag {
+  font-size: 12px;
+}
+
+/* --- Responsive Design --- */
 @media (max-width: 1400px) {
+  .metrics-row-1 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  
+  .metric-card.product-stats {
+    grid-column: span 2;
   .metrics-row-1 {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
@@ -635,8 +918,12 @@ h1 {
     grid-column: span 2;
   }
 }
+}
 
 @media (max-width: 992px) {
+  .metrics-row-1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   .metrics-row-1 {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
@@ -651,8 +938,19 @@ h1 {
   }
   
   .charts-row {
+  
+  .metric-card.product-stats {
+    grid-column: span 1;
+  }
+  
+  .metrics-row-2 {
     grid-template-columns: 1fr;
   }
+  
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
 }
 
 @media (max-width: 576px) {
@@ -667,6 +965,77 @@ h1 {
   .search-container {
     display: none;
   }
+}
+
+.primary-card .card-value {
+  color: white;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: #999;
+}
+
+.primary-card .card-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.card-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.primary-card {
+  background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
+  color: white;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card:not(.primary-card) .card-icon {
+  background: #f8f8f8;
+  color: #7c0f0f;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.card-badge.positive {
+  background: #e8f5e8;
+  color: #27ae60;
+}
+
+.card-badge.negative {
+  background: #ffeaea;
+  color: #e74c3c;
+}
+
+.primary-card .card-badge.positive {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .primary-card .card-value {
@@ -1276,11 +1645,13 @@ h1 {
   justify-content: space-between;
   align-items: stretch;
   margin: 6px 0 10px 0;
+  margin: 6px 0 10px 0;
 }
 
 .chart-container {
   flex: 1;
   min-width: 0;
+  height: 200px; /* slightly smaller to fit without cropping */
   height: 200px; /* slightly smaller to fit without cropping */
 }
 
@@ -1597,4 +1968,5 @@ h1 {
   .card-content {
     padding: 0 15px 15px 15px;
   }
+}
 }
