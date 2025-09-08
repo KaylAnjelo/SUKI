@@ -10,7 +10,7 @@ router.get('/Redemptions', (req, res) => {
 });
 
 // User Management (support common aliases)
-router.get(['/UserManagement', '/usermanagement', '/user-management'], (req, res) => {
+router.get(['/UserManagement', '/usermanagement', '/user-management', '/management'], (req, res) => {
     res.render('users/UserManagement');
 });
 
