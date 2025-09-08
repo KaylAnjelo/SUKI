@@ -36,34 +36,180 @@
 
         <main class="main-content">
             <div class="header">
-                <h1>Dashboard</h1>
-                <div class="notif-container">
-                    <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-                    <div id="notificationsDropdown" style="display: none;">
-                        <ul id="notificationsList"></ul>
+                <div class="header-left">
+                    <h1 style="color:#7D0006;">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                    <div class="notif-container">
+                        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+                        <div id="notificationsDropdown" style="display: none;">
+                            <ul id="notificationsList"></ul>
+                        </div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="profile-pic">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <span class="user-name">Admin User</span>
+                            <span class="user-role">Admin store</span>
+                        </div>
                     </div>
                     <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
                         <button type="submit" class="logout">Log out</button>
                     </form>
                 </div>
             </div>
-           <div class="dash">
-                <div class="stats-cards">
-                    <div class="card">
-                        <p>{{total_owners}}</p>
+            
+            <!-- Top Row Metrics -->
+            <div class="metrics-row-1">
+                <div class="metric-card total-sales">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-content">
                         <h3>Total Store Owners</h3>
+                        <div class="metric-value">{{total_owners}}</div>
+                        <div class="metric-comparison">Stores vs last month</div>
+                        <div class="metric-change {{owners_growth_class}}">
+                            <i class="fas {{owners_icon}}"></i>
+                            {{owners_growth}}%
+                        </div>
                     </div>
-                    <div class="card">
-                        <p>{{total_customers}}</p>
+                </div>
+                
+                <div class="metric-card total-orders">
+                    <div class="card-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="card-content">
                         <h3>Total Customers</h3>
+                        <div class="metric-value">{{total_customers}}</div>
+                        <div class="metric-comparison">Customers vs last month</div>
+                        <div class="metric-change {{customers_growth_class}}">
+                            <i class="fas {{customers_icon}}"></i>
+                            {{customers_growth}}%
+                        </div>
                     </div>
-                    <div class="card">
-                        <p>{{total_points}}</p>
+                </div>
+                
+                <div class="metric-card product-stats">
+                    <div class="card-header">
+                        <h3>Product Statistic</h3>
+                        <p>Track your product sales</p>
+                        <div class="dropdown-container">
+                            <select class="time-dropdown">
+                                <option>Today</option>
+                                <option>This Week</option>
+                                <option>This Month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="donut-chart-container">
+                        <canvas id="productStatsChart"></canvas>
+                        <div class="chart-center">
+                            <div class="center-value">{{total_points}}</div>
+                            <div class="center-label">Total Points</div>
+                            <div class="metric-change {{product_growth_class}}">
+                                <i class="fas {{product_icon}}"></i>
+                                {{product_growth}}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="category-list">
+                        {{#each storeLabels}}
+                        <div class="category-item">
+                            <span class="category-name">{{this}}</span>
+                            <span class="category-value">{{lookup ../storeEngagementData @index}}</span>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Middle Row Metrics -->
+            <div class="metrics-row-2">
+                <div class="metric-card visitor">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-content">
                         <h3>Total Points Earned</h3>
+                        <div class="metric-value">{{total_points}}</div>
+                        <div class="metric-comparison">Points vs last month</div>
+                        <div class="metric-change {{points_growth_class}}">
+                            <i class="fas {{points_icon}}"></i>
+                            {{points_growth}}%
+                        </div>
                     </div>
-                    <div class="card">
-                        <p>{{redeemed_points}}</p>
+                </div>
+                
+                <div class="metric-card total-sold">
+                    <div class="card-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="card-content">
                         <h3>Total Points Redeemed</h3>
+                        <div class="metric-value">{{redeemed_points}}</div>
+                        <div class="metric-comparison">Points vs last month</div>
+                        <div class="metric-change {{redeemed_growth_class}}">
+                            <i class="fas {{redeemed_icon}}"></i>
+                            {{redeemed_growth}}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Row Charts -->
+            <div class="charts-row">
+                <div class="chart-card customer-habits">
+                    <div class="chart-header">
+                        <h3>Points Per Day</h3>
+                        <p>Track daily points earned</p>
+                        <div class="dropdown-container">
+                            <select class="time-dropdown">
+                                <option>This year</option>
+                                <option>This month</option>
+                                <option>This week</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot sales"></span>
+                            <span>Points Earned</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="customerHabitsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card customer-growth">
+                    <div class="chart-header">
+                        <h3>Store Engagement</h3>
+                        <p>Track store performance</p>
+                        <div class="dropdown-container">
+                            <select class="time-dropdown">
+                                <option>Today</option>
+                                <option>This week</option>
+                                <option>This month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bubble-chart-container">
+                        <canvas id="customerGrowthChart"></canvas>
+                        <div class="country-list">
+                            {{#each storeLabels}}
+                            <div class="country-item">
+                                <span class="country-flag">🏪</span>
+                                <span>{{this}}</span>
+                            </div>
+                            {{/each}}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,13 +277,42 @@
         Chart.register(ChartDataLabels);
       }
 
-      // ===== Points Per Day Chart =====
-      const pointsPerDayCtx = document.getElementById('pointsPerDayChart').getContext('2d');
-      const gradient = pointsPerDayCtx.createLinearGradient(0, 0, 0, 400);
+      // ===== Product Stats Donut Chart =====
+      const productStatsCtx = document.getElementById('productStatsChart').getContext('2d');
+      new Chart(productStatsCtx, {
+        type: 'doughnut',
+        data: {
+          labels: storeLabels,
+          datasets: [{
+            data: storeEngagementData,
+            backgroundColor: [
+              '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
+            ],
+            borderWidth: 0,
+            cutout: '70%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              enabled: false
+            }
+          }
+        }
+      });
+
+      // ===== Customer Habits Bar Chart =====
+      const customerHabitsCtx = document.getElementById('customerHabitsChart').getContext('2d');
+      const gradient = customerHabitsCtx.createLinearGradient(0, 0, 0, 400);
       gradient.addColorStop(0, '#C72C41');
       gradient.addColorStop(1, '#7D0006');
 
-      new Chart(pointsPerDayCtx, {
+      new Chart(customerHabitsCtx, {
         type: 'bar',
         data: {
           labels: pointsPerDayLabels,
@@ -147,7 +322,8 @@
             backgroundColor: gradient,
             borderColor: '#7D0006',
             borderWidth: 2,
-            hoverBackgroundColor: '#F8C471'
+            hoverBackgroundColor: '#F8C471',
+            borderRadius: 4
           }]
         },
         options: {
@@ -158,6 +334,11 @@
             easing: 'easeOutBounce'
           },
           scales: {
+            x: {
+              grid: {
+                display: false
+              }
+            },
             y: {
               beginAtZero: true,
               ticks: { stepSize: 5 }
@@ -165,9 +346,7 @@
           },
           plugins: {
             legend: {
-              display: true,
-              position: 'bottom',
-              labels: { font: { size: 14, weight: 'bold' }, color: '#333' }
+              display: false
             },
             tooltip: {
               backgroundColor: '#333',
@@ -176,59 +355,50 @@
               callbacks: {
                 label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} pts`
               }
-            },
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#333',
-              font: { size: 12, weight: 'bold' }
             }
           }
         }
       });
 
-      // ===== Store Engagement Chart =====
-      const storeEngagementCtx = document.getElementById('storeEngagementChart').getContext('2d');
-      new Chart(storeEngagementCtx, {
-        type: 'pie',
+      // ===== Customer Growth Bubble Chart =====
+      const customerGrowthCtx = document.getElementById('customerGrowthChart').getContext('2d');
+      
+      // Create bubble data from store engagement data
+      const bubbleData = storeEngagementData.map((value, index) => ({
+        x: Math.random() * 4 + 1, // Random x position
+        y: Math.random() * 4 + 1, // Random y position
+        r: Math.max(value / 2, 10) // Size based on data value
+      }));
+
+      new Chart(customerGrowthCtx, {
+        type: 'bubble',
         data: {
-          labels: storeLabels,
           datasets: [{
-            label: 'Customer Engagement',
-            data: storeEngagementData,
+            label: 'Store Engagement',
+            data: bubbleData,
             backgroundColor: [
               '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
-            ]
+            ],
+            borderWidth: 0
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          scales: {
+            x: {
+              display: false
+            },
+            y: {
+              display: false
+            }
+          },
           plugins: {
             legend: {
-              position: 'right',
-              labels: { font: { size: 13, weight: 'bold' }, color: '#444' }
+              display: false
             },
             tooltip: {
-              backgroundColor: '#222',
-              titleColor: '#fff',
-              bodyColor: '#fff',
-              callbacks: {
-                label: (ctx) => {
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                  return `${ctx.label}: ${ctx.raw} (${pct}%)`;
-                }
-              }
-            },
-            datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: (value, ctx) => {
-                const total = ctx.dataset?.data?.reduce((a, b) => a + b, 0);
-                const pct = total ? (value / total * 100).toFixed(1) : 0;
-                return `${pct}%`;
-              }
+              enabled: false
             }
           }
         }

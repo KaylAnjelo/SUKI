@@ -1,127 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{appName}} - Dashboard</title>
 
-  <link rel="stylesheet" href="styles.css"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/AdminStyles.css"/>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
 </head>
 <body>
   <div class="container">
     <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <h2>{{appName}}</h2>
-      </div>
-
-      <nav class="nav-menu">
-        <ul>
-          <li class="active">
-            <a href="#dashboard">
-              <i class="fas fa-chart-line"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-
-          <li class="has-submenu">
-            <a href="#reports" class="menu-toggle">
-              <i class="fas fa-file-alt"></i>
-              <span>Generate Reports</span>
-              <i class="fas fa-chevron-right"></i>
-            </a>
-            <ul class="submenu">
-              <li>
-                <a href="#sales">
-                  <i class="fas fa-circle"></i>
-                  <span>Sales</span>
-                </a>
-              </li>
-              <li>
-                <a href="#user-transactions">
-                  <i class="fas fa-circle"></i>
-                  <span>User Transactions</span>
-                </a>
-              </li>
-              <li>
-                <a href="#user-activity">
-                  <i class="fas fa-circle"></i>
-                  <span>User Activity</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <li>
-            <a href="Transactions.html">
-              <i class="fas fa-exchange-alt"></i>
-              <span>Transactions</span>
-            </a>
-          </li>
-          <li>
-            <a href="Users.html">
-              <i class="fas fa-fingerprint"></i>
-              <span>Users</span>
-            </a>
-          </li>
-        </ul>
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo">{{appName}}</div>
+      <nav class="nav">
+        <a href="/owner/dashboard" class="nav-item active">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/reports" class="nav-item">
+          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/users" class="nav-item">
+          <i class="fas fa-fingerprint"></i><span class="label">Users</span>
+        </a>
       </nav>
-    </div>
+    </aside>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main class="main-content">
       <!-- Header -->
-      <header class="header">
-        <h1>{{pageTitle}}</h1>
-        <div class="header-actions">
-          <i class="fas fa-bell"></i>
-          <span class="logout">Log out</span>
+      <div class="header">
+        <div class="header-left">
+          <h1 style="color:#7D0006;">{{pageTitle}}</h1>
         </div>
-      </header>
-
-      <!-- Summary Cards -->
-      <div class="summary-cards">
-        {{#each summaryCards}}
-          <div class="card">
-            <div class="card-number">{{this.number}}</div>
-            <div class="card-label">{{this.label}}</div>
+        <div class="header-right">
+          <div class="notif-container">
+            <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+            <div id="notificationsDropdown" style="display:none;">
+              <ul id="notificationsList"></ul>
+            </div>
           </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{ownerName}}</span>
+              <span class="user-role">Store Owner</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display:inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Metrics Row -->
+      <div class="metrics-row-1">
+        {{#each summaryCards}}
+        <div class="metric-card">
+          <div class="card-icon">
+            <i class="{{this.icon}}"></i>
+          </div>
+          <div class="card-content">
+            <h3>{{this.label}}</h3>
+            <div class="metric-value">{{this.number}}</div>
+            <div class="metric-comparison">{{this.comparison}}</div>
+            <div class="metric-change {{this.growth_class}}">
+              <i class="fas {{this.icon_direction}}"></i>
+              {{this.growth}}%
+            </div>
+          </div>
+        </div>
         {{/each}}
       </div>
 
-      <!-- Content Sections -->
-      <div class="content-sections">
-        <!-- Vendors Section -->
-        <div class="section vendors-section">
-          <h3>Vendors</h3>
-          <div class="table-container">
-            <table class="data-table">
+      <!-- Tables Section -->
+      <div class="tables-section">
+        <!-- Vendors Table -->
+        <div class="table-container">
+          <h2>Vendors</h2>
+          <div class="table-scroll">
+            <table>
               <thead>
                 <tr>
-                  <th>Vendors</th>
+                  <th>Vendor</th>
                   <th>Store</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {{#each vendors}}
-                  <tr>
-                    <td>{{this.name}}</td>
-                    <td>{{this.store}}</td>
-                    <td>{{this.status}}</td>
-                  </tr>
+                <tr>
+                  <td>{{this.name}}</td>
+                  <td>{{this.store}}</td>
+                  <td>{{this.status}}</td>
+                </tr>
                 {{/each}}
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Recent Transactions Section -->
-        <div class="section transactions-section">
-          <h3>Recent Transactions</h3>
-          <div class="table-container">
-            <table class="data-table">
+        <!-- Recent Transactions Table -->
+        <div class="table-container">
+          <h2>Recent Transactions</h2>
+          <div class="table-scroll">
+            <table>
               <thead>
                 <tr>
                   <th>Date</th>
@@ -132,32 +127,19 @@
               </thead>
               <tbody>
                 {{#each transactions}}
-                  <tr>
-                    <td>{{this.date}}</td>
-                    <td>{{this.user}}</td>
-                    <td>{{this.points}}</td>
-                    <td>{{this.store}}</td>
-                  </tr>
+                <tr>
+                  <td>{{this.date}}</td>
+                  <td>{{this.user}}</td>
+                  <td>{{this.points}}</td>
+                  <td>{{this.store}}</td>
+                </tr>
                 {{/each}}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
-
-  <!-- Logout Confirmation Modal -->
-  <div id="logoutModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-text">Are you sure you want to logout?</div>
-      <div class="modal-buttons">
-        <button class="modal-btn yes-btn">YES</button>
-        <button class="modal-btn no-btn">NO</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
