@@ -19,7 +19,7 @@
             <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
             <div class="logo">SUKI Incorporation</div>
             <nav class="nav">
-                <a href="/dashboard" class="nav-item active">
+                <a href="/admin-dashboard" class="nav-item active">
                     <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
                 </a>
                 <a href="/reports" class="nav-item">
@@ -37,12 +37,9 @@
         <main class="main-content">
             <div class="header">
                 <div class="header-left">
-                    <h1 style="color:#7D0006;">Dashboard</h1>
+                    <h1>Dashboard</h1>
                 </div>
                 <div class="header-right">
-                    <div class="search-container">
-                        <i class="fas fa-search search-icon"></i>
-                    </div>
                     <div class="notif-container">
                         <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
                         <div id="notificationsDropdown" style="display: none;">
@@ -54,8 +51,7 @@
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <span class="user-name">Admin User</span>
-                            <span class="user-role">Admin store</span>
+                            <span class="user-name">{{user.username}}</span>
                         </div>
                     </div>
                     <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -66,32 +62,64 @@
             
             <!-- Top Row Metrics -->
             <div class="metrics-row-1">
-                <div class="metric-card total-sales">
-                    <div class="card-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Total Store Owners</h3>
-                        <div class="metric-value">{{total_owners}}</div>
-                        <div class="metric-comparison">Stores vs last month</div>
-                        <div class="metric-change {{owners_growth_class}}">
-                            <i class="fas {{owners_icon}}"></i>
-                            {{owners_growth}}%
+                <div class="metrics-left-column">
+                    <div class="metric-card total-sales">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Total Store Owners</h3>
+                            <div class="metric-value">{{total_owners}}</div>
+                            <div class="metric-comparison">Stores vs last month</div>
+                            <div class="metric-change {{owners_growth_class}}">
+                                <i class="fas {{owners_icon}}"></i>
+                                {{owners_growth}}%
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="metric-card total-orders">
-                    <div class="card-icon">
-                        <i class="fas fa-shopping-bag"></i>
+                    
+                    <div class="metric-card total-orders">
+                        <div class="card-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Total Customers</h3>
+                            <div class="metric-value">{{total_customers}}</div>
+                            <div class="metric-comparison">Customers vs last month</div>
+                            <div class="metric-change {{customers_growth_class}}">
+                                <i class="fas {{customers_icon}}"></i>
+                                {{customers_growth}}%
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-content">
-                        <h3>Total Customers</h3>
-                        <div class="metric-value">{{total_customers}}</div>
-                        <div class="metric-comparison">Customers vs last month</div>
-                        <div class="metric-change {{customers_growth_class}}">
-                            <i class="fas {{customers_icon}}"></i>
-                            {{customers_growth}}%
+                    
+                    <div class="metric-card visitor">
+                        <div class="card-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Total Points Earned</h3>
+                            <div class="metric-value">{{total_points}}</div>
+                            <div class="metric-comparison">Points vs last month</div>
+                            <div class="metric-change {{points_growth_class}}">
+                                <i class="fas {{points_icon}}"></i>
+                                {{points_growth}}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card total-sold">
+                        <div class="card-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Total Points Redeemed</h3>
+                            <div class="metric-value">{{redeemed_points}}</div>
+                            <div class="metric-comparison">Points vs last month</div>
+                            <div class="metric-change {{redeemed_growth_class}}">
+                                <i class="fas {{redeemed_icon}}"></i>
+                                {{redeemed_growth}}%
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -109,7 +137,7 @@
                         </div>
                     </div>
                     <div class="donut-chart-container">
-                        <canvas id="productStatsChart"></canvas>
+                        <canvas id="productStatsChart" width="240" height="240"></canvas>
                         <div class="chart-center">
                             <div class="center-value">{{total_points}}</div>
                             <div class="center-label">Total Points</div>
@@ -126,39 +154,6 @@
                             <span class="category-value">{{lookup ../storeEngagementData @index}}</span>
                         </div>
                         {{/each}}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Middle Row Metrics -->
-            <div class="metrics-row-2">
-                <div class="metric-card visitor">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Total Points Earned</h3>
-                        <div class="metric-value">{{total_points}}</div>
-                        <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change {{points_growth_class}}">
-                            <i class="fas {{points_icon}}"></i>
-                            {{points_growth}}%
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="metric-card total-sold">
-                    <div class="card-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Total Points Redeemed</h3>
-                        <div class="metric-value">{{redeemed_points}}</div>
-                        <div class="metric-comparison">Points vs last month</div>
-                        <div class="metric-change {{redeemed_growth_class}}">
-                            <i class="fas {{redeemed_icon}}"></i>
-                            {{redeemed_growth}}%
-                        </div>
                     </div>
                 </div>
             </div>
@@ -252,16 +247,6 @@
                     </div>
                 </div>
             </div>
-
-			<!-- Charts -->
-			<div class="charts-row">
-				<div class="chart-container">
-				  <canvas id="pointsPerDayChart"></canvas>
-				</div>
-				<div class="chart-container">
-				  <canvas id="storeEngagementChart"></canvas>
-				</div>
-			</div>
         </main>
     </div>
 
@@ -297,10 +282,53 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: true,
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 20,
+                font: {
+                  size: 12,
+                  family: 'Poppins, sans-serif'
+                },
+                color: '#333',
+                generateLabels: function(chart) {
+                  const data = chart.data;
+                  if (data.labels.length && data.datasets.length) {
+                    return data.labels.map((label, i) => {
+                      const dataset = data.datasets[0];
+                      return {
+                        text: label,
+                        fillStyle: dataset.backgroundColor[i],
+                        strokeStyle: dataset.backgroundColor[i],
+                        lineWidth: 0,
+                        pointStyle: 'circle',
+                        hidden: false,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
             },
             tooltip: {
-              enabled: false
+              enabled: true,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: '#7c0f0f',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
             }
           }
         }

@@ -21,7 +21,7 @@
       <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
-        <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i><span class="label">Dashboard</span></a>
+        <a href="/admin-dashboard" class="nav-item"><i class="fas fa-chart-line"></i><span class="label">Dashboard</span></a>
         <a href="/reports" class="nav-item"><i class="fas fa-file-alt"></i><span class="label">Reports</span></a>
         <a href="/transac" class="nav-item"><i class="fas fa-exchange-alt"></i><span class="label">Transactions</span></a>
         <a href="/users/UserManagement" class="nav-item active"><i class="fa-solid fa-fingerprint"></i><span class="label">Users</span></a>
@@ -74,13 +74,13 @@
                   </div>
                 </td>
                 <td>
-                  {{this.owner_name}}
+                  {{this.ownerFullName}}
                 </td>
                 <td><a class="link" href="tel:{{this.owner_contact}}">{{this.owner_contact}}</a></td>
                 <td>{{this.store_code}}</td>
                 <td>
-                  <form action="/users/stores/delete/{{this.owner_id}}" method="POST" style="display:inline;" onsubmit="return confirmDelete(this);">
-                    <button type="submit" class="icon-btn" title="Delete Store"><i class="fas fa-trash"></i></button>
+                  <form class="delete-store-form" data-store-id="{{this.store_id}}" onsubmit="return deleteStore(event, this);">
+                    <button type="submit">Delete</button>
                   </form>
                 </td>
               </tr>
@@ -111,7 +111,7 @@
             <h2>Add Store</h2>
             <span class="close" onclick="closeModal()">&times;</span>
           </div>
-
+        <form id="addStoreForm" action="/users/stores/add" method="POST" enctype="multipart/form-data">
           <div class="modal-body">
             <!-- Step 1: Store Info -->
             <div class="form-step active" id="step1">
@@ -183,7 +183,8 @@
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </form>
       </div>
     </main>
   </div>

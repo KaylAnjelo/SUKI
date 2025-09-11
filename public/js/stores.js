@@ -51,9 +51,33 @@ function nextStep(step) {
 }
 
 
-// Confirm deletion
-function confirmDelete(form) {
-  return confirm('Are you sure you want to delete this store? This action cannot be undone.');
+function deleteStore(event, form) {
+  event.preventDefault();
+  const storeId = form.getAttribute('data-store-id');
+  if (!storeId) {
+    alert('Store ID not found!');
+    return false;
+  }
+  if (!confirm('Are you sure you want to delete this store?')) return false;
+
+  fetch(`/users/stores/delete/${storeId}`, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Remove the row or reload
+        form.closest('tr').remove();
+      } else {
+        alert('Failed to delete store: ' + (data.message || 'Unknown error'));
+      }
+    })
+    .catch(err => {
+      alert('Error deleting store.');
+    });
+
+  return false;
 }
 
 // Handle form submission

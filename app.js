@@ -3,7 +3,6 @@ import path from 'path';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import supabase from './config/db.js';
-import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import authRoutes from './api/routes/authRoutes.js';
 import notificationRoutes from './api/routes/notificationRoutes.js';
 import reportsRoutes from './api/routes/reports.js';
@@ -46,7 +45,6 @@ app.use((req, res, next) => {
 });
 // Routes
 app.use('/', authRoutes);
-app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);

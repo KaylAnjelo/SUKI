@@ -58,12 +58,18 @@ export const getStores = async (req, res) => {
   try {
     const { data: stores, error } = await supabase
       .from('stores')
-      .select('owner_id, store_name, is_active, store_code, owner_name, owner_contact, store_image, location')
+      .select('store_id, owner_id, store_name, is_active, store_code, owner_name , owner_contact, store_image, location')
       .order('store_id', { ascending: true });
 
     if (error) throw error;
 
-    res.render('users/Store', { stores });
+    // Add ownerFullName to each store
+    const storesWithFullName = stores.map(store => ({
+      ...store,
+      ownerFullName: store.owner_name
+    }));
+
+    res.render('users/Store', { stores: storesWithFullName });
   } catch (error) {
     console.error("Error fetching stores:", error.message);
     res.status(500).send('Server Error');
@@ -72,10 +78,10 @@ export const getStores = async (req, res) => {
 
 export const addStore = async (req, res) => {
   try {
-    const { storeName, ownerName, contactInfo, location, ownerEmail } = req.body;
-
+    const { storeName, ownerFirstName, ownerLastName, contactInfo, location, ownerEmail } = req.body;
+    const ownerName = `${ownerFirstName} ${ownerLastName}`;
     // Validate required fields
-    if (!storeName || !ownerName || !ownerEmail) {
+    if (!storeName || !ownerFirstName || !ownerLastName || !ownerEmail) {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields',
@@ -176,7 +182,9 @@ export const addStore = async (req, res) => {
       user_email: ownerEmail,
       contact_number: contactInfo,
       password: hashedPassword,
-      role: 'owner'  // Store owners are vendors
+      role: 'owner',  // Store owners are vendors
+      first_name: ownerFirstName, 
+      last_name: ownerLastName
     }]).select().single();
 
     if (userError) {
@@ -233,8 +241,6 @@ export const addStore = async (req, res) => {
 export const deleteStore = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Validate that store_id is provided
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -244,12 +250,11 @@ export const deleteStore = async (req, res) => {
     }
 
     const { error } = await supabase.from('stores').delete().eq("store_id", id);
-
     if (error) throw error;
 
-    // Return JSON response instead of redirecting
-    res.json({ 
-      success: true, 
+    // Return JSON for AJAX
+    res.json({
+      success: true,
       message: 'Store deleted successfully',
       deletedId: id
     });

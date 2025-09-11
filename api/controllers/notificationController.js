@@ -3,8 +3,8 @@ import supabase from '../../config/db.js';
 export const getNotifications = async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('admin_logs')
-      .select('admin_name, login_time')
+      .from('user_logs')
+      .select('log_id, user_id, username, login_time')
       .order('login_time', { ascending: false })
       .limit(2);
     if (error) {
