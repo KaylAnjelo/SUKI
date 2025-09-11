@@ -175,10 +175,11 @@ export const addStore = async (req, res) => {
 
     // Hash the store_code to use as initial password
     const hashedPassword = await bcrypt.hash(newStore.store_code, 10);
+    const username = storeName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
     // Create user account with store_code as password
     const { data: newUser, error: userError } = await supabase.from('users').insert([{
-      username: ownerName,
+      username: username,
       user_email: ownerEmail,
       contact_number: contactInfo,
       password: hashedPassword,

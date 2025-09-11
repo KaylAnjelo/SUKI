@@ -57,8 +57,7 @@ export const login = async (req, res) => {
         { 
           user_id: user.user_id,
           username: username, 
-          login_time: new Date().toISOString(),
-          action: 'login'
+
         }
       ]);
       console.log("✅ Login logged successfully");

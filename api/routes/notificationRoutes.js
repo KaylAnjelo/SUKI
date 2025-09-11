@@ -1,8 +1,8 @@
 import express from 'express';
-import * as notificationController from '../controllers/notificationController.js';
+import { getNotifications } from '../controllers/notificationController.js';
 
 const router = express.Router();
 
-router.get('AdminSide/notifications', notificationController.getNotifications);
+router.get('/notifications', getNotifications);
 
 export default router;

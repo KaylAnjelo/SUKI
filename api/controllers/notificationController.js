@@ -6,7 +6,7 @@ export const getNotifications = async (req, res) => {
       .from('user_logs')
       .select('log_id, user_id, username, login_time')
       .order('login_time', { ascending: false })
-      .limit(2);
+      .limit(5);
     if (error) {
       console.error('Error fetching notifications:', error);
       return res.status(500).json({ error: 'Failed to fetch notifications' });
