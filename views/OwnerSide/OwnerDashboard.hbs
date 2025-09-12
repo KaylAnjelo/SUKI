@@ -1,132 +1,117 @@
-// Vendor Sales Comparison
-const vendorSalesCtx = document.getElementById("vendorSalesChart").getContext("2d");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard</title>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script src="/js/OwnerDashboard.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo">Owner Panel</div>
+      <nav class="nav">
+        <a href="/owner/dashboard" class="nav-item active">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/stores" class="nav-item">
+          <i class="fas fa-store"></i><span class="label">Stores</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-receipt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/redemptions" class="nav-item">
+          <i class="fas fa-gift"></i><span class="label">Redemptions</span>
+        </a>
+      </nav>
+    </aside>
 
-new Chart(vendorSalesCtx, {
-  type: "bar",
-  data: {
-    labels: ["Vendor A", "Vendor B", "Vendor C", "Vendor D"], // Replace with dynamic data if needed
-    datasets: [
-      {
-        label: "Total Sales (₱)",
-        data: [50000, 35000, 28000, 15000], // Replace with dynamic data
-        backgroundColor: "rgba(125, 0, 6, 0.8)",
-        borderRadius: 6
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: function(ctx) {
-            return `₱${ctx.raw.toLocaleString()}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 10000,
-          callback: function(value) {
-            return '₱' + value.toLocaleString();
-          }
-        }
-      }
-    }
-  }
-});
+    <main class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <h1>Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
 
-// Transactions Over Time
-const transactionsCtx = document.getElementById("transactionsChart").getContext("2d");
+      <div class="metrics-row-1">
+        <div class="metric-card">
+          <i class="fas fa-store"></i>
+          <h3>Total Stores</h3>
+          <div class="metric-value">{{owner_total_stores}}</div>
+        </div>
 
-new Chart(transactionsCtx, {
-  type: "line",
-  data: {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], // Replace with dynamic data
-    datasets: [
-      {
-        label: "Transactions",
-        data: [120, 150, 180, 90, 200, 170, 140], // Replace with dynamic data
-        borderColor: "rgba(125, 0, 6, 1)",
-        backgroundColor: "rgba(125, 0, 6, 0.2)",
-        tension: 0.4,
-        fill: true,
-        pointRadius: 5,
-        pointBackgroundColor: "#7D0006"
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: function(ctx) {
-            return `${ctx.raw} transactions`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 50
-        }
-      }
-    }
-  }
-});
+        <div class="metric-card">
+          <i class="fas fa-users"></i>
+          <h3>Total Customers</h3>
+          <div class="metric-value">{{owner_total_customers}}</div>
+        </div>
 
-// Points Issued vs Redeemed
-const pointsCtx = document.getElementById("pointsChart").getContext("2d");
+        <div class="metric-card">
+          <i class="fas fa-coins"></i>
+          <h3>Points Issued</h3>
+          <div class="metric-value">{{owner_total_points}}</div>
+        </div>
 
-new Chart(pointsCtx, {
-  type: "bar",
-  data: {
-    labels: ["Issued", "Redeemed"],
-    datasets: [
-      {
-        label: "Points",
-        data: [4500, 3200], // Replace with dynamic data
-        backgroundColor: [
-          "rgba(39, 174, 96, 0.8)", // green
-          "rgba(199, 44, 65, 0.8)"  // red
-        ],
-        borderRadius: 6
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: function(ctx) {
-            return `${ctx.label}: ${ctx.raw} pts`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1000,
-          callback: function(value) {
-            return value + ' pts';
-          }
-        }
-      }
-    }
-  }
-});
+        <div class="metric-card">
+          <i class="fas fa-gift"></i>
+          <h3>Rewards Redeemed</h3>
+          <div class="metric-value">{{owner_total_redeemed}}</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Vendor Sales Comparison</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="vendorSalesChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Transactions Over Time</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="transactionsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card" style="flex: 1;">
+          <div class="chart-header">
+            <h3>Points Issued vs Redeemed</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="pointsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
