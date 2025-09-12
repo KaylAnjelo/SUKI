@@ -1555,14 +1555,36 @@ h1 {
 #addStoreModal .uploader {
   background: #f8f8f8;
   border-radius: 10px;
-  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   justify-content: center;
-  min-width: 280px;
   max-width: 300px;
   flex: 0 0 300px;
+}
+
+#addStoreModal .preview-area{
+  width: 200px;
+  height: 150px;
+  border-radius: 8px;
+  background: #f3f3f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 0 auto 12px auto;
+  border: 2px dashed #d1d5db;
+}
+
+#addStoreModal .preview-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#addStoreModal .preview-area i {
+  font-size: 48px;
+  color: #c7c7c7;
 }
 
 /* Right form using grid */
@@ -1645,7 +1667,8 @@ h1 {
 
 /* Next / Back buttons */
 #addStoreModal .next-btn,
-#addStoreModal .back-btn {
+#addStoreModal .back-btn,
+#addStoreModal .clear-btn {
   padding: 10px 16px;
   border-radius: 8px;
   font-weight: 600;
@@ -1660,12 +1683,15 @@ h1 {
 #addStoreModal .next-btn:hover { background: #5a0000; }
 #addStoreModal .next-btn:active { transform: translateY(1px); }
 
+#addStoreModal .clear-btn,
 #addStoreModal .back-btn {
   background: #fff;
   color: #333;
   border-color: #d1d5db;
 }
+#addStoreModal .clear-btn:hover,
 #addStoreModal .back-btn:hover { background: #f3f4f6; }
+#addStoreModal .clear-btn:active,
 #addStoreModal .back-btn:active { transform: translateY(1px); }
 
 /* Step transitions */

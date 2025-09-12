@@ -80,6 +80,23 @@ function deleteStore(event, form) {
   return false;
 }
 
+function clearAddStoreForm() {
+  const form = document.getElementById('addStoreForm');
+  form.reset();
+
+  const preview = document.getElementById('imagePreview');
+  const fileName = document.getElementById('fileName');
+  if(preview) {
+    preview.innerHTML = '<i class="fas fa-image" style="font-size:48px;color:#c7c7c7;"></i>';
+  }
+
+  if(fileName) {
+    fileName.textContent = 'No file chosen';
+  }
+
+  setActiveStep(1);
+}
+
 // Handle form submission
 document.addEventListener("DOMContentLoaded", () => {
   const addStoreForm = addStoreModal.querySelector('form');

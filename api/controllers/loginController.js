@@ -57,7 +57,6 @@ export const login = async (req, res) => {
         { 
           user_id: user.user_id,
           username: username, 
-
         }
       ]);
       console.log("✅ Login logged successfully");

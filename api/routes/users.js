@@ -25,9 +25,7 @@ router.post('/stores/add', upload.single('storeImage'), UserManagementController
 router.post('/stores/delete/:id', UserManagementController.deleteStore);
 
 
-router.get('/Vendor', (req, res) => {
-    res.render('users/Vendor');
-});
+router.get('/vendor', UserManagementController.getVendors);
 
 router.get('/UserManagement/AddUser', (req, res) => {
     res.render('users/AddUser');

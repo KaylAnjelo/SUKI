@@ -54,6 +54,41 @@ export const getCustomers = async (req, res) => {
   }
 };
 
+
+export const getVendors = async (req, res) => {
+    try {
+      const { data: vendors, error } = await supabase
+    .from('users')
+    .select('user_id, username, contact_number, user_email, role, store_id')
+    .eq('role', 'vendor')
+    .order('user_id', { ascending: true });
+
+  if (error) throw error;
+
+  const { data: stores, error: storesError } = await supabase
+    .from('stores')
+    .select('store_id, store_name');
+
+  if (storesError) throw storesError;
+
+  const vendorsWithStores = vendors.map(vendor => {
+    const store = stores.find(s => s.store_id === vendor.store_id);
+    return {
+      ...vendor,
+      store_name: store ? store.store_name : 'N/A'
+    };
+  });
+
+      
+
+    res.render('users/Vendor', { vendors: vendorsWithStores });
+  } catch (error) {
+    console.error("Error fetching vendors:", error.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+
 export const getStores = async (req, res) => {
   try {
     const { data: stores, error } = await supabase
