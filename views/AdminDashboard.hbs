@@ -11,7 +11,6 @@
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
     <div class="container">
@@ -34,18 +33,13 @@
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <div class="header">
                 <div class="header-left">
                     <h1>Dashboard</h1>
                 </div>
                 <div class="header-right">
-                    <div class="notif-container">
-                        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-                        <div id="notificationsDropdown" style="display: none;">
-                            <ul id="notificationsList"></ul>
-                        </div>
-                    </div>
                     <div class="user-profile">
                         <div class="profile-pic">
                             <i class="fas fa-user"></i>
@@ -210,6 +204,7 @@
             </div>
             
             <div class="tables-section">
+                <!-- Recent Transactions -->
                 <div class="table-container">
                     <h2>Stores</h2>
                     <div class="table-scroll">
@@ -227,7 +222,6 @@
                     </table>
                     </div>
                 </div>
-
                 <div class="table-container">
                     <h2>Recent Transactions</h2>
                     <div class="table-scroll">
@@ -250,6 +244,7 @@
         </main>
     </div>
 
+    <!-- ChartJS Scripts -->
     <script>
       // Safely hydrate chart data
       const pointsPerDayLabels = {{#if pointsPerDayLabels}}{{{pointsPerDayLabels}}}{{else}}[]{{/if}};

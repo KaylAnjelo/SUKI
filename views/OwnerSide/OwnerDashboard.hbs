@@ -1,141 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{appName}} - Dashboard</title>
-
-  <link rel="stylesheet" href="/css/AdminStyles.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard</title>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <script src="/js/notifications.js" defer></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
+  <script src="/js/OwnerDashboard.js" defer></script>
 </head>
 <body>
   <div class="container">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
         <i class="fas fa-bars"></i>
       </button>
-      <div class="logo">{{appName}}</div>
+      <div class="logo">Owner Panel</div>
       <nav class="nav">
         <a href="/owner/dashboard" class="nav-item active">
           <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
         </a>
-        <a href="/owner/reports" class="nav-item">
-          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+        <a href="/owner/stores" class="nav-item">
+          <i class="fas fa-store"></i><span class="label">Stores</span>
         </a>
         <a href="/owner/transactions" class="nav-item">
-          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+          <i class="fas fa-receipt"></i><span class="label">Transactions</span>
         </a>
-        <a href="/owner/users" class="nav-item">
-          <i class="fas fa-fingerprint"></i><span class="label">Users</span>
+        <a href="/owner/redemptions" class="nav-item">
+          <i class="fas fa-gift"></i><span class="label">Redemptions</span>
         </a>
       </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
-      <!-- Header -->
       <div class="header">
         <div class="header-left">
-          <h1 style="color:#7D0006;">{{pageTitle}}</h1>
+          <h1>Dashboard</h1>
         </div>
         <div class="header-right">
-          <div class="notif-container">
-            <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-            <div id="notificationsDropdown" style="display:none;">
-              <ul id="notificationsList"></ul>
-            </div>
-          </div>
           <div class="user-profile">
             <div class="profile-pic">
               <i class="fas fa-user"></i>
             </div>
             <div class="profile-info">
-              <span class="user-name">{{ownerName}}</span>
-              <span class="user-role">Store Owner</span>
+              <span class="user-name">{{user.username}}</span>
             </div>
           </div>
-          <form id="logoutForm" action="/logout" method="POST" style="display:inline;">
+          <form id="logoutForm" action="/logout" method="POST">
             <button type="submit" class="logout">Log out</button>
           </form>
         </div>
       </div>
 
-      <!-- Metrics Row -->
       <div class="metrics-row-1">
-        {{#each summaryCards}}
         <div class="metric-card">
-          <div class="card-icon">
-            <i class="{{this.icon}}"></i>
-          </div>
-          <div class="card-content">
-            <h3>{{this.label}}</h3>
-            <div class="metric-value">{{this.number}}</div>
-            <div class="metric-comparison">{{this.comparison}}</div>
-            <div class="metric-change {{this.growth_class}}">
-              <i class="fas {{this.icon_direction}}"></i>
-              {{this.growth}}%
-            </div>
-          </div>
+          <i class="fas fa-store"></i>
+          <h3>Total Stores</h3>
+          <div class="metric-value">{{owner_total_stores}}</div>
         </div>
-        {{/each}}
+
+        <div class="metric-card">
+          <i class="fas fa-users"></i>
+          <h3>Total Customers</h3>
+          <div class="metric-value">{{owner_total_customers}}</div>
+        </div>
+
+        <div class="metric-card">
+          <i class="fas fa-coins"></i>
+          <h3>Points Issued</h3>
+          <div class="metric-value">{{owner_total_points}}</div>
+        </div>
+
+        <div class="metric-card">
+          <i class="fas fa-gift"></i>
+          <h3>Rewards Redeemed</h3>
+          <div class="metric-value">{{owner_total_redeemed}}</div>
+        </div>
       </div>
 
-      <!-- Tables Section -->
-      <div class="tables-section">
-        <!-- Vendors Table -->
-        <div class="table-container">
-          <h2>Vendors</h2>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Vendor</th>
-                  <th>Store</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each vendors}}
-                <tr>
-                  <td>{{this.name}}</td>
-                  <td>{{this.store}}</td>
-                  <td>{{this.status}}</td>
-                </tr>
-                {{/each}}
-              </tbody>
-            </table>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Vendor Sales Comparison</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="vendorSalesChart"></canvas>
           </div>
         </div>
 
-        <!-- Recent Transactions Table -->
-        <div class="table-container">
-          <h2>Recent Transactions</h2>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>User</th>
-                  <th>Points</th>
-                  <th>Store</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each transactions}}
-                <tr>
-                  <td>{{this.date}}</td>
-                  <td>{{this.user}}</td>
-                  <td>{{this.points}}</td>
-                  <td>{{this.store}}</td>
-                </tr>
-                {{/each}}
-              </tbody>
-            </table>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Transactions Over Time</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="transactionsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card" style="flex: 1;">
+          <div class="chart-header">
+            <h3>Points Issued vs Redeemed</h3>
+          </div>
+          <div class="chart-wrapper" style="height: 320px;">
+            <canvas id="pointsChart"></canvas>
           </div>
         </div>
       </div>
