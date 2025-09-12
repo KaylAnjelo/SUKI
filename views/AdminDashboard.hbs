@@ -3,49 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/css/AdminStyles.css">
-    <script src="/js/notifications.js" defer></script>
+    <title>Store Dashboard</title>
+    <link rel="stylesheet" href="/css/StoreOwnerStyles.css">
     <script src="/js/logout.js" defer></script>
     <script src="/js/sidebar.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
-            <div class="logo">SUKI Incorporation</div>
+            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">Store Panel</div>
             <nav class="nav">
-                <a href="/admin-dashboard" class="nav-item active">
+                <a href="/store/dashboard" class="nav-item active">
                     <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
                 </a>
-                <a href="/reports" class="nav-item">
-                    <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+                <a href="/store/rewards" class="nav-item">
+                    <i class="fas fa-gift"></i><span class="label">Rewards</span>
                 </a>
-                <a href="/transac" class="nav-item">
-                    <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+                <a href="/store/transactions" class="nav-item">
+                    <i class="fas fa-receipt"></i><span class="label">Transactions</span>
                 </a>
-                <a href="/users/UserManagement" class="nav-item">
-                    <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+                <a href="/store/customers" class="nav-item">
+                    <i class="fas fa-users"></i><span class="label">Customers</span>
                 </a>
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <div class="header">
                 <div class="header-left">
                     <h1>Dashboard</h1>
                 </div>
                 <div class="header-right">
-                    <div class="notif-container">
-                        <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-                        <div id="notificationsDropdown" style="display: none;">
-                            <ul id="notificationsList"></ul>
-                        </div>
-                    </div>
                     <div class="user-profile">
                         <div class="profile-pic">
                             <i class="fas fa-user"></i>
@@ -54,383 +50,159 @@
                             <span class="user-name">{{user.username}}</span>
                         </div>
                     </div>
-                    <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+                    <form id="logoutForm" action="/logout" method="POST">
                         <button type="submit" class="logout">Log out</button>
                     </form>
                 </div>
             </div>
-            
-            <!-- Top Row Metrics -->
+
+            <!-- Metrics -->
             <div class="metrics-row-1">
-                <div class="metrics-left-column">
-                    <div class="metric-card total-sales">
-                        <div class="card-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Total Store Owners</h3>
-                            <div class="metric-value">{{total_owners}}</div>
-                            <div class="metric-comparison">Stores vs last month</div>
-                            <div class="metric-change {{owners_growth_class}}">
-                                <i class="fas {{owners_icon}}"></i>
-                                {{owners_growth}}%
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="metric-card total-orders">
-                        <div class="card-icon">
-                            <i class="fas fa-shopping-bag"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Total Customers</h3>
-                            <div class="metric-value">{{total_customers}}</div>
-                            <div class="metric-comparison">Customers vs last month</div>
-                            <div class="metric-change {{customers_growth_class}}">
-                                <i class="fas {{customers_icon}}"></i>
-                                {{customers_growth}}%
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="metric-card visitor">
-                        <div class="card-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Total Points Earned</h3>
-                            <div class="metric-value">{{total_points}}</div>
-                            <div class="metric-comparison">Points vs last month</div>
-                            <div class="metric-change {{points_growth_class}}">
-                                <i class="fas {{points_icon}}"></i>
-                                {{points_growth}}%
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="metric-card total-sold">
-                        <div class="card-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Total Points Redeemed</h3>
-                            <div class="metric-value">{{redeemed_points}}</div>
-                            <div class="metric-comparison">Points vs last month</div>
-                            <div class="metric-change {{redeemed_growth_class}}">
-                                <i class="fas {{redeemed_icon}}"></i>
-                                {{redeemed_growth}}%
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="metric-card product-stats">
-                    <div class="card-header">
-                        <h3>Product Statistic</h3>
-                        <p>Track your product sales</p>
-                        <div class="dropdown-container">
-                            <select class="time-dropdown">
-                                <option>Today</option>
-                                <option>This Week</option>
-                                <option>This Month</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="donut-chart-container">
-                        <canvas id="productStatsChart" width="240" height="240"></canvas>
-                        <div class="chart-center">
-                            <div class="center-value">{{total_points}}</div>
-                            <div class="center-label">Total Points</div>
-                            <div class="metric-change {{product_growth_class}}">
-                                <i class="fas {{product_icon}}"></i>
-                                {{product_growth}}%
-                            </div>
-                        </div>
-                    </div>
-                    <div class="category-list">
-                        {{#each storeLabels}}
-                        <div class="category-item">
-                            <span class="category-name">{{this}}</span>
-                            <span class="category-value">{{lookup ../storeEngagementData @index}}</span>
-                        </div>
-                        {{/each}}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Bottom Row Charts -->
-            <div class="charts-row">
-                <div class="chart-card customer-habits">
-                    <div class="chart-header">
-                        <h3>Points Per Day</h3>
-                        <p>Track daily points earned</p>
-                        <div class="dropdown-container">
-                            <select class="time-dropdown">
-                                <option>This year</option>
-                                <option>This month</option>
-                                <option>This week</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span class="legend-dot sales"></span>
-                            <span>Points Earned</span>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="customerHabitsChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="chart-card customer-growth">
-                    <div class="chart-header">
-                        <h3>Store Engagement</h3>
-                        <p>Track store performance</p>
-                        <div class="dropdown-container">
-                            <select class="time-dropdown">
-                                <option>Today</option>
-                                <option>This week</option>
-                                <option>This month</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="bubble-chart-container">
-                        <canvas id="customerGrowthChart"></canvas>
-                        <div class="country-list">
-                            {{#each storeLabels}}
-                            <div class="country-item">
-                                <span class="country-flag">🏪</span>
-                                <span>{{this}}</span>
-                            </div>
-                            {{/each}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tables-section">
-                <div class="table-container">
-                    <h2>Stores</h2>
-                    <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Store</th>
-                                <th>Location</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{{storesTableRows}}}
-                        </tbody>
-                    </table>
-                    </div>
+                <div class="metric-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Total Customers</h3>
+                    <div class="metric-value">{{store_total_customers}}</div>
                 </div>
 
+                <div class="metric-card">
+                    <i class="fas fa-coins"></i>
+                    <h3>Points Issued</h3>
+                    <div class="metric-value">{{store_total_points}}</div>
+                </div>
+
+                <div class="metric-card">
+                    <i class="fas fa-gift"></i>
+                    <h3>Points Redeemed</h3>
+                    <div class="metric-value">{{store_rewards_redeemed}}</div>
+                </div>
+
+                <div class="metric-card">
+                    <i class="fas fa-tags"></i>
+                    <h3>Active Rewards</h3>
+                    <div class="metric-value">{{store_active_rewards}}</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Reward Redemption Stats</h3>
+                    </div>
+                    <canvas id="rewardStatsChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Points Earned Over Time</h3>
+                    </div>
+                    <canvas id="storePointsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tables Section -->
+            <div class="tables-section">
+                <!-- Recent Transactions -->
                 <div class="table-container">
                     <h2>Recent Transactions</h2>
                     <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>User</th>
-                                <th>Points</th>
-                                <th>Store</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{{transactionTableRows}}} 
-                        </tbody>
-                    </table>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Points Earned</th>
+                                    <th>Points Redeemed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{{storeTransactionTableRows}}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reward Inventory -->
+                <div class="table-container">
+                    <h2>Reward Inventory</h2>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reward</th>
+                                    <th>Points Required</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{{rewardTableRows}}}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- ChartJS Scripts -->
     <script>
-      // Safely hydrate chart data
-      const pointsPerDayLabels = {{#if pointsPerDayLabels}}{{{pointsPerDayLabels}}}{{else}}[]{{/if}};
-      const pointsPerDayData = {{#if pointsPerDayData}}{{{pointsPerDayData}}}{{else}}[]{{/if}};
-      const storeLabels = {{#if storeLabels}}{{{storeLabels}}}{{else}}[]{{/if}};
-      const storeEngagementData = {{#if storeEngagementData}}{{{storeEngagementData}}}{{else}}[]{{/if}};
+        const rewardLabels = {{#if rewardLabels}}{{{rewardLabels}}}{{else}}[]{{/if}};
+        const rewardRedemptionData = {{#if rewardRedemptionData}}{{{rewardRedemptionData}}}{{else}}[]{{/if}};
+        const pointsEarnedDates = {{#if pointsEarnedDates}}{{{pointsEarnedDates}}}{{else}}[]{{/if}};
+        const pointsEarnedValues = {{#if pointsEarnedValues}}{{{pointsEarnedValues}}}{{else}}[]{{/if}};
 
-      // Register DataLabels plugin
-      if (window.Chart && window.ChartDataLabels) {
-        Chart.register(ChartDataLabels);
-      }
+        // Reward Donut Chart
+        const rewardCtx = document.getElementById('rewardStatsChart').getContext('2d');
+        new Chart(rewardCtx, {
+            type: 'doughnut',
+            data: {
+                labels: rewardLabels,
+                datasets: [{
+                    data: rewardRedemptionData,
+                    backgroundColor: ['#7D0006', '#C72C41', '#F8C471', '#27AE60'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
 
-      // ===== Product Stats Donut Chart =====
-      const productStatsCtx = document.getElementById('productStatsChart').getContext('2d');
-      new Chart(productStatsCtx, {
-        type: 'doughnut',
-        data: {
-          labels: storeLabels,
-          datasets: [{
-            data: storeEngagementData,
-            backgroundColor: [
-              '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
-            ],
-            borderWidth: 0,
-            cutout: '70%'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: true,
-              position: 'bottom',
-              labels: {
-                usePointStyle: true,
-                pointStyle: 'circle',
-                padding: 20,
-                font: {
-                  size: 12,
-                  family: 'Poppins, sans-serif'
+        // Points Earned Bar Chart
+        const pointsCtx = document.getElementById('storePointsChart').getContext('2d');
+        new Chart(pointsCtx, {
+            type: 'bar',
+            data: {
+                labels: pointsEarnedDates,
+                datasets: [{
+                    label: 'Points Earned',
+                    data: pointsEarnedValues,
+                    backgroundColor: '#C72C41',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 },
-                color: '#333',
-                generateLabels: function(chart) {
-                  const data = chart.data;
-                  if (data.labels.length && data.datasets.length) {
-                    return data.labels.map((label, i) => {
-                      const dataset = data.datasets[0];
-                      return {
-                        text: label,
-                        fillStyle: dataset.backgroundColor[i],
-                        strokeStyle: dataset.backgroundColor[i],
-                        lineWidth: 0,
-                        pointStyle: 'circle',
-                        hidden: false,
-                        index: i
-                      };
-                    });
-                  }
-                  return [];
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
-              }
-            },
-            tooltip: {
-              enabled: true,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              titleColor: '#fff',
-              bodyColor: '#fff',
-              borderColor: '#7c0f0f',
-              borderWidth: 1,
-              callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.parsed;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = ((value / total) * 100).toFixed(1);
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
             }
-          }
-        }
-      });
-
-      // ===== Customer Habits Bar Chart =====
-      const customerHabitsCtx = document.getElementById('customerHabitsChart').getContext('2d');
-      const gradient = customerHabitsCtx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, '#C72C41');
-      gradient.addColorStop(1, '#7D0006');
-
-      new Chart(customerHabitsCtx, {
-        type: 'bar',
-        data: {
-          labels: pointsPerDayLabels,
-          datasets: [{
-            label: 'Points Earned',
-            data: pointsPerDayData,
-            backgroundColor: gradient,
-            borderColor: '#7D0006',
-            borderWidth: 2,
-            hoverBackgroundColor: '#F8C471',
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 1200,
-            easing: 'easeOutBounce'
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false
-              }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 5 }
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: '#333',
-              titleColor: '#fff',
-              bodyColor: '#fff',
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} pts`
-              }
-            }
-          }
-        }
-      });
-
-      // ===== Customer Growth Bubble Chart =====
-      const customerGrowthCtx = document.getElementById('customerGrowthChart').getContext('2d');
-      
-      // Create bubble data from store engagement data
-      const bubbleData = storeEngagementData.map((value, index) => ({
-        x: Math.random() * 4 + 1, // Random x position
-        y: Math.random() * 4 + 1, // Random y position
-        r: Math.max(value / 2, 10) // Size based on data value
-      }));
-
-      new Chart(customerGrowthCtx, {
-        type: 'bubble',
-        data: {
-          datasets: [{
-            label: 'Store Engagement',
-            data: bubbleData,
-            backgroundColor: [
-              '#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60'
-            ],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              display: false
-            },
-            y: {
-              display: false
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              enabled: false
-            }
-          }
-        }
-      });
+        });
     </script>
 </body>
 </html>
