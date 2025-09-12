@@ -84,13 +84,23 @@ function updateTable(data) {
 async function applyFilters() {
     // Mark that filters are now applied
     window.filtersApplied = true;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const store = document.getElementById('storeFilter')?.value;
-    const user = document.getElementById('userFilter')?.value;
-    const activityType = document.getElementById('activityType')?.value;
-    const transactionType = document.getElementById('transactionType')?.value;
-    const sortOrder = document.getElementById('sortOrder')?.value;
+    const startDateRaw = document.getElementById('startDate')?.value || '';
+    const endDateRaw = document.getElementById('endDate')?.value || '';
+    const storeRaw = document.getElementById('storeFilter')?.value || '';
+    const userRaw = document.getElementById('userFilter')?.value || '';
+    const activityTypeRaw = document.getElementById('activityType')?.value || '';
+    const transactionTypeRaw = document.getElementById('transactionType')?.value || '';
+    const sortOrderRaw = document.getElementById('sortOrder')?.value || '';
+
+    // Normalize inputs
+    const startDate = startDateRaw;
+    const endDate = endDateRaw; // server expands end-of-day
+    const store = storeRaw.trim(); // now a numeric/id string when present
+    const user = userRaw.trim();
+    const normalizeType = (v) => v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : '';
+    const activityType = normalizeType(activityTypeRaw.trim());
+    const transactionType = normalizeType(transactionTypeRaw.trim());
+    const sortOrder = (sortOrderRaw === 'oldest' || sortOrderRaw === 'newest') ? sortOrderRaw : '';
 
     try {
         // Choose endpoint based on current page
@@ -102,19 +112,22 @@ async function applyFilters() {
             endpoint = '/reports/transactions/filter';
         }
 
+        // Prevent double submit
+        if (applyFiltersBtn) applyFiltersBtn.disabled = true;
+
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                startDate,
-                endDate,
-                store,
-                user,
-                activityType,
-                transactionType,
-                sortOrder
+                ...(startDate ? { startDate } : {}),
+                ...(endDate ? { endDate } : {}),
+                ...(store ? { store } : {}),
+                ...(user ? { user } : {}),
+                ...(activityType ? { activityType } : {}),
+                ...(transactionType ? { transactionType } : {}),
+                ...(sortOrder ? { sortOrder } : {}),
             }),
         });
 
@@ -132,6 +145,8 @@ async function applyFilters() {
         }
     } catch (error) {
         console.error('Error applying filters:', error);
+    } finally {
+        if (applyFiltersBtn) applyFiltersBtn.disabled = false;
     }
 }
 

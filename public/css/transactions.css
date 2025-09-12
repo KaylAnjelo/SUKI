@@ -36,31 +36,43 @@ tbody tr:nth-child(even) {
 
 /* Receipt Modal Styles */
 .receipt-modal {
-    display: none; /* hide by default */
+    display: none; /* hidden by default */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.4); /* semi-transparent background */
-    display: flex;
-    justify-content: center; /* horizontal center */
-    align-items: center;     /* vertical center */
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 1000;
     overflow: auto; /* scroll only if content too tall */
 }
 
+/* Visible/centered state */
+.receipt-modal.open {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 /* Inner content box */
-.receipt-modal .receipt-body {
+.receipt-modal .receipt-content {
     background: #fff;
     border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 85vh; /* limit height to viewport */
-    overflow-y: auto; /* scroll inside the modal if needed */
+    width: 92%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow: hidden; /* header sticky within content */
     box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    position: relative;
-    padding: 0; /* keep padding inside sections */
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.receipt-modal .receipt-body {
+    padding: 16px 20px;
+    overflow-y: auto;
 }
 
 
@@ -71,6 +83,10 @@ tbody tr:nth-child(even) {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky; /* sticky header */
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 .receipt-logo {
@@ -113,9 +129,9 @@ tbody tr:nth-child(even) {
 
 .receipt-title {
     text-align: center;
-    margin-bottom: 20px; /* Reduced margin */
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 15px; /* Reduced padding */
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
 }
 
 .receipt-title h2 {
@@ -139,8 +155,8 @@ tbody tr:nth-child(even) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0; /* Reduced padding */
-    border-bottom: 1px solid #f5f5f5;
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
 }
 
 .info-row:last-child {
@@ -194,8 +210,8 @@ tbody tr:nth-child(even) {
 .receipt-summary {
     background: #f8f9fa;
     border-radius: 8px;
-    padding: 15px; /* Reduced padding */
-    margin-bottom: 20px; /* Reduced margin */
+    padding: 12px 14px;
+    margin-bottom: 12px;
 }
 
 .summary-row {
@@ -273,13 +289,19 @@ tbody tr:nth-child(even) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     color: #7D0006;
+    border: 1px solid #e3d5d6;
+    border-radius: 6px;
+    background: #fff7f8;
+    transition: all .2s ease;
 }
 
 .view-details:hover {
-    color: #6b0005
+    color: #6b0005;
+    background: #ffecee;
+    box-shadow: 0 2px 6px rgba(125,0,6,0.15);
 }
 .view-details i {
     font-size: 16px;
@@ -289,6 +311,26 @@ th.sortable { cursor: pointer; user-select: none;}
 th.sortable::after { content: ' ⬍'; opacity: 1; font-size: 1em; }
 th.sortable.asc::after { content: ' ↑'; }
 th.sortable.desc::after { content: ' ↓'; }
+
+/* Details button in table */
+.details-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e6e6e6;
+    background: #fafafa;
+    color: #7D0006;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+.details-btn:hover { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.details-btn i { font-size: 16px; }
+
+/* Prevent body scroll when modal open */
+body.modal-open { overflow: hidden; }
 
 /* Responsive Design */
 @media (max-width: 600px) {
