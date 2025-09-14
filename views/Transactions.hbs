@@ -17,22 +17,25 @@
   <div class="container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
         <a href="/admin-dashboard" class="nav-item">
-          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+          <span class="label">Dashboard</span>
         </a>
         <a href="/reports" class="nav-item">
-          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+          <span class="label">Sales Report</span>
         </a>
         <a href="/transac" class="nav-item active">
-          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+          <span class="label">Transactions</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="label">Products</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="label">Promotions</span>
         </a>
         <a href="/users/UserManagement" class="nav-item">
-          <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+          <span class="label">Users</span>
         </a>
       </nav>
     </aside>
@@ -62,6 +65,7 @@
             <option value="Redemption">Redemption</option>
             <option value="Refund">Refund</option>
           </select>
+          <button class="apply-filters-btn">Apply Filters</button>
         </div>
       </div>
 
@@ -72,12 +76,11 @@
            <thead>
               <tr>
                 <th data-column="reference_number" >Reference #</th>
-                <th data-column="user_name">Account Name</th>
-                <th data-column="store_name" class="sortable">Store</th>
+                <th data-column="store_name" class="sortable">Vendor Name</th>
                 <th data-column="amount" class="sortable">Amount</th>
                 <th data-column="points" class="sortable">Points</th>
                 <th data-column="transaction_type">Type</th>
-                <th data-column="transaction_date" class="sortable">Transaction Date</th>
+                <th data-column="transaction_date" class="sortable">Date</th>
                 <th>Details</th>
               </tr>
             </thead>

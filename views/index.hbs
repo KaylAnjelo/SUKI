@@ -4,14 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | SUKI</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/AdminStyles.css">
 </head>
-<body>
+<body class="login-page">
   <div class="login-container">
     <div class="logo">
-      <img src="/assets/SUKI_Logo_1.png" alt="SUKI Logo">
+      <img src="/assets/SUKI_Logo_1.png" alt="SUKI Logo" class="logo-image">
     </div>
-    <h2>Welcome to SUKI</h2>
+    <h2>Welcome Back to SUKI</h2>
+    {{#if error}}
+      <div class="error-message" style="color: red; margin-bottom: 10px; text-align: center;">
+        {{error}}
+      </div>
+    {{/if}}
     <form action="/login" method="POST">
       <input type="text" name="username" placeholder="Enter your username" required>
       <input type="password" name="password" placeholder="Enter your password" required>
@@ -19,7 +24,7 @@
         <label>
           <input type="checkbox" name="remember"> Remember me
         </label>
-        <a href="/forgot-password">Forgot Password ?</a>
+        <a href="/forgot-password">Forgot Password?</a>
       </div>
       <button type="submit">Login</button>
     </form>

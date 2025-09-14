@@ -35,7 +35,6 @@ function renderTransactions(rows) {
 
     tr.innerHTML = `
       <td>${ref}</td>
-      <td>${userName}</td>
       <td>${storeName}</td>
       <td>₱${amount}</td>
       <td>${points}</td>
@@ -120,7 +119,7 @@ function compareByColumn(a, b, column, direction) {
 
 // Type filter
 function initTypeFilter() {
-  const btn = document.getElementById('applyFiltersTrans');
+  const btn = document.querySelector('.apply-filters-btn');
   const sel = document.getElementById('typeFilterTrans');
   const apply = () => {
     const val = (sel?.value || '').trim();
