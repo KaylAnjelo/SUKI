@@ -22,6 +22,7 @@
       </button>
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
+<<<<<<< HEAD
         <a href="/owner/dashboard" class="nav-item">
           <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
         </a>
@@ -33,6 +34,22 @@
         </a>
         <a href="/owner/redemptions" class="nav-item active">
           <i class="fas fa-gift"></i><span class="label">Redemptions</span>
+=======
+        <a href="/owner-dashboard" class="nav-item">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/sales-report" class="nav-item">
+          <i class="fas fa-chart-bar"></i><span class="label">Sales Report</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/products" class="nav-item">
+          <i class="fas fa-box"></i><span class="label">Products</span>
+        </a>
+        <a href="/owner/promotions" class="nav-item">
+          <i class="fas fa-percentage"></i><span class="label">Promotions</span>
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
         </a>
         <a href="/api/owner/profile" class="nav-item">
           <i class="fas fa-user"></i><span class="label">Profile</span>
@@ -43,6 +60,7 @@
     <!-- Main Content -->
     <main class="main-content">
       <div class="header">
+<<<<<<< HEAD
         <h1>Redemptions</h1>
         <div class="notif-container">
           <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
@@ -53,6 +71,28 @@
             <button type="submit" class="logout">Log out</button>
           </form>
         </div>
+=======
+        <div class="header-left">
+          <h1>Redemptions</h1>
+        </div>
+        <div class="header-right">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
       </div>
 
       <!-- Filters -->

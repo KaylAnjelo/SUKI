@@ -29,7 +29,11 @@
         <a href="/owner/products" class="nav-item">
           <i class="fas fa-box"></i><span class="label">Products</span>
         </a>
+<<<<<<< HEAD
         <a href="/api/owner/promotions" class="nav-item">
+=======
+        <a href="/owner/promotions" class="nav-item">
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           <i class="fas fa-percentage"></i><span class="label">Promotions</span>
         </a>
         <a href="/api/owner/profile" class="nav-item active">
@@ -49,6 +53,21 @@
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
           </div>
+<<<<<<< HEAD
+=======
+          <div class="user-profile">
+            <div class="profile-pic" id="headerProfilePic">
+              {{#if storeData.store_image}}
+                <img src="{{storeData.store_image}}" alt="Store Photo" id="headerStorePhoto">
+              {{else}}
+                <i class="fas fa-user"></i>
+              {{/if}}
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>
@@ -60,18 +79,35 @@
         <!-- Profile Details Section -->
         <div class="profile-details-card">
           <div class="profile-picture-container">
+<<<<<<< HEAD
             <div class="store-profile-pic">
               <span>Store Profile Pic</span>
+=======
+            <div class="store-profile-pic" id="storeProfilePic">
+              {{#if storeData.store_image}}
+                <img src="{{storeData.store_image}}" alt="Store Photo" id="storePhotoImg">
+              {{else}}
+                <span>Store Profile Pic</span>
+              {{/if}}
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
             </div>
           </div>
           <div class="profile-fields">
             <div class="profile-field">
               <label>Store Name</label>
+<<<<<<< HEAD
               <input type="text" value="LPU Canteen" readonly>
             </div>
             <div class="profile-field">
               <label>Owner Name</label>
               <input type="text" value="John Doe" readonly>
+=======
+              <input type="text" id="storeName" value="{{#if storeData}}{{storeData.store_name}}{{else}}No Store{{/if}}" readonly>
+            </div>
+            <div class="profile-field">
+              <label>Owner Name</label>
+              <input type="text" id="ownerName" value="{{#if storeData}}{{storeData.owner_name}}{{else}}{{#if userData}}{{userData.first_name}} {{userData.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
             </div>
           </div>
           <div class="profile-actions">
@@ -86,6 +122,7 @@
             <h3>Information</h3>
             <div class="info-item">
               <i class="fas fa-map-marker-alt"></i>
+<<<<<<< HEAD
               <span>LPU MAIN BATANGAS</span>
             </div>
             <div class="info-item">
@@ -95,6 +132,17 @@
             <div class="info-item">
               <i class="fas fa-phone"></i>
               <span>+639123569811</span>
+=======
+              <span id="location">{{#if storeData}}{{storeData.location}}{{else}}No Location{{/if}}</span>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-envelope"></i>
+              <span id="email">{{#if userData}}{{userData.user_email}}{{else}}No Email{{/if}}</span>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-phone"></i>
+              <span id="contactNumber">{{#if userData}}{{userData.contact_number}}{{else}}{{#if storeData}}{{storeData.owner_contact}}{{else}}No Contact{{/if}}{{/if}}</span>
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
               <div class="contact-badge">
                 <i class="fas fa-at"></i>
               </div>
@@ -148,16 +196,209 @@
     </main>
   </div>
 
+<<<<<<< HEAD
+=======
+  <!-- Edit Profile Modal -->
+  <div id="editProfileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Profile</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="editProfileForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="editStorePhoto">Store Photo</label>
+          <div class="photo-upload-container">
+            <input type="file" id="editStorePhoto" name="storePhoto" accept="image/*" class="photo-input">
+            <div class="photo-preview" id="photoPreview">
+              <span class="photo-placeholder">Click to select photo</span>
+            </div>
+            <button type="button" class="btn-remove-photo" id="removePhotoBtn" style="display: none;">Remove Photo</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editStoreName">Store Name</label>
+          <input type="text" id="editStoreName" name="storeName" required>
+        </div>
+        <div class="form-group">
+          <label for="editOwnerName">Owner Name</label>
+          <input type="text" id="editOwnerName" name="ownerName" required>
+        </div>
+        <div class="form-group">
+          <label for="editContactNumber">Contact Number</label>
+          <input type="tel" id="editContactNumber" name="contactNumber" required>
+        </div>
+        <div class="form-group">
+          <label for="editEmail">Email</label>
+          <input type="email" id="editEmail" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="editLocation">Location</label>
+          <input type="text" id="editLocation" name="location" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Profile page loaded');
       
+<<<<<<< HEAD
       // Handle edit profile button
       const editProfileBtn = document.querySelector('.edit-profile-btn');
       if (editProfileBtn) {
         editProfileBtn.addEventListener('click', () => {
           // TODO: Implement edit profile functionality
           alert('Edit profile functionality will be implemented');
+=======
+      // Modal elements
+      const modal = document.getElementById('editProfileModal');
+      const editProfileBtn = document.querySelector('.edit-profile-btn');
+      const closeBtn = document.querySelector('.close');
+      const cancelBtn = document.querySelector('.btn-cancel');
+      const editForm = document.getElementById('editProfileForm');
+      
+      // Open modal when edit button is clicked
+      if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', async () => {
+          try {
+            // Fetch current profile data
+            const response = await fetch('/api/owner/profile-data');
+            const data = await response.json();
+            
+            if (response.ok) {
+              // Populate form with current data
+              document.getElementById('editStoreName').value = data.store?.store_name || '';
+              document.getElementById('editOwnerName').value = data.store?.owner_name || '';
+              document.getElementById('editContactNumber').value = data.user?.contact_number || data.store?.owner_contact || '';
+              document.getElementById('editEmail').value = data.user?.user_email || '';
+              document.getElementById('editLocation').value = data.store?.location || '';
+              
+              // Set current photo preview
+              const photoPreview = document.getElementById('photoPreview');
+              if (data.store?.store_image) {
+                photoPreview.innerHTML = `<img src="${data.store.store_image}" alt="Current Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                document.getElementById('removePhotoBtn').style.display = 'block';
+              } else {
+                photoPreview.innerHTML = '<span class="photo-placeholder">Click to select photo</span>';
+                document.getElementById('removePhotoBtn').style.display = 'none';
+              }
+              
+              // Show modal
+              modal.style.display = 'block';
+            } else {
+              alert('Failed to load profile data');
+            }
+          } catch (error) {
+            console.error('Error loading profile data:', error);
+            alert('Failed to load profile data');
+          }
+        });
+      }
+      
+      // Close modal when X is clicked
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          modal.style.display = 'none';
+        });
+      }
+      
+      // Close modal when Cancel is clicked
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          modal.style.display = 'none';
+        });
+      }
+      
+      // Close modal when clicking outside of it
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+      
+      // Handle photo file selection
+      const photoInput = document.getElementById('editStorePhoto');
+      const photoPreview = document.getElementById('photoPreview');
+      const removePhotoBtn = document.getElementById('removePhotoBtn');
+      
+      if (photoInput) {
+        photoInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              photoPreview.innerHTML = `<img src="${e.target.result}" alt="Selected Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+              removePhotoBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+      
+      // Handle remove photo button
+      if (removePhotoBtn) {
+        removePhotoBtn.addEventListener('click', () => {
+          photoInput.value = '';
+          photoPreview.innerHTML = '<span class="photo-placeholder">Click to select photo</span>';
+          removePhotoBtn.style.display = 'none';
+        });
+      }
+      
+      // Handle form submission
+      if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const formData = new FormData(editForm);
+          
+          try {
+            const response = await fetch('/api/owner/profile', {
+              method: 'PUT',
+              body: formData // Send FormData directly for file upload
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              // Update the display with new data
+              document.getElementById('storeName').value = formData.get('storeName');
+              document.getElementById('ownerName').value = formData.get('ownerName');
+              document.getElementById('location').textContent = formData.get('location');
+              document.getElementById('email').textContent = formData.get('email');
+              document.getElementById('contactNumber').textContent = formData.get('contactNumber');
+              
+              // Update store photo if a new one was uploaded
+              if (result.storeImage) {
+                const storeProfilePic = document.getElementById('storeProfilePic');
+                const headerProfilePic = document.getElementById('headerProfilePic');
+                
+                // Update main profile photo
+                storeProfilePic.innerHTML = `<img src="${result.storeImage}" alt="Store Photo" id="storePhotoImg">`;
+                
+                // Update header photo
+                headerProfilePic.innerHTML = `<img src="${result.storeImage}" alt="Store Photo" id="headerStorePhoto">`;
+              }
+              
+              // Close modal
+              modal.style.display = 'none';
+              
+              // Show success message
+              alert('Profile updated successfully!');
+            } else {
+              alert('Failed to update profile: ' + (result.error || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile');
+          }
+>>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
         });
       }
     });

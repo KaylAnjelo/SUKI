@@ -2,323 +2,11 @@ import express from "express";
 import multer from "multer";
 import supabase from "../../config/db.js";
 
+const upload = multer();
 const router = express.Router();
 
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
 
-// Get all stores owned by the current user
-router.get('/stores', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { data: stores, error } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('owner_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching stores:', error);
-      return res.status(500).json({ error: 'Failed to fetch stores' });
-    }
-
-    res.json(stores);
-  } catch (error) {
-    console.error('Error in GET /api/owner/stores:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get a specific store by ID
-router.get('/stores/:id', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const storeId = req.params.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { data: store, error } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('store_id', storeId)
-      .eq('owner_id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching store:', error);
-      return res.status(404).json({ error: 'Store not found' });
-    }
-
-    res.json(store);
-  } catch (error) {
-    console.error('Error in GET /api/owner/stores/:id:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Create a new store
-router.post('/stores', upload.single('storeImage'), async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const { storeName, storeCode, ownerContact, location, isActive } = req.body;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Validate required fields
-    if (!storeName || !storeCode || !ownerContact || !location) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    let storeImage = null;
-    
-    // Handle image upload if provided
-    if (req.file) {
-      try {
-        const file = req.file;
-        const filePath = `stores/${Date.now()}_${file.originalname}`;
-
-        // Upload image to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('store_image')
-          .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          return res.status(500).json({ error: 'Failed to upload image' });
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('store_image')
-          .getPublicUrl(filePath);
-        
-        storeImage = publicUrl;
-      } catch (uploadError) {
-        console.error('Error processing image upload:', uploadError);
-        return res.status(500).json({ error: 'Failed to process image' });
-      }
-    }
-
-    // Create store record
-    const { data: newStore, error: storeError } = await supabase
-      .from('stores')
-      .insert({
-        store_name: storeName,
-        store_code: storeCode,
-        owner_contact: ownerContact,
-        location: location,
-        store_image: storeImage,
-        is_active: isActive === 'true' || isActive === true,
-        owner_id: userId,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (storeError) {
-      console.error('Error creating store:', storeError);
-      return res.status(500).json({ error: 'Failed to create store' });
-    }
-
-    res.status(201).json({
-      message: 'Store created successfully',
-      store: newStore
-    });
-  } catch (error) {
-    console.error('Error in POST /api/owner/stores:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Update a store
-router.put('/stores/:id', upload.single('storeImage'), async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const storeId = req.params.id;
-    const { storeName, storeCode, ownerContact, location, isActive } = req.body;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Check if store exists and belongs to user
-    const { data: existingStore, error: fetchError } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('store_id', storeId)
-      .eq('owner_id', userId)
-      .single();
-
-    if (fetchError || !existingStore) {
-      return res.status(404).json({ error: 'Store not found' });
-    }
-
-    let storeImage = existingStore.store_image;
-    
-    // Handle image upload if provided
-    if (req.file) {
-      try {
-        const file = req.file;
-        const filePath = `stores/${Date.now()}_${file.originalname}`;
-
-        // Upload new image to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('store_image')
-          .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          return res.status(500).json({ error: 'Failed to upload image' });
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('store_image')
-          .getPublicUrl(filePath);
-        
-        storeImage = publicUrl;
-      } catch (uploadError) {
-        console.error('Error processing image upload:', uploadError);
-        return res.status(500).json({ error: 'Failed to process image' });
-      }
-    }
-
-    // Update store record
-    const updateData = {
-      store_name: storeName,
-      store_code: storeCode,
-      owner_contact: ownerContact,
-      location: location,
-      is_active: isActive === 'true' || isActive === true,
-      updated_at: new Date().toISOString()
-    };
-
-    if (storeImage) {
-      updateData.store_image = storeImage;
-    }
-
-    const { data: updatedStore, error: updateError } = await supabase
-      .from('stores')
-      .update(updateData)
-      .eq('store_id', storeId)
-      .eq('owner_id', userId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Error updating store:', updateError);
-      return res.status(500).json({ error: 'Failed to update store' });
-    }
-
-    res.json({
-      message: 'Store updated successfully',
-      store: updatedStore
-    });
-  } catch (error) {
-    console.error('Error in PUT /api/owner/stores/:id:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Delete a store
-router.delete('/stores/:id', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const storeId = req.params.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Check if store exists and belongs to user
-    const { data: existingStore, error: fetchError } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('store_id', storeId)
-      .eq('owner_id', userId)
-      .single();
-
-    if (fetchError || !existingStore) {
-      return res.status(404).json({ error: 'Store not found' });
-    }
-
-    // Delete store
-    const { error: deleteError } = await supabase
-      .from('stores')
-      .delete()
-      .eq('store_id', storeId)
-      .eq('owner_id', userId);
-
-    if (deleteError) {
-      console.error('Error deleting store:', deleteError);
-      return res.status(500).json({ error: 'Failed to delete store' });
-    }
-
-    res.json({ message: 'Store deleted successfully' });
-  } catch (error) {
-    console.error('Error in DELETE /api/owner/stores/:id:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get stores for dropdown (used in dashboard)
-router.get('/stores/dropdown', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { data: stores, error } = await supabase
-      .from('stores')
-      .select('store_id, store_name')
-      .eq('owner_id', userId)
-      .eq('is_active', true)
-      .order('store_name', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching stores dropdown:', error);
-      return res.status(500).json({ error: 'Failed to fetch stores' });
-    }
-
-    res.json(stores);
-  } catch (error) {
-    console.error('Error in GET /api/owner/stores/dropdown:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get all redemptions from owner's stores
+// Get all redemptions from owner
 router.get('/redemptions', async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -327,41 +15,22 @@ router.get('/redemptions', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // First get all stores owned by the user
-    const { data: userStores, error: storesError } = await supabase
-      .from('stores')
-      .select('store_id')
-      .eq('owner_id', userId);
-
-    if (storesError) {
-      console.error('Error fetching user stores:', storesError);
-      return res.status(500).json({ error: 'Failed to fetch user stores' });
-    }
-
-    if (!userStores || userStores.length === 0) {
-      return res.json([]);
-    }
-
-    const storeIds = userStores.map(store => store.store_id);
-
-    // Get redemptions from all user's stores
+    // Get redemptions from owner
     const { data: redemptions, error: redemptionsError } = await supabase
       .from('redemptions')
       .select(`
         redemption_id,
         customer_id,
-        store_id,
         reward_id,
         points_used,
         status,
         redemption_date,
         description,
         created_at,
-        stores!inner(store_name, store_id),
         customers!inner(customer_name, points_balance),
         rewards!inner(reward_name, description)
       `)
-      .in('store_id', storeIds)
+      .eq('owner_id', userId)
       .order('redemption_date', { ascending: false });
 
     if (redemptionsError) {
@@ -373,14 +42,12 @@ router.get('/redemptions', async (req, res) => {
     const transformedRedemptions = redemptions.map(redemption => ({
       redemption_id: redemption.redemption_id,
       customer_name: redemption.customers?.customer_name || 'Unknown Customer',
-      store_name: redemption.stores?.store_name || 'Unknown Store',
       reward_name: redemption.rewards?.reward_name || 'Unknown Reward',
       points_used: redemption.points_used,
       status: redemption.status,
       redemption_date: redemption.redemption_date,
       description: redemption.description || redemption.rewards?.description || 'No description',
-      customer_points_balance: redemption.customers?.points_balance || 0,
-      store_id: redemption.store_id
+      customer_points_balance: redemption.customers?.points_balance || 0
     }));
 
     res.json(transformedRedemptions);
@@ -400,38 +67,23 @@ router.get('/redemptions/:id', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // First get all stores owned by the user
-    const { data: userStores, error: storesError } = await supabase
-      .from('stores')
-      .select('store_id')
-      .eq('owner_id', userId);
-
-    if (storesError) {
-      console.error('Error fetching user stores:', storesError);
-      return res.status(500).json({ error: 'Failed to fetch user stores' });
-    }
-
-    const storeIds = userStores.map(store => store.store_id);
-
     // Get specific redemption
     const { data: redemption, error: redemptionError } = await supabase
       .from('redemptions')
       .select(`
         redemption_id,
         customer_id,
-        store_id,
         reward_id,
         points_used,
         status,
         redemption_date,
         description,
         created_at,
-        stores!inner(store_name, store_id),
         customers!inner(customer_name, points_balance),
         rewards!inner(reward_name, description)
       `)
       .eq('redemption_id', redemptionId)
-      .in('store_id', storeIds)
+      .eq('owner_id', userId)
       .single();
 
     if (redemptionError || !redemption) {
@@ -442,14 +94,12 @@ router.get('/redemptions/:id', async (req, res) => {
     const transformedRedemption = {
       redemption_id: redemption.redemption_id,
       customer_name: redemption.customers?.customer_name || 'Unknown Customer',
-      store_name: redemption.stores?.store_name || 'Unknown Store',
       reward_name: redemption.rewards?.reward_name || 'Unknown Reward',
       points_used: redemption.points_used,
       status: redemption.status,
       redemption_date: redemption.redemption_date,
       description: redemption.description || redemption.rewards?.description || 'No description',
-      customer_points_balance: redemption.customers?.points_balance || 0,
-      store_id: redemption.store_id
+      customer_points_balance: redemption.customers?.points_balance || 0
     };
 
     res.json(transformedRedemption);
@@ -468,53 +118,32 @@ router.get('/dashboard-metrics', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get owner's stores count
-    const { count: totalStores } = await supabase
-      .from('stores')
-      .select('*', { count: 'exact', head: true })
-      .eq('owner_id', userId);
-
-    // Get total customers from owner's stores
+    // Get total customers from owner's transactions
     const { count: totalCustomers } = await supabase
       .from('transactions')
       .select('customer_id', { count: 'exact', head: true })
-      .in('store_id', 
-        supabase
-          .from('stores')
-          .select('store_id')
-          .eq('owner_id', userId)
-      );
+      .eq('owner_id', userId);
 
-    // Get total points earned from owner's stores
+    // Get total points earned from owner's transactions
     const { data: pointsData } = await supabase
       .from('transactions')
       .select('points')
-      .in('store_id', 
-        supabase
-          .from('stores')
-          .select('store_id')
-          .eq('owner_id', userId)
-      );
+      .eq('owner_id', userId);
 
     const totalPoints = pointsData?.reduce((sum, t) => sum + (t.points || 0), 0) || 0;
 
-    // Get total redemptions from owner's stores
+    // Get total redemptions from owner
     const { count: totalRedemptions } = await supabase
       .from('redemptions')
       .select('*', { count: 'exact', head: true })
-      .in('store_id', 
-        supabase
-          .from('stores')
-          .select('store_id')
-          .eq('owner_id', userId)
-      );
+      .eq('owner_id', userId);
 
     res.json({
-      totalStores: totalStores || 0,
+      totalStores: 0, // No longer tracking stores
       totalCustomers: totalCustomers || 0,
       totalPoints: totalPoints,
       totalRedemptions: totalRedemptions || 0,
-      storesGrowth: 5, // Placeholder - implement actual growth calculation
+      storesGrowth: 0, // No longer tracking stores
       customersGrowth: 12, // Placeholder
       pointsGrowth: 8, // Placeholder
       redemptionsGrowth: 15 // Placeholder
@@ -529,27 +158,10 @@ router.get('/dashboard-metrics', async (req, res) => {
 router.get('/engagement', async (req, res) => {
   try {
     const userId = req.session.userId;
-    const { storeId, period = 'month' } = req.query;
+    const { period = 'month' } = req.query;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Get owner's store IDs
-    let storeQuery = supabase
-      .from('stores')
-      .select('store_id')
-      .eq('owner_id', userId);
-
-    if (storeId) {
-      storeQuery = storeQuery.eq('store_id', storeId);
-    }
-
-    const { data: stores } = await storeQuery;
-    const storeIds = stores?.map(s => s.store_id) || [];
-
-    if (storeIds.length === 0) {
-      return res.json({ labels: [], data: [] });
     }
 
     // Generate labels based on period
@@ -565,11 +177,11 @@ router.get('/engagement', async (req, res) => {
       labels = Array.from({ length: 5 }, (_, i) => (currentYear - 4 + i).toString());
     }
 
-    // Get transaction data
+    // Get transaction data for the owner
     const { data: transactions } = await supabase
       .from('transactions')
       .select('points, transaction_date')
-      .in('store_id', storeIds)
+      .eq('owner_id', userId)
       .order('transaction_date', { ascending: true });
 
     // Process data based on period
@@ -602,89 +214,15 @@ router.get('/engagement', async (req, res) => {
   }
 });
 
-// Owner store breakdown endpoint
-router.get('/store-breakdown', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const { store = '' } = req.query;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Get owner's stores
-    let storeQuery = supabase
-      .from('stores')
-      .select('store_id, store_name')
-      .eq('owner_id', userId);
-
-    if (store) {
-      storeQuery = storeQuery.eq('store_id', store);
-    }
-
-    const { data: stores } = await storeQuery;
-
-    if (!stores || stores.length === 0) {
-      return res.json({ labels: [], data: [], breakdown: [] });
-    }
-
-    // Get points data for each store
-    const breakdown = [];
-    for (const storeData of stores) {
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('points')
-        .eq('store_id', storeData.store_id);
-
-      const totalPoints = transactions?.reduce((sum, t) => sum + (t.points || 0), 0) || 0;
-      
-      breakdown.push({
-        store_name: storeData.store_name,
-        total_points: totalPoints
-      });
-    }
-
-    const labels = breakdown.map(item => item.store_name);
-    const data = breakdown.map(item => item.total_points);
-
-    res.json({ labels, data, breakdown });
-  } catch (error) {
-    console.error('Error in GET /api/owner/store-breakdown:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Sales Report endpoint
 router.get('/sales-report', async (req, res) => {
   try {
     const userId = req.session.userId;
-    const { dateFrom, dateTo, storeId, sortBy, page = 1, limit = 10 } = req.query;
+    const { dateFrom, dateTo, sortBy, page = 1, limit = 10 } = req.query;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Get owner's store IDs
-    let storeQuery = supabase
-      .from('stores')
-      .select('store_id')
-      .eq('owner_id', userId);
-
-    if (storeId) {
-      storeQuery = storeQuery.eq('store_id', storeId);
-    }
-
-    const { data: stores } = await storeQuery;
-    const storeIds = stores?.map(s => s.store_id) || [];
-
-    if (storeIds.length === 0) {
-      return res.json({
-        sales: [],
-        total: 0,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: 0
-      });
     }
 
     // Build query for sales data
@@ -695,15 +233,13 @@ router.get('/sales-report', async (req, res) => {
         transaction_date,
         total_amount,
         reference_number,
-        store_id,
-        stores!inner(store_name, store_id),
         transaction_items!inner(
           product_name,
           quantity,
           unit_price
         )
       `)
-      .in('store_id', storeIds);
+      .eq('owner_id', userId);
 
     // Apply date filters
     if (dateFrom) {
@@ -750,8 +286,7 @@ router.get('/sales-report', async (req, res) => {
       date: transaction.transaction_date,
       reference: transaction.reference_number || `TXN-${transaction.transaction_id}`,
       product: transaction.transaction_items?.[0]?.product_name || 'Multiple Products',
-      amount: parseFloat(transaction.total_amount || 0),
-      store_name: transaction.stores?.store_name || 'Unknown Store'
+      amount: parseFloat(transaction.total_amount || 0)
     })) || [];
 
     const totalPages = Math.ceil((totalCount || 0) / parseInt(limit));
@@ -773,27 +308,10 @@ router.get('/sales-report', async (req, res) => {
 router.get('/sales-report/csv', async (req, res) => {
   try {
     const userId = req.session.userId;
-    const { dateFrom, dateTo, storeId, sortBy } = req.query;
+    const { dateFrom, dateTo, sortBy } = req.query;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Get owner's store IDs
-    let storeQuery = supabase
-      .from('stores')
-      .select('store_id')
-      .eq('owner_id', userId);
-
-    if (storeId) {
-      storeQuery = storeQuery.eq('store_id', storeId);
-    }
-
-    const { data: stores } = await storeQuery;
-    const storeIds = stores?.map(s => s.store_id) || [];
-
-    if (storeIds.length === 0) {
-      return res.status(404).json({ error: 'No stores found' });
     }
 
     // Build query for sales data
@@ -804,15 +322,13 @@ router.get('/sales-report/csv', async (req, res) => {
         transaction_date,
         total_amount,
         reference_number,
-        store_id,
-        stores!inner(store_name, store_id),
         transaction_items!inner(
           product_name,
           quantity,
           unit_price
         )
       `)
-      .in('store_id', storeIds);
+      .eq('owner_id', userId);
 
     // Apply filters
     if (dateFrom) {
@@ -852,8 +368,7 @@ router.get('/sales-report/csv', async (req, res) => {
       Date: transaction.transaction_date,
       'Reference #': transaction.reference_number || `TXN-${transaction.transaction_id}`,
       'Product Sold': transaction.transaction_items?.[0]?.product_name || 'Multiple Products',
-      'Total Amount': parseFloat(transaction.total_amount || 0),
-      'Store': transaction.stores?.store_name || 'Unknown Store'
+      'Total Amount': parseFloat(transaction.total_amount || 0)
     })) || [];
 
     // Set CSV headers
@@ -862,7 +377,7 @@ router.get('/sales-report/csv', async (req, res) => {
 
     // Generate CSV content
     if (csvData.length === 0) {
-      return res.send('Date,Reference #,Product Sold,Total Amount,Store\n');
+      return res.send('Date,Reference #,Product Sold,Total Amount\n');
     }
 
     const headers = Object.keys(csvData[0]);
@@ -882,27 +397,10 @@ router.get('/sales-report/csv', async (req, res) => {
 router.get('/sales-report/pdf', async (req, res) => {
   try {
     const userId = req.session.userId;
-    const { dateFrom, dateTo, storeId, sortBy } = req.query;
+    const { dateFrom, dateTo, sortBy } = req.query;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Get owner's store IDs
-    let storeQuery = supabase
-      .from('stores')
-      .select('store_id, store_name')
-      .eq('owner_id', userId);
-
-    if (storeId) {
-      storeQuery = storeQuery.eq('store_id', storeId);
-    }
-
-    const { data: stores } = await storeQuery;
-    const storeIds = stores?.map(s => s.store_id) || [];
-
-    if (storeIds.length === 0) {
-      return res.status(404).json({ error: 'No stores found' });
     }
 
     // Build query for sales data
@@ -913,15 +411,13 @@ router.get('/sales-report/pdf', async (req, res) => {
         transaction_date,
         total_amount,
         reference_number,
-        store_id,
-        stores!inner(store_name, store_id),
         transaction_items!inner(
           product_name,
           quantity,
           unit_price
         )
       `)
-      .in('store_id', storeIds);
+      .eq('owner_id', userId);
 
     // Apply filters
     if (dateFrom) {
@@ -961,8 +457,7 @@ router.get('/sales-report/pdf', async (req, res) => {
       date: transaction.transaction_date,
       reference: transaction.reference_number || `TXN-${transaction.transaction_id}`,
       product: transaction.transaction_items?.[0]?.product_name || 'Multiple Products',
-      amount: parseFloat(transaction.total_amount || 0),
-      store: transaction.stores?.store_name || 'Unknown Store'
+      amount: parseFloat(transaction.total_amount || 0)
     })) || [];
 
     // Generate PDF
@@ -974,7 +469,7 @@ router.get('/sales-report/pdf', async (req, res) => {
     res.json({
       message: 'PDF generation not implemented yet',
       data: pdfData,
-      filters: { dateFrom, dateTo, storeId, sortBy },
+      filters: { dateFrom, dateTo, sortBy },
       generatedAt: new Date().toISOString()
     });
   } catch (error) {
@@ -983,8 +478,64 @@ router.get('/sales-report/pdf', async (req, res) => {
   }
 });
 
+// Products API routes
+router.get('/products', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get products for the owner
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      return res.status(500).json({ error: 'Failed to fetch products' });
+    }
+
+    res.json(products || []);
+  } catch (error) {
+    console.error('Error in GET /api/owner/products:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Promotions API routes
+router.get('/promotions', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get promotions for the owner
+    const { data: promotions, error } = await supabase
+      .from('promotions')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching promotions:', error);
+      return res.status(500).json({ error: 'Failed to fetch promotions' });
+    }
+
+    res.json(promotions || []);
+  } catch (error) {
+    console.error('Error in GET /api/owner/promotions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Profile page route
-router.get('/profile', (req, res) => {
+router.get('/profile', async (req, res) => {
   console.log('🔍 Owner profile route hit');
   console.log('🔍 Session user:', req.session.user);
 
@@ -993,9 +544,196 @@ router.get('/profile', (req, res) => {
     return res.redirect('/');
   }
 
-  res.render('OwnerSide/Profile', { 
-    user: req.session.user
-  });
+  try {
+    const userId = req.session.userId;
+    
+    // Get owner's store information
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
+    if (storeError) {
+      console.error('Error fetching store data:', storeError);
+      // Continue with just user data if store not found
+    }
+
+    // Get user information
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return res.status(500).render('OwnerSide/Profile', { 
+        user: req.session.user,
+        error: 'Failed to fetch profile data'
+      });
+    }
+
+    res.render('OwnerSide/Profile', { 
+      user: req.session.user,
+      storeData: storeData || null,
+      userData: userData || null
+    });
+  } catch (error) {
+    console.error('Error in profile route:', error);
+    res.render('OwnerSide/Profile', { 
+      user: req.session.user,
+      error: 'Failed to load profile data'
+    });
+  }
+});
+
+// Get owner profile data API endpoint
+router.get('/profile-data', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get owner's store information
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
+    if (storeError) {
+      console.error('Error fetching store data:', storeError);
+    }
+
+    // Get user information
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return res.status(500).json({ error: 'Failed to fetch profile data' });
+    }
+
+    res.json({
+      user: userData,
+      store: storeData
+    });
+  } catch (error) {
+    console.error('Error in profile-data route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update owner profile data API endpoint
+router.put('/profile', upload.single('storePhoto'), async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { storeName, ownerName, contactNumber, email, location } = req.body;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    let storeImage = null;
+    
+    // Handle photo upload if provided
+    if (req.file) {
+      try {
+        const file = req.file;
+        const filePath = `stores/${Date.now()}_${file.originalname}`;
+
+        console.log('📁 Uploading store photo:', file.originalname);
+        console.log('📂 Target bucket: store_image');
+        console.log('📄 File path:', filePath);
+
+        // Upload image to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('store_image')
+          .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+        if (uploadError) {
+          console.error('❌ Storage upload error:', uploadError);
+          if (uploadError.message.includes('Bucket not found')) {
+            throw new Error('Storage bucket "store_image" not found. Please create it in your Supabase dashboard under Storage.');
+          }
+          throw uploadError;
+        }
+
+        console.log('✅ Store photo uploaded successfully');
+
+        // Get public URL
+        const { data: publicURL, error: urlError } = supabase.storage
+          .from('store_image')
+          .getPublicUrl(filePath);
+
+        if (urlError) {
+          console.error('❌ Public URL error:', urlError);
+          throw urlError;
+        }
+
+        storeImage = publicURL.publicUrl;
+        console.log('🔗 Store photo URL generated:', storeImage);
+      } catch (imageError) {
+        console.error('❌ Store photo processing error:', imageError);
+        // Continue without image if there's an error
+        storeImage = null;
+        console.log('⚠️ Continuing without photo upload');
+      }
+    }
+
+    // Update user information
+    const { error: userError } = await supabase
+      .from('users')
+      .update({
+        contact_number: contactNumber,
+        user_email: email
+      })
+      .eq('user_id', userId);
+
+    if (userError) {
+      console.error('Error updating user data:', userError);
+      return res.status(500).json({ error: 'Failed to update user data' });
+    }
+
+    // Prepare store update data
+    const storeUpdateData = {
+      store_name: storeName,
+      owner_name: ownerName,
+      owner_contact: contactNumber,
+      location: location
+    };
+
+    // Only update store_image if a new photo was uploaded
+    if (storeImage) {
+      storeUpdateData.store_image = storeImage;
+    }
+
+    // Update store information
+    const { error: storeError } = await supabase
+      .from('stores')
+      .update(storeUpdateData)
+      .eq('owner_id', userId);
+
+    if (storeError) {
+      console.error('Error updating store data:', storeError);
+      return res.status(500).json({ error: 'Failed to update store data' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      storeImage: storeImage // Return the new image URL if uploaded
+    });
+  } catch (error) {
+    console.error('Error in profile update route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;
