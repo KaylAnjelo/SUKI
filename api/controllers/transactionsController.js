@@ -107,7 +107,7 @@ export const createTransaction = async (req, res) => {
 };
 
 /**
- * GET all transactions
+ * GET all transactions (Admin view - shows all transactions from all stores)
  */
 export const getTransactions = async (req, res) => {
   try {

@@ -434,19 +434,12 @@ body.modal-open { overflow: hidden; }
     }
 }
 
-.main-content .table-scroll {
-    height: calc(100vh - 1in - 180px) !important; /* adjust 180px to fit your header/filters */
-    overflow: auto;
-}
-/* Stop page/main from scrolling */
-.main-content { overflow: hidden; }
+/* Removed problematic height and overflow rules that were conflicting with AdminStyles.css */
 
-/* Put the scrollbar on the table wrapper only */
-.table-container { display: flex; min-height: 0; }
+/* Table scrolling - compatible with AdminStyles.css */
 .table-scroll {
-  flex: 1;
-  max-height: 70vh;    /* adjust as needed or use calc(...) */
-  overflow-y: auto;    /* vertical scroll on table only */
+  max-height: 60vh;
+  overflow-y: auto;
   overflow-x: auto;    /* optional: horizontal scroll */
 }
 

@@ -3,32 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transactions</title>
-  <link rel="stylesheet" href="/css/AdminStyles.css">
+  <title>My Store Transactions</title>
+  <link rel="stylesheet" href="/css/OwnerStyles.css">
+  <link rel="stylesheet" href="/css/transactions.css">
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
-  <script src="/js/transactions.js" defer></script>
+  <script src="/js/OwnerTransactions.js" defer></script>
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
+    <!-- Sidebar -->
     <aside class="sidebar">
       <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
-        <a href="/admin-dashboard" class="nav-item">
+        <a href="/owner-dashboard" class="nav-item">
           <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
         </a>
-        <a href="/reports" class="nav-item">
-          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+        <a href="/owner/stores" class="nav-item">
+          <i class="fas fa-store"></i><span class="label">My Stores</span>
         </a>
-        <a href="/transac" class="nav-item active">
+        <a href="/owner/transactions" class="nav-item active">
           <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
         </a>
-        <a href="/users/UserManagement" class="nav-item">
-          <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+        <a href="/owner/redemptions" class="nav-item">
+          <i class="fas fa-gift"></i><span class="label">Redemptions</span>
+        </a>
+        <a href="/owner/sales-report" class="nav-item">
+          <i class="fas fa-chart-bar"></i><span class="label">Sales Report</span>
+        </a>
+        <a href="/owner/products" class="nav-item">
+          <i class="fas fa-box"></i><span class="label">Products</span>
+        </a>
+        <a href="/api/owner/promotions" class="nav-item">
+          <i class="fas fa-percentage"></i><span class="label">Promotions</span>
+        </a>
+        <a href="/api/owner/profile" class="nav-item">
+          <i class="fas fa-user"></i><span class="label">Profile</span>
         </a>
       </nav>
     </aside>
@@ -37,27 +51,16 @@
     <main class="main-content">
       <div class="header">
         <div class="header-left">
-          <h1>Transactions</h1>
+          <h1>My Store Transactions</h1>
         </div>
         <div class="header-right">
           <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
           </div>
-          <div class="user-profile">
-            <div class="profile-pic">
-              <i class="fas fa-user"></i>
-            </div>
-            <div class="user-info">
-              <span class="user-name">Admin</span>
-              <span class="user-role">Administrator</span>
-            </div>
-            <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-              <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-              </button>
-            </form>
-          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
         </div>
       </div>
 
@@ -73,6 +76,12 @@
           </select>
           <button class="apply-filters-btn">Apply Filters</button>
         </div>
+        <div class="filter-group">
+          <label for="storeFilter">Store:</label>
+          <select id="storeFilter" name="storeFilter">
+            <option value="">All Stores</option>
+          </select>
+        </div>
       </div>
 
       <!-- Transactions Table -->
@@ -82,7 +91,7 @@
            <thead>
               <tr>
                 <th data-column="reference_number" >Reference #</th>
-                <th data-column="store_name" class="sortable">Vendor Name</th>
+                <th data-column="store_name" class="sortable">Store Name</th>
                 <th data-column="amount" class="sortable">Amount</th>
                 <th data-column="points" class="sortable">Points</th>
                 <th data-column="transaction_type">Type</th>

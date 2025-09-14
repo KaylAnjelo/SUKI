@@ -230,9 +230,15 @@ body {
   font-size: 18px;
   cursor: pointer;
   margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 .sidebar-toggle:focus { outline: none; }
-.sidebar-toggle:hover { opacity: 0.85; }
+.sidebar-toggle:hover { 
+  background-color: rgba(255, 255, 255, 0.1);
+  opacity: 0.85; 
+}
 
 /* Collapsed sidebar behavior */
 .sidebar.collapsed {
@@ -567,7 +573,43 @@ h1 {
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -220px;
+    z-index: 1000;
+    height: 100vh;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: #7c0f0f;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .main-content {
+    padding-top: 60px;
+  }
+  
   .header-right {
     gap: 10px;
   }
@@ -583,6 +625,59 @@ h1 {
   
   .card-content p {
     font-size: 11px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .filters-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-group select,
+  .filter-group input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-right {
+    gap: 8px;
+  }
+  
+  .header-left h1 {
+    font-size: 24px;
+  }
+  
+  .metric-card {
+    min-height: 80px;
+    padding: 12px;
+  }
+  
+  .metric-card h3 {
+    font-size: 12px;
+  }
+  
+  .card-content p {
+    font-size: 10px;
+  }
+  
+  .logout,
+  .notif-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+    max-height: 95vh;
   }
 }
 
@@ -1271,6 +1366,70 @@ h1 {
 
 .vendors-table td:empty {
   border-bottom: 1px solid #e5e7eb;
+}
+
+/* --- Filters Container --- */
+.filters-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #7c0f0f;
+  box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
+}
+
+.filter-btn,
+.apply-filters-btn {
+  background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: end;
+}
+
+.filter-btn:hover,
+.apply-filters-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 15, 15, 0.3);
 }
 
 /* --- Responsive Design for Store Management --- */
