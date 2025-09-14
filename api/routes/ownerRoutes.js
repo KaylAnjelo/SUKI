@@ -1,6 +1,8 @@
 import express from "express";
+import multer from "multer";
 import supabase from "../../config/db.js";
 
+const upload = multer();
 const router = express.Router();
 
 
@@ -533,7 +535,7 @@ router.get('/promotions', async (req, res) => {
 });
 
 // Profile page route
-router.get('/profile', (req, res) => {
+router.get('/profile', async (req, res) => {
   console.log('🔍 Owner profile route hit');
   console.log('🔍 Session user:', req.session.user);
 
@@ -542,9 +544,196 @@ router.get('/profile', (req, res) => {
     return res.redirect('/');
   }
 
-  res.render('OwnerSide/Profile', { 
-    user: req.session.user
-  });
+  try {
+    const userId = req.session.userId;
+    
+    // Get owner's store information
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
+    if (storeError) {
+      console.error('Error fetching store data:', storeError);
+      // Continue with just user data if store not found
+    }
+
+    // Get user information
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return res.status(500).render('OwnerSide/Profile', { 
+        user: req.session.user,
+        error: 'Failed to fetch profile data'
+      });
+    }
+
+    res.render('OwnerSide/Profile', { 
+      user: req.session.user,
+      storeData: storeData || null,
+      userData: userData || null
+    });
+  } catch (error) {
+    console.error('Error in profile route:', error);
+    res.render('OwnerSide/Profile', { 
+      user: req.session.user,
+      error: 'Failed to load profile data'
+    });
+  }
+});
+
+// Get owner profile data API endpoint
+router.get('/profile-data', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get owner's store information
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
+    if (storeError) {
+      console.error('Error fetching store data:', storeError);
+    }
+
+    // Get user information
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return res.status(500).json({ error: 'Failed to fetch profile data' });
+    }
+
+    res.json({
+      user: userData,
+      store: storeData
+    });
+  } catch (error) {
+    console.error('Error in profile-data route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update owner profile data API endpoint
+router.put('/profile', upload.single('storePhoto'), async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { storeName, ownerName, contactNumber, email, location } = req.body;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    let storeImage = null;
+    
+    // Handle photo upload if provided
+    if (req.file) {
+      try {
+        const file = req.file;
+        const filePath = `stores/${Date.now()}_${file.originalname}`;
+
+        console.log('📁 Uploading store photo:', file.originalname);
+        console.log('📂 Target bucket: store_image');
+        console.log('📄 File path:', filePath);
+
+        // Upload image to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('store_image')
+          .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+        if (uploadError) {
+          console.error('❌ Storage upload error:', uploadError);
+          if (uploadError.message.includes('Bucket not found')) {
+            throw new Error('Storage bucket "store_image" not found. Please create it in your Supabase dashboard under Storage.');
+          }
+          throw uploadError;
+        }
+
+        console.log('✅ Store photo uploaded successfully');
+
+        // Get public URL
+        const { data: publicURL, error: urlError } = supabase.storage
+          .from('store_image')
+          .getPublicUrl(filePath);
+
+        if (urlError) {
+          console.error('❌ Public URL error:', urlError);
+          throw urlError;
+        }
+
+        storeImage = publicURL.publicUrl;
+        console.log('🔗 Store photo URL generated:', storeImage);
+      } catch (imageError) {
+        console.error('❌ Store photo processing error:', imageError);
+        // Continue without image if there's an error
+        storeImage = null;
+        console.log('⚠️ Continuing without photo upload');
+      }
+    }
+
+    // Update user information
+    const { error: userError } = await supabase
+      .from('users')
+      .update({
+        contact_number: contactNumber,
+        user_email: email
+      })
+      .eq('user_id', userId);
+
+    if (userError) {
+      console.error('Error updating user data:', userError);
+      return res.status(500).json({ error: 'Failed to update user data' });
+    }
+
+    // Prepare store update data
+    const storeUpdateData = {
+      store_name: storeName,
+      owner_name: ownerName,
+      owner_contact: contactNumber,
+      location: location
+    };
+
+    // Only update store_image if a new photo was uploaded
+    if (storeImage) {
+      storeUpdateData.store_image = storeImage;
+    }
+
+    // Update store information
+    const { error: storeError } = await supabase
+      .from('stores')
+      .update(storeUpdateData)
+      .eq('owner_id', userId);
+
+    if (storeError) {
+      console.error('Error updating store data:', storeError);
+      return res.status(500).json({ error: 'Failed to update store data' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      storeImage: storeImage // Return the new image URL if uploaded
+    });
+  } catch (error) {
+    console.error('Error in profile update route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

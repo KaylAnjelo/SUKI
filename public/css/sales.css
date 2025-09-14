@@ -12,8 +12,7 @@
 .download-section {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .download-btn {
@@ -31,23 +30,23 @@
 }
 
 .csv-btn {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
   color: white;
 }
 
 .csv-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 15, 15, 0.3);
 }
 
 .pdf-btn {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
   color: white;
 }
 
 .pdf-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 15, 15, 0.3);
 }
 
 .download-btn i {
@@ -61,6 +60,10 @@
   padding: 20px;
   margin-bottom: 24px;
   border: 1px solid #e5e7eb;
+}
+
+.filter-header {
+  margin-bottom: 20px;
 }
 
 .filter-row {
@@ -361,6 +364,7 @@
   .download-section {
     flex-direction: column;
     align-items: stretch;
+    justify-content: flex-start;
   }
   
   .filter-actions {
