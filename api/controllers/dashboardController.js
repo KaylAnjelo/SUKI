@@ -285,3 +285,137 @@ export const getDashboard = async (req, res) => {
     });
   }
 };
+
+export const getStores = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name, is_active')
+      .eq('is_active', true) // Only active stores
+      .order('store_name');
+    
+    if (error) {
+      console.error('❌ Stores API error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Stores API data:', data);
+    res.json(data || []);
+  } catch (err) {
+    console.error('💥 Error in stores API:', err);
+    res.status(500).json({ error: 'Failed to fetch stores' });
+  }
+};
+
+
+
+export const getEngagementData = async (req, res) => {
+  try {
+    const { storeId, period } = req.query;
+
+    let fromDate = new Date();
+    if (period === 'week') {
+      fromDate.setDate(fromDate.getDate() - 7);
+    } else if (period === 'month') {
+      fromDate.setMonth(fromDate.getMonth() - 12); // last 12 months
+    } else if (period === 'year') {
+      fromDate.setFullYear(fromDate.getFullYear() - 5); // last 5 years
+    }
+
+    let query = supabase
+      .from('transactions')
+      .select('transaction_date, points')
+      .gte('transaction_date', fromDate.toISOString().slice(0, 10));
+
+    if (storeId) query = query.eq('store_id', storeId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const engagementMap = new Map();
+
+    data.forEach(tx => {
+      let key, sortKey;
+      const txDate = new Date(tx.transaction_date);
+
+      if (period === 'week') {
+        // Group by day of week (Sunday → Saturday)
+        key = txDate.toLocaleDateString('en-US', { weekday: 'long' });
+        sortKey = txDate.getDay(); // 0=Sunday, 1=Monday, etc.
+      } else if (period === 'month') {
+        // Group by Year-Month (e.g., "Sep 2025")
+        key = txDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        sortKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM format
+      } else if (period === 'year') {
+        // Group by Year
+        key = txDate.getFullYear().toString();
+        sortKey = txDate.getFullYear(); // Use year as number for sorting
+      }
+
+      if (!engagementMap.has(key)) {
+        engagementMap.set(key, { points: 0, sortKey });
+      }
+      engagementMap.get(key).points += tx.points;
+    });
+
+    // Sort by actual date ranges using sortKey
+    const sortedEntries = Array.from(engagementMap.entries()).sort((a, b) => {
+      if (period === 'week') {
+        // Sort days of week (Sunday to Saturday)
+        return a[1].sortKey - b[1].sortKey;
+      } else if (period === 'month') {
+        // Sort by YYYY-MM format
+        return a[1].sortKey.localeCompare(b[1].sortKey);
+      } else if (period === 'year') {
+        // Sort by year number
+        return a[1].sortKey - b[1].sortKey;
+      }
+      return 0;
+    });
+
+    const labels = sortedEntries.map(([label]) => label);
+    const dataPoints = sortedEntries.map(([, data]) => data.points);
+
+    res.json({ labels, data: dataPoints });
+  } catch (err) {
+    console.error('Engagement API error:', err);
+    res.status(500).json({ error: 'Failed to fetch engagement data' });
+  }
+};
+
+export const getProductBreakdown = async (req, res) => {
+  try {
+    const { store } = req.query;
+
+    let query = supabase
+      .from('transactions')
+      .select(`
+        points,
+        products(product_type),
+        store_id
+      `);
+
+    if (store) query = query.eq('store_id', store);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const breakdownMap = new Map();
+    data.forEach(tx => {
+      const type = tx.products?.product_type || 'Unknown';
+      breakdownMap.set(type, (breakdownMap.get(type) || 0) + tx.points);
+    });
+
+    const labels = Array.from(breakdownMap.keys());
+    const counts = labels.map(type => breakdownMap.get(type));
+    const breakdown = labels.map((type, i) => ({
+      product_type: type,
+      total_points: counts[i]
+    }));
+
+    res.json({ labels, data: counts, breakdown });
+  } catch (err) {
+    console.error('Product Breakdown API error:', err);
+    res.status(500).json({ error: 'Failed to fetch product breakdown' });
+  }
+};
