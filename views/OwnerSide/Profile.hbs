@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - SUKI Incorporation</title>
+  <link rel="stylesheet" href="/css/OwnerStyles.css">
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/owner-dashboard" class="nav-item">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/sales-report" class="nav-item">
+          <i class="fas fa-chart-bar"></i><span class="label">Sales Report</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/products" class="nav-item">
+          <i class="fas fa-box"></i><span class="label">Products</span>
+        </a>
+        <a href="/api/owner/promotions" class="nav-item">
+          <i class="fas fa-percentage"></i><span class="label">Promotions</span>
+        </a>
+        <a href="/api/owner/profile" class="nav-item active">
+          <i class="fas fa-user"></i><span class="label">Profile</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <h1>Profile</h1>
+        </div>
+        <div class="header-right">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Profile Content -->
+      <div class="profile-content">
+        <!-- Profile Details Section -->
+        <div class="profile-details-card">
+          <div class="profile-picture-container">
+            <div class="store-profile-pic">
+              <span>Store Profile Pic</span>
+            </div>
+          </div>
+          <div class="profile-fields">
+            <div class="profile-field">
+              <label>Store Name</label>
+              <input type="text" value="LPU Canteen" readonly>
+            </div>
+            <div class="profile-field">
+              <label>Owner Name</label>
+              <input type="text" value="John Doe" readonly>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="edit-profile-btn">Edit Profile</button>
+          </div>
+        </div>
+
+        <!-- Information and My Vendors Section -->
+        <div class="profile-bottom-section">
+          <!-- Information Section -->
+          <div class="information-card">
+            <h3>Information</h3>
+            <div class="info-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>LPU MAIN BATANGAS</span>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-envelope"></i>
+              <span>JohnDoe@example.com</span>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-phone"></i>
+              <span>+639123569811</span>
+              <div class="contact-badge">
+                <i class="fas fa-at"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- My Vendors Section -->
+          <div class="vendors-card">
+            <h3>My Vendors</h3>
+            <div class="vendors-table-container">
+              <table class="vendors-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Contact #</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Vendor Name</td>
+                    <td>+639123456789</td>
+                    <td>vendor@example.com</td>
+                    <td><span class="status-badge active">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Profile page loaded');
+      
+      // Handle edit profile button
+      const editProfileBtn = document.querySelector('.edit-profile-btn');
+      if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', () => {
+          // TODO: Implement edit profile functionality
+          alert('Edit profile functionality will be implemented');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

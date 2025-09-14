@@ -9,6 +9,7 @@ import reportsRoutes from './api/routes/reports.js';
 import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
+import ownerRoutes from './api/routes/ownerRoutes.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -34,7 +35,7 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false}
@@ -51,6 +52,7 @@ app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
+app.use('/api/owner', ownerRoutes);
 
 // Views
 app.get("/reports", (req, res) => {
@@ -64,6 +66,71 @@ app.get("/transac", (req, res) => {
     chartLabels,
     chartData,
   });
+});
+
+// Owner routes
+app.get("/owner/stores", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    // Fetch stores owned by the user
+    const { data: stores, error } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching stores:', error);
+      return res.status(500).send('Error loading stores');
+    }
+
+    res.render('OwnerSide/OwnerStores', {
+      user: req.session.user,
+      stores: stores || []
+    });
+  } catch (error) {
+    console.error('Error in /owner/stores route:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get("/owner/redemptions", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    res.render('OwnerSide/Redemptions', {
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Error in /owner/redemptions route:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get("/owner/sales-report", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    res.render('OwnerSide/SalesReport', {
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Error in /owner/sales-report route:', error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.listen(port, () => {

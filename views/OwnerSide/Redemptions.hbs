@@ -1,117 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{appName}} - Redemption Management</title>
-
-  <link rel="stylesheet" href="/styles.css"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redemptions - Owner Dashboard</title>
+  <link rel="stylesheet" href="/css/OwnerStyles.css">
+  <link rel="stylesheet" href="/css/transactions.css">
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script src="/js/OwnerRedemptions.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
     <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <h2>{{appName}}</h2>
-      </div>
-      <nav class="nav-menu">
-        <ul>
-          <li>
-            <a href="/dashboard">
-              <i class="fas fa-chart-line"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="has-submenu">
-            <a href="#reports" class="menu-toggle">
-              <i class="fas fa-file-alt"></i>
-              <span>Generate Reports</span>
-              <i class="fas fa-chevron-right"></i>
-            </a>
-            <ul class="submenu">
-              <li><a href="/sales"><i class="fas fa-circle"></i><span>Sales</span></a></li>
-              <li><a href="/user-transactions"><i class="fas fa-circle"></i><span>User Transactions</span></a></li>
-              <li><a href="/user-activity"><i class="fas fa-circle"></i><span>User Activity</span></a></li>
-            </ul>
-          </li>
-          <li>
-            <a href="/transactions">
-              <i class="fas fa-exchange-alt"></i>
-              <span>Transactions</span>
-            </a>
-          </li>
-          <li class="active">
-            <a href="/users">
-              <i class="fas fa-fingerprint"></i>
-              <span>Users</span>
-            </a>
-          </li>
-        </ul>
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/owner/dashboard" class="nav-item">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/stores" class="nav-item">
+          <i class="fas fa-store"></i><span class="label">Stores</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-receipt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/redemptions" class="nav-item active">
+          <i class="fas fa-gift"></i><span class="label">Redemptions</span>
+        </a>
+        <a href="/api/owner/profile" class="nav-item">
+          <i class="fas fa-user"></i><span class="label">Profile</span>
+        </a>
       </nav>
-    </div>
+    </aside>
 
     <!-- Main Content -->
-    <div class="main-content">
-      <header class="header">
-        <h1>{{pageTitle}}</h1>
-        <div class="header-actions">
-          <div class="notification-bell">
-            <i class="fas fa-bell"></i>
-            <span class="notification-dot"></span>
+    <main class="main-content">
+      <div class="header">
+        <h1>Redemptions</h1>
+        <div class="notif-container">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
           </div>
-          <span class="logout">Log out</span>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
         </div>
-      </header>
+      </div>
 
-      <a href="/users" class="back-link"><i class="fas fa-arrow-left"></i></a>
+      <!-- Filters -->
+      <div class="filters-container" id="filtersContainer">
+        <div class="filter-group">
+          <label for="storeFilter">Store:</label>
+          <select id="storeFilter" name="storeFilter">
+            <option value="">All Stores</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="statusFilter">Status:</label>
+          <select id="statusFilter" name="statusFilter">
+            <option value="">All</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="dateFrom">From:</label>
+          <input type="date" id="dateFrom" name="dateFrom">
+        </div>
+        <div class="filter-group">
+          <label for="dateTo">To:</label>
+          <input type="date" id="dateTo" name="dateTo">
+        </div>
+        <button id="applyFilters" class="filter-btn">Apply Filters</button>
+      </div>
 
-      {{#if redemptions.length}}
-        <div class="report-table-container">
-          <table class="report-table">
+      <!-- Redemptions Table -->
+      <div class="table-container">
+        <div class="table-scroll">
+          <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Item</th>
-                <th>Points Used</th>
-                <th>Status</th>
+                <th data-column="redemption_id">Redemption ID</th>
+                <th data-column="customer_name" class="sortable">Customer</th>
+                <th data-column="store_name" class="sortable">Store</th>
+                <th data-column="reward_name" class="sortable">Reward</th>
+                <th data-column="points_used" class="sortable">Points Used</th>
+                <th data-column="status" class="sortable">Status</th>
+                <th data-column="redemption_date" class="sortable">Date</th>
+                <th>Details</th>
               </tr>
             </thead>
-            <tbody>
-              {{#each redemptions}}
-                <tr>
-                  <td>{{this.date}}</td>
-                  <td>{{this.user}}</td>
-                  <td>{{this.item}}</td>
-                  <td>{{this.points}}</td>
-                  <td>{{this.status}}</td>
-                </tr>
-              {{/each}}
-            </tbody>
+            <tbody id="redemptionsBody"></tbody>
           </table>
         </div>
-      {{else}}
-        <div class="empty-panel">
-          <div class="empty-icon"><i class="fas fa-coins"></i></div>
-          <div class="empty-title">No redemptions at this time</div>
-          <div class="empty-subtitle">Start redeeming points now.</div>
-        </div>
-      {{/if}}
-    </div>
-  </div>
-
-  <!-- Logout Confirmation Modal -->
-  <div id="logoutModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-text">Are you sure you want to logout?</div>
-      <div class="modal-buttons">
-        <button class="modal-btn yes-btn">YES</button>
-        <button class="modal-btn no-btn">NO</button>
       </div>
-    </div>
-  </div>
 
-  <script src="/script.js"></script>
+      <!-- Redemption Details Modal -->
+      <div id="detailsModal" class="receipt-modal" style="display:none;">
+        <div class="receipt-content">
+          <!-- Modal Header -->
+          <div class="receipt-header">
+            <div class="receipt-logo">
+              <i class="fas fa-gift"></i> SUKI Redemption
+            </div>
+            <span class="close" onclick="closeModal()">&times;</span>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="receipt-body">
+            <!-- Title and Reference -->
+            <div class="receipt-title">
+              <h2>Redemption Details</h2>
+              <div class="receipt-number" id="modalRef"></div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="receipt-info">
+              <div class="info-row">
+                <span class="label">Customer:</span>
+                <span class="value" id="modalCustomer"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Store:</span>
+                <span class="value" id="modalStore"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Reward:</span>
+                <span class="value" id="modalReward"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Description:</span>
+                <span class="value" id="modalDescription"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Status:</span>
+                <span class="value" id="modalStatus"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Date:</span>
+                <span class="value" id="modalDate"></span>
+              </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="receipt-summary">
+              <div class="summary-row">
+                <span class="label">Points Used:</span>
+                <span class="value points" id="modalPoints"></span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Customer Points Balance:</span>
+                <span class="value points" id="modalBalance"></span>
+              </div>
+            </div>
+
+            <!-- Optional Footer -->
+            <div class="receipt-footer">
+              <p>Thank you for using SUKI!</p>
+              <p class="footer-note">This is a system-generated redemption receipt.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </body>
 </html>

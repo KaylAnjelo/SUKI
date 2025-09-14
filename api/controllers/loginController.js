@@ -50,6 +50,7 @@ export const login = async (req, res) => {
       last_name: user.last_name,
       role: user.role
     };
+    req.session.userId = user.user_id; // Also store userId for compatibility
 
     // Log the successful login to user_logs table
     try {

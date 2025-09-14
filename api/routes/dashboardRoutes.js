@@ -39,7 +39,26 @@ router.get('/owner-dashboard', (req, res) => {
   }
 
   res.render('OwnerSide/OwnerDashboard', { 
-    user: req.session.user 
+    user: req.session.user,
+    total_stores: 0,
+    total_customers: 0,
+    total_points: 0,
+    total_redemptions: 0,
+    stores_growth: 0,
+    customers_growth: 0,
+    points_growth: 0,
+    redemptions_growth: 0,
+    stores_growth_class: 'neutral',
+    customers_growth_class: 'neutral',
+    points_growth_class: 'neutral',
+    redemptions_growth_class: 'neutral',
+    stores_icon: 'fa-minus',
+    customers_icon: 'fa-minus',
+    points_icon: 'fa-minus',
+    redemptions_icon: 'fa-minus',
+    store_growth: 0,
+    store_growth_class: 'neutral',
+    store_icon: 'fa-minus'
   });
 });
 
