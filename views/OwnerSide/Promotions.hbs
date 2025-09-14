@@ -374,7 +374,7 @@
         <a href="/owner/products" class="nav-item">
           <i class="fas fa-box"></i><span class="label">Products</span>
         </a>
-        <a href="/api/owner/promotions" class="nav-item active">
+        <a href="/owner/promotions" class="nav-item active">
           <i class="fas fa-percentage"></i><span class="label">Promotions</span>
         </a>
         <a href="/api/owner/profile" class="nav-item">
@@ -394,6 +394,14 @@
           <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
+          </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>

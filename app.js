@@ -126,35 +126,6 @@ app.get("/transac", (req, res) => {
 });
 
 // Owner routes
-app.get("/owner/stores", async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.redirect('/login');
-    }
-
-    // Fetch stores owned by the user
-    const { data: stores, error } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('owner_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching stores:', error);
-      return res.status(500).send('Error loading stores');
-    }
-
-    res.render('OwnerSide/OwnerStores', {
-      user: req.session.user,
-      stores: stores || []
-    });
-  } catch (error) {
-    console.error('Error in /owner/stores route:', error);
-    res.status(500).send('Internal server error');
-  }
-});
 
 app.get("/owner/redemptions", async (req, res) => {
   try {
@@ -203,6 +174,40 @@ app.get("/owner/transactions", async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /owner/transactions route:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get("/owner/products", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    res.render('OwnerSide/Products', {
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Error in /owner/products route:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get("/owner/promotions", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    res.render('OwnerSide/Promotions', {
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Error in /owner/promotions route:', error);
     res.status(500).send('Internal server error');
   }
 });
