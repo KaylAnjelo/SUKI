@@ -134,7 +134,7 @@
             </div>
           </div>
           <div class="donut-chart-container">
-            <canvas id="productStatsChart" width="240" height="240"></canvas>
+            <canvas id="productStatsChart"></canvas>
             <div class="chart-center">
               <div class="center-value">{{total_points}}</div>
               <div class="center-label">Total Points</div>
@@ -223,9 +223,8 @@
               data: data,
               borderColor: '#7D0006',
               borderWidth: 2,
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.4,
+              fill: false,
+              tension: 0,
               pointBackgroundColor: '#C72C41',
               pointBorderColor: '#7D0006',
               pointRadius: 5,

@@ -68,9 +68,11 @@
       <div class="filters-container" id="filtersContainer">
         <div class="filter-group">
           <label for="startDate">Date Range:</label>
-          <input type="date" id="startDate" name="startDate">
-          <span>to</span>
-          <input type="date" id="endDate" name="endDate" readonly>
+          <div class="date-range">
+            <input type="date" id="startDate" name="startDate">
+            <span>to</span>
+            <input type="date" id="endDate" name="endDate">
+          </div>
         </div>
         <div class="filter-group">
           <label for="storeFilter">Store:</label>
@@ -90,8 +92,6 @@
         <button id="applyFilters" class="filter-btn">Apply Filters</button>
         <button type="button" class="filter-btn" onclick="window.filtersApplied=false;">Clear Filters</button>
       </div>
-
-      
 
       <!-- Table -->
       <div class="table-container">

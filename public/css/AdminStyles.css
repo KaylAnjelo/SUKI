@@ -4,6 +4,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 /* Login Page Styles */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* prevent horizontal scroll */
+}
+
+
 body {
   margin: 0;
   font-family: "Poppins", sans-serif;
@@ -13,6 +20,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;   
+  width: 100%;
+  overflow: hidden;
 }
 
 .login-container {
@@ -140,11 +156,17 @@ body:not(.login-page) {
 
 .sidebar {
   width: 220px;
-  background-color: #7c0f0f;
-  color: white;
+  background: #7c0f0f;
+  color: #fff;
   padding: 20px;
-  transition: width 0.3s ease, padding 0.3s ease;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  transition: transform 0.3s 0.3s ease, width 0.3s ease, padding 0.3s ease;
+  z-index: 1000;
 }
+
 
 .logo {
   font-size: 18px;
@@ -190,8 +212,10 @@ body:not(.login-page) {
 }
 
 .main-content {
-  flex-grow: 1;
+  flex: 1;
   padding: 24px;
+  min-width: 0;
+  /* min-width: 100%; */
   background-color: #f8f9fa;
   position: relative;
   overflow-y: auto;
@@ -656,8 +680,15 @@ h1 {
 
 .donut-chart-container {
   position: relative;
-  height: 150px;
-  margin-bottom: 15px;
+  width: 100%;
+  max-width: 400px;   /* chart won't grow too large */
+  height: 300px;      /* controls height */
+  margin: 0 auto;
+}
+
+.donut-chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .chart-center {
@@ -1502,32 +1533,39 @@ h1 {
 /* --- Responsive Filters --- */
 .filters-container {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 15px;
   background: #f8f8f8;
   padding: 15px 20px;
   margin-bottom: 20px;
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px; /* space between label and input */
+  font-size: 13px;
   white-space: nowrap;
-  min-width: fit-content;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;              /* space between date inputs */
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .filter-group label {
   font-weight: 500;
   color: #333;
-  font-size: 13px;
-  min-width: 80px;
 }
 
 .filter-group input,
@@ -1536,7 +1574,6 @@ h1 {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 13px;
-  width: 130px;
   height: 32px;
 }
 
@@ -1553,22 +1590,30 @@ h1 {
 }
 
 .filter-btn {
-  background-color: #8b0000;
+  background-color: #7D0006; 
   color: white;
   border: none;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   font-size: 13px;
-  transition: background 0.3s;
-  white-space: nowrap;
+  transition: all 0.3s ease;
 }
 
 .filter-btn:hover {
-  background-color: #a60000;
+  background-color: #C72C41; /* lighter red on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
 }
 
+.clear-btn {
+  background-color: #555; /* neutral gray */
+}
+
+.clear-btn:hover {
+  background-color: #777;
+}
 /* Responsive breakpoints for filters */
 @media (max-width: 1200px) {
   .filters-container {
@@ -1932,6 +1977,25 @@ h1 {
   }
   .chart-container {
     height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    transform: translateX(-100%); /* hidden */
+  }
+
+  .sidebar.active {
+    transform: translateX(0); /* visible when toggled */
+  }
+
+  /* Show hamburger button */
+  .sidebar-toggle {
+    display: block;
   }
 }
 
