@@ -30,14 +30,10 @@
         <a href="/owner/products" class="nav-item">
           <i class="fas fa-box"></i><span class="label">Products</span>
         </a>
-<<<<<<< HEAD
-        <a href="/api/owner/promotions" class="nav-item">
-=======
         <a href="/owner/promotions" class="nav-item">
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           <i class="fas fa-percentage"></i><span class="label">Promotions</span>
         </a>
-        <a href="/api/owner/profile" class="nav-item">
+        <a href="/owner/profile" class="nav-item">
           <i class="fas fa-user"></i><span class="label">Profile</span>
         </a>
       </nav>
@@ -53,8 +49,6 @@
           <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
-<<<<<<< HEAD
-=======
           </div>
           <div class="user-profile">
             <div class="profile-pic">
@@ -63,7 +57,6 @@
             <div class="profile-info">
               <span class="user-name">{{user.username}}</span>
             </div>
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
@@ -565,7 +558,7 @@
       try {
         showLoading();
         
-        const response = await fetch(`/api/owner/api/top-products?category=${category}&limit=5`);
+        const response = await fetch(`/api/owner/top-products?category=${category}&limit=5`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -741,7 +734,7 @@
       try {
         showEngagementLoading();
         
-        const response = await fetch(`/api/owner/api/customer-engagement?period=${period}`);
+        const response = await fetch(`/api/owner/customer-engagement?period=${period}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -962,7 +955,7 @@
       try {
         showRecommendationsLoading();
         
-        const response = await fetch('/api/owner/api/recommendations');
+        const response = await fetch('/api/owner/recommendations');
         const data = await response.json();
 
         if (!response.ok) {

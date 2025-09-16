@@ -72,4 +72,14 @@ router.get('/owner-dashboard', (req, res) => {
   });
 });
 
+// Owner profile view (redundant path to ensure availability)
+router.get('/owner/profile', (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'owner') {
+    return res.redirect('/');
+  }
+  return res.render('OwnerSide/Profile', {
+    user: req.session.user
+  });
+});
+
 export default router;

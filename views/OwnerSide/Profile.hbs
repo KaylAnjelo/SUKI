@@ -29,14 +29,10 @@
         <a href="/owner/products" class="nav-item">
           <i class="fas fa-box"></i><span class="label">Products</span>
         </a>
-<<<<<<< HEAD
-        <a href="/api/owner/promotions" class="nav-item">
-=======
         <a href="/owner/promotions" class="nav-item">
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           <i class="fas fa-percentage"></i><span class="label">Promotions</span>
         </a>
-        <a href="/api/owner/profile" class="nav-item active">
+        <a href="/owner/profile" class="nav-item active">
           <i class="fas fa-user"></i><span class="label">Profile</span>
         </a>
       </nav>
@@ -53,8 +49,6 @@
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
           </div>
-<<<<<<< HEAD
-=======
           <div class="user-profile">
             <div class="profile-pic" id="headerProfilePic">
               {{#if storeData.store_image}}
@@ -67,7 +61,6 @@
               <span class="user-name">{{user.username}}</span>
             </div>
           </div>
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>
@@ -79,35 +72,22 @@
         <!-- Profile Details Section -->
         <div class="profile-details-card">
           <div class="profile-picture-container">
-<<<<<<< HEAD
-            <div class="store-profile-pic">
-              <span>Store Profile Pic</span>
-=======
             <div class="store-profile-pic" id="storeProfilePic">
               {{#if storeData.store_image}}
                 <img src="{{storeData.store_image}}" alt="Store Photo" id="storePhotoImg">
               {{else}}
                 <span>Store Profile Pic</span>
               {{/if}}
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
             </div>
           </div>
           <div class="profile-fields">
             <div class="profile-field">
               <label>Store Name</label>
-<<<<<<< HEAD
-              <input type="text" value="LPU Canteen" readonly>
-            </div>
-            <div class="profile-field">
-              <label>Owner Name</label>
-              <input type="text" value="John Doe" readonly>
-=======
               <input type="text" id="storeName" value="{{#if storeData}}{{storeData.store_name}}{{else}}No Store{{/if}}" readonly>
             </div>
             <div class="profile-field">
               <label>Owner Name</label>
               <input type="text" id="ownerName" value="{{#if storeData}}{{storeData.owner_name}}{{else}}{{#if userData}}{{userData.first_name}} {{userData.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
             </div>
           </div>
           <div class="profile-actions">
@@ -122,17 +102,6 @@
             <h3>Information</h3>
             <div class="info-item">
               <i class="fas fa-map-marker-alt"></i>
-<<<<<<< HEAD
-              <span>LPU MAIN BATANGAS</span>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-envelope"></i>
-              <span>JohnDoe@example.com</span>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-phone"></i>
-              <span>+639123569811</span>
-=======
               <span id="location">{{#if storeData}}{{storeData.location}}{{else}}No Location{{/if}}</span>
             </div>
             <div class="info-item">
@@ -142,7 +111,6 @@
             <div class="info-item">
               <i class="fas fa-phone"></i>
               <span id="contactNumber">{{#if userData}}{{userData.contact_number}}{{else}}{{#if storeData}}{{storeData.owner_contact}}{{else}}No Contact{{/if}}{{/if}}</span>
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
               <div class="contact-badge">
                 <i class="fas fa-at"></i>
               </div>
@@ -196,8 +164,6 @@
     </main>
   </div>
 
-<<<<<<< HEAD
-=======
   <!-- Edit Profile Modal -->
   <div id="editProfileModal" class="modal">
     <div class="modal-content">
@@ -243,20 +209,10 @@
       </form>
     </div>
   </div>
-
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Profile page loaded');
       
-<<<<<<< HEAD
-      // Handle edit profile button
-      const editProfileBtn = document.querySelector('.edit-profile-btn');
-      if (editProfileBtn) {
-        editProfileBtn.addEventListener('click', () => {
-          // TODO: Implement edit profile functionality
-          alert('Edit profile functionality will be implemented');
-=======
       // Modal elements
       const modal = document.getElementById('editProfileModal');
       const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -398,7 +354,6 @@
             console.error('Error updating profile:', error);
             alert('Failed to update profile');
           }
->>>>>>> dd15e666e69f6df323d24411dd4d6bd452460f45
         });
       }
     });
