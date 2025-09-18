@@ -2380,3 +2380,14 @@ body.modal-open {
     padding: 0 15px 15px 15px;
   }
 }
+
+.store-dropdown {
+  background: #fff7f7;
+  border: 1px solid #C72C41;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #7D0006;
+  cursor: pointer;
+  margin-bottom: 8px;
+}

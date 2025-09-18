@@ -401,9 +401,11 @@ export const getProductBreakdown = async (req, res) => {
     if (error) throw error;
 
     const breakdownMap = new Map();
+    let totalPoints = 0;
     data.forEach(tx => {
       const type = tx.products?.product_type || 'Unknown';
       breakdownMap.set(type, (breakdownMap.get(type) || 0) + tx.points);
+      totalPoints += tx.points || 0;
     });
 
     const labels = Array.from(breakdownMap.keys());
@@ -413,7 +415,7 @@ export const getProductBreakdown = async (req, res) => {
       total_points: counts[i]
     }));
 
-    res.json({ labels, data: counts, breakdown });
+    res.json({ labels, data: counts, breakdown, totalPoints }); // <-- Add totalPoints
   } catch (err) {
     console.error('Product Breakdown API error:', err);
     res.status(500).json({ error: 'Failed to fetch product breakdown' });

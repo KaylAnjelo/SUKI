@@ -38,15 +38,6 @@
                     <a href="/users/UserManagement"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
                     <h1>Customer Management</h1>
                 </div>
-                <div class="notif-container">
-                    <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-                    <div id="notificationsDropdown" style="display: none;">
-                        <ul id="notificationsList"></ul>
-                    </div>
-                    <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-                        <button type="submit" class="logout">Log out</button>
-                    </form>
-                </div>
             </div>
             
             <div class="tables-section">
@@ -55,8 +46,8 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Username</th>
+                                <th>Name</th>
                                 <th>Email</th>
                                 <th>Contact Number</th>
                             </tr>
@@ -64,8 +55,8 @@
                         <tbody>
                             {{#each customers}}
                             <tr>
-                                <td>{{this.user_id}}</td>
                                 <td>{{this.username}}</td>
+                                <td>{{this.full_name}}</td>
                                 <td>{{this.user_email}}</td>
                                 <td>{{this.contact_number}}</td>
                             </tr>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Transactions</title>
   <link rel="stylesheet" href="/css/AdminStyles.css">
+  <link rel="stylesheet" href="/css/transactionReceipt.css"
   <script src="/js/notifications.js" defer></script>
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
@@ -39,26 +40,6 @@
         <div class="header-left">
           <h1>Transactions</h1>
         </div>
-        <div class="header-right">
-          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
-          <div id="notificationsDropdown" style="display: none;">
-            <ul id="notificationsList"></ul>
-          </div>
-          <div class="user-profile">
-            <div class="profile-pic">
-              <i class="fas fa-user"></i>
-            </div>
-            <div class="user-info">
-              <span class="user-name">Admin</span>
-              <span class="user-role">Administrator</span>
-            </div>
-            <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
-              <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-              </button>
-            </form>
-          </div>
-        </div>
       </div>
 
       <!-- Filters -->
@@ -71,7 +52,6 @@
             <option value="Redemption">Redemption</option>
             <option value="Refund">Refund</option>
           </select>
-          <button class="apply-filters-btn">Apply Filters</button>
         </div>
       </div>
 

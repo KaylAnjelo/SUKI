@@ -39,15 +39,21 @@ export const getCustomers = async (req, res) => {
   try {
     const { data: customers, error } = await supabase
       .from('users')
-      .select('user_id, username, contact_number, user_email')
+      .select('user_id, username, contact_number, user_email, first_name, last_name')
       .eq('role', 'customer')
       .order('user_id', { ascending: true });
 
     if (error) throw error;
 
-    console.log("Customers:", customers);
+    // Add full_name property to each customer
+    const customersWithFullName = customers.map(c => ({
+      ...c,
+      full_name: `${c.first_name} ${c.last_name}`
+    }));
 
-    res.render('users/Customer', { customers });
+    console.log("Customers:", customersWithFullName);
+
+    res.render('users/Customer', { customers: customersWithFullName });
   } catch (error) {
     console.error("Error fetching customers:", error.message);
     res.status(500).send('Server Error');
