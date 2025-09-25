@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import supabase from "../../config/db.js";
+import { generateSalesReportPDF } from "../utils/pdfGenerator.js";
 
 const upload = multer();
 const router = express.Router();
@@ -15,12 +16,13 @@ router.get('/redemptions', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get redemptions from owner
+    // Get redemptions from owner with proper joins
     const { data: redemptions, error: redemptionsError } = await supabase
       .from('redemptions')
       .select(`
         redemption_id,
         customer_id,
+        store_id,
         reward_id,
         points_used,
         status,
@@ -28,7 +30,8 @@ router.get('/redemptions', async (req, res) => {
         description,
         created_at,
         customers!inner(customer_name, points_balance),
-        rewards!inner(reward_name, description)
+        rewards!inner(reward_name, description),
+        stores!inner(store_name)
       `)
       .eq('owner_id', userId)
       .order('redemption_date', { ascending: false });
@@ -42,6 +45,7 @@ router.get('/redemptions', async (req, res) => {
     const transformedRedemptions = redemptions.map(redemption => ({
       redemption_id: redemption.redemption_id,
       customer_name: redemption.customers?.customer_name || 'Unknown Customer',
+      store_name: redemption.stores?.store_name || 'Unknown Store',
       reward_name: redemption.rewards?.reward_name || 'Unknown Reward',
       points_used: redemption.points_used,
       status: redemption.status,
@@ -67,12 +71,13 @@ router.get('/redemptions/:id', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get specific redemption
+    // Get specific redemption with proper joins
     const { data: redemption, error: redemptionError } = await supabase
       .from('redemptions')
       .select(`
         redemption_id,
         customer_id,
+        store_id,
         reward_id,
         points_used,
         status,
@@ -80,7 +85,8 @@ router.get('/redemptions/:id', async (req, res) => {
         description,
         created_at,
         customers!inner(customer_name, points_balance),
-        rewards!inner(reward_name, description)
+        rewards!inner(reward_name, description),
+        stores!inner(store_name)
       `)
       .eq('redemption_id', redemptionId)
       .eq('owner_id', userId)
@@ -94,6 +100,7 @@ router.get('/redemptions/:id', async (req, res) => {
     const transformedRedemption = {
       redemption_id: redemption.redemption_id,
       customer_name: redemption.customers?.customer_name || 'Unknown Customer',
+      store_name: redemption.stores?.store_name || 'Unknown Store',
       reward_name: redemption.rewards?.reward_name || 'Unknown Reward',
       points_used: redemption.points_used,
       status: redemption.status,
@@ -470,17 +477,16 @@ router.get('/sales-report/pdf', async (req, res) => {
     })) || [];
 
     // Generate PDF
-    // Placeholder
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="sales-report.pdf"');
-    
-    // actual PDF
-    res.json({
-      message: 'PDF generation not implemented yet',
-      data: pdfData,
-      filters: { dateFrom, dateTo, sortBy },
-      generatedAt: new Date().toISOString()
-    });
+    try {
+      const pdfBuffer = await generateSalesReportPDF(pdfData, { dateFrom, dateTo, storeId });
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="sales-report.pdf"');
+      res.send(pdfBuffer);
+    } catch (pdfError) {
+      console.error('Error generating PDF:', pdfError);
+      res.status(500).json({ error: 'Failed to generate PDF' });
+    }
   } catch (error) {
     console.error('Error in GET /api/owner/sales-report/pdf:', error);
     res.status(500).json({ error: 'Internal server error' });

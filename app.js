@@ -12,6 +12,7 @@ import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerRoutes from './api/routes/ownerRoutes.js';
 import ownerTransactionRoutes from './api/routes/ownerTransactionRoutes.js';
+import ownerStoresRoutes from './api/routes/ownerStoresRoutes.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -110,6 +111,7 @@ app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/owner/transactions', ownerTransactionRoutes);
+app.use('/api/owner/stores', ownerStoresRoutes);
 
 // Views
 app.get("/reports", (req, res) => {
