@@ -220,6 +220,9 @@
     .modal-content {
       width: 100%;
       max-width: 500px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
       background: white;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
@@ -255,11 +258,13 @@
     }
 
     .modal-body {
-      padding: 24px;
+      padding: 16px 20px;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 14px;
     }
 
     .form-group label {
@@ -289,6 +294,37 @@
       box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
     }
 
+    .input-with-unit { position: relative; }
+    .input-unit {
+      position: absolute;
+      left: 12px;
+      top: 69%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-weight: 700;
+      font-size: 14px;
+      pointer-events: none;
+    }
+    /* Add left padding when unit shown on the left */
+    .input-with-unit input { padding-left: 34px; }
+
+    /* Neutralize browser red borders for invalid fields */
+    .form-group input:invalid,
+    .form-group select:invalid,
+    .form-group textarea:invalid {
+      border-color: #d1d5db;
+      box-shadow: none;
+    }
+    .form-group input:user-invalid,
+    .form-group select:user-invalid,
+    .form-group textarea:user-invalid {
+      border-color: #d1d5db;
+      box-shadow: none;
+    }
+
     .form-group textarea {
       resize: vertical;
       min-height: 80px;
@@ -302,7 +338,8 @@
 
     .modal-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
       gap: 12px;
       padding: 20px 24px;
       border-top: 1px solid #e5e7eb;
@@ -335,6 +372,32 @@
 
     .btn-primary:hover {
       background: #5a0000;
+    }
+
+    /* Toggle switch for Mode */
+    .segmented {
+      display: inline-flex;
+      background: #e5e7eb;
+      padding: 4px;
+      border-radius: 9999px;
+      gap: 6px;
+    }
+    .segment {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      user-select: none;
+    }
+    .segment:focus { outline: none; }
+    .segment:focus-visible { box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.2); }
+    .segment.active {
+      background: #7c0f0f;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(124, 15, 15, 0.25);
     }
 
     @media (max-width: 768px) {
@@ -537,17 +600,14 @@
         <h2 id="modalTitle">Add New Promotion</h2>
         <button class="close-btn" onclick="closePromotionModal()">&times;</button>
       </div>
-      <form id="promotionForm">
+      <form id="promotionForm" novalidate>
         <div class="modal-body">
           <div class="form-group">
             <label for="promotionName">Promotion Name</label>
             <input type="text" id="promotionName" name="name" required placeholder="e.g., Summer Sale">
           </div>
           
-          <div class="form-group">
-            <label for="promotionDescription">Description</label>
-            <textarea id="promotionDescription" name="description" placeholder="Describe your promotion..."></textarea>
-          </div>
+          
 
           <div class="form-row">
             <div class="form-group">
@@ -559,22 +619,22 @@
                 <option value="buy_x_get_y">Buy X Get Y</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group input-with-unit">
               <label for="discountValue">Discount Value</label>
               <input type="number" id="discountValue" name="discountValue" required placeholder="e.g., 20">
+              <span class="input-unit" id="discountUnit">%</span>
             </div>
           </div>
 
+          <!-- Mode segmented control and Task/Points -->
           <div class="form-row">
-            <div class="form-group">
-              <label for="minPurchase">Minimum Purchase</label>
-              <input type="number" id="minPurchase" name="minPurchase" placeholder="₱0">
-            </div>
-            <div class="form-group">
-              <label for="maxDiscount">Max Discount Amount</label>
-              <input type="number" id="maxDiscount" name="maxDiscount" placeholder="₱0">
+            <div class="form-group" id="pointsGroup" style="display:none;">
+              <label for="points">Points Required</label>
+              <input type="number" id="points" name="points" placeholder="e.g., 10" min="0">
             </div>
           </div>
+
+          
 
           <div class="form-row">
             <div class="form-group">
@@ -587,24 +647,20 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="usageLimit">Usage Limit</label>
-              <input type="number" id="usageLimit" name="usageLimit" placeholder="Unlimited">
-            </div>
-            <div class="form-group">
-              <label for="status">Status</label>
-              <select id="status" name="status" required>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="scheduled">Scheduled</option>
-              </select>
-            </div>
-          </div>
+          
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closePromotionModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Promotion</button>
+          <div>
+            <div class="segmented" role="tablist" aria-label="Mode">
+              <button type="button" class="segment active" id="modeTaskBtn" aria-selected="true">Task</button>
+              <button type="button" class="segment" id="modePointsBtn" aria-selected="false">Points</button>
+            </div>
+            <input type="hidden" id="modeType" name="modeType" value="task">
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary" onclick="closePromotionModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Promotion</button>
+          </div>
         </div>
       </form>
     </div>
@@ -616,12 +672,14 @@
       document.getElementById('modalTitle').textContent = 'Add New Promotion';
       document.getElementById('promotionForm').reset();
       document.getElementById('promotionModal').style.display = 'block';
+      setupModeSegments();
     }
 
     function editPromotion(id) {
       document.getElementById('modalTitle').textContent = 'Edit Promotion';
       // TODO: Load promotion data and populate form
       document.getElementById('promotionModal').style.display = 'block';
+      setupModeSegments();
     }
 
     function closePromotionModal() {
@@ -635,12 +693,57 @@
       }
     }
 
+    function setupModeSegments() {
+      const taskBtn = document.getElementById('modeTaskBtn');
+      const pointsBtn = document.getElementById('modePointsBtn');
+      const taskGroup = document.getElementById('taskGroup');
+      const pointsGroup = document.getElementById('pointsGroup');
+      const modeType = document.getElementById('modeType');
+      const discountType = document.getElementById('discountType');
+      const discountUnit = document.getElementById('discountUnit');
+
+      if (!taskBtn || !pointsBtn) return;
+
+      const activate = (type) => {
+        const isTask = type === 'task';
+        taskBtn.classList.toggle('active', isTask);
+        taskBtn.setAttribute('aria-selected', String(isTask));
+        pointsBtn.classList.toggle('active', !isTask);
+        pointsBtn.setAttribute('aria-selected', String(!isTask));
+        if (taskGroup) taskGroup.style.display = isTask ? '' : 'none';
+        pointsGroup.style.display = isTask ? 'none' : '';
+        modeType.value = type;
+      };
+
+      taskBtn.onclick = () => activate('task');
+      pointsBtn.onclick = () => activate('points');
+      activate(modeType.value || 'task');
+
+      // Sync Discount Value unit with Discount Type
+      if (discountType && discountUnit) {
+        const syncUnit = () => {
+          const type = discountType.value;
+          if (type === 'percentage') {
+            discountUnit.textContent = '%';
+          } else {
+            discountUnit.textContent = '₱';
+          }
+        };
+        discountType.addEventListener('change', syncUnit);
+        syncUnit();
+      }
+    }
+
     // Form submission
     document.getElementById('promotionForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
       const formData = new FormData(this);
       const promotionData = Object.fromEntries(formData);
+      promotionData.modeType = document.getElementById('modeType').value;
+      const taskEl = document.getElementById('task');
+      promotionData.task = taskEl ? taskEl.value : '';
+      promotionData.points = parseInt(document.getElementById('points').value || '0', 10);
       
       console.log('Promotion data:', promotionData);
       

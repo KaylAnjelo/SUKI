@@ -1666,6 +1666,34 @@ h1 {
   color: #374151;
 }
 
+/* Align filter controls in a single row with gaps */
+.filters-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filters-container .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: auto;
+}
+
+.filters-container .filter-group label {
+  min-width: 130px; /* ensures dropdowns line up */
+}
+
+.filters-container .filter-group select,
+.filters-container .filter-group input {
+  min-width: 180px; /* consistent width for alignment */
+}
+
+.filters-container .apply-filters-btn {
+  align-self: center;
+}
+
 .filter-group select,
 .filter-group input {
   padding: 10px 12px;
