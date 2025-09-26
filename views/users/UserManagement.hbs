@@ -33,7 +33,26 @@
         </aside>
     <main class="main-content">
       <div class="header">
-        <h1>User Management</h1>
+        <div class="header-left">
+          <h1>User Management</h1>
+        </div>
+        <div class="header-right">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
       </div>
       <div class="u-man">
         <div class="management-intro">

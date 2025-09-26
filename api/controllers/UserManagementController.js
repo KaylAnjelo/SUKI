@@ -242,7 +242,6 @@ export const addStore = async (req, res) => {
       .eq('store_id', newStore.store_id);
 
     if (updateError) {
-      // If update fails, clean up both records
       await supabase.from('users').delete().eq('user_id', newUser.user_id);
       await supabase.from('stores').delete().eq('store_id', newStore.store_id);
       throw updateError;
