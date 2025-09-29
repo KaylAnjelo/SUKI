@@ -10,6 +10,7 @@ import reportsRoutes from './api/routes/reports.js';
 import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
+import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js';
 import ownerRoutes from './api/routes/ownerRoutes.js';
 import ownerTransactionRoutes from './api/routes/ownerTransactionRoutes.js';
 import ownerStoresRoutes from './api/routes/ownerStoresRoutes.js';
@@ -111,6 +112,7 @@ app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
+app.use('/owner/profile/data', ownerProfileRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/owner/transactions', ownerTransactionRoutes);
 app.use('/api/owner/stores', ownerStoresRoutes);
@@ -217,27 +219,27 @@ app.get("/owner/promotions", async (req, res) => {
   }
 });
 
-app.get("/owner/profile", async (req, res) => {
-  try {
-    const userId = req.session.userId;
+// app.get("/owner/profile", async (req, res) => {
+//   try {
+//     const userId = req.session.userId;
 
-    if (!userId) {
-      return res.redirect('/login');
-    }
+//     if (!userId) {
+//       return res.redirect('/login');
+//     }
 
-    res.render('OwnerSide/Profile', {
-      user: req.session.user
-    });
-  } catch (error) {
-    console.error('Error in /owner/profile route:', error);
-    res.status(500).send('Internal server error');
-  }
-});
+//     res.render('OwnerSide/Profile', {
+//       user: req.session.user
+//     });
+//   } catch (error) {
+//     console.error('Error in /owner/profile route:', error);
+//     res.status(500).send('Internal server error');
+//   }
+// });
 
-// Backward compatibility: if something links to API path, redirect to view path
-app.get("/api/owner/profile", (req, res) => {
-  return res.redirect(302, "/owner/profile");
-});
+// // Backward compatibility: if something links to API path, redirect to view path
+// app.get("/api/owner/profile", (req, res) => {
+//   return res.redirect(302, "/owner/profile");
+// });
 
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);

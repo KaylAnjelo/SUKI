@@ -137,6 +137,8 @@ export const addStore = async (req, res) => {
       .eq('user_email', ownerEmail)
       .single();
 
+      let ownerId;
+
     if (existingUser) {
       return res.status(400).json({
         success: false,

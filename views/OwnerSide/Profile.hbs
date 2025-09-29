@@ -51,8 +51,8 @@
           </div>
           <div class="user-profile">
             <div class="profile-pic" id="headerProfilePic">
-              {{#if storeData.store_image}}
-                <img src="{{storeData.store_image}}" alt="Store Photo" id="headerStorePhoto">
+              {{#if store.store_image}}
+                <img src="{{store.store_image}}" alt="Store Photo" id="headerStorePhoto">
               {{else}}
                 <i class="fas fa-user"></i>
               {{/if}}
@@ -73,8 +73,8 @@
         <div class="profile-details-card">
           <div class="profile-picture-container">
             <div class="store-profile-pic" id="storeProfilePic">
-              {{#if storeData.store_image}}
-                <img src="{{storeData.store_image}}" alt="Store Photo" id="storePhotoImg">
+              {{#if store.store_image}}
+                <img src="{{store.store_image}}" alt="Store Photo" id="storePhotoImg">
               {{else}}
                 <span>Store Profile Pic</span>
               {{/if}}
@@ -83,11 +83,11 @@
           <div class="profile-fields">
             <div class="profile-field">
               <label>Store Name</label>
-              <input type="text" id="storeName" value="{{#if storeData}}{{storeData.store_name}}{{else}}No Store{{/if}}" readonly>
+              <input type="text" id="storeName" value="{{#if store.store_name}}{{store.store_name}}{{else}}No Store{{/if}}" readonly>
             </div>
             <div class="profile-field">
               <label>Owner Name</label>
-              <input type="text" id="ownerName" value="{{#if storeData}}{{storeData.owner_name}}{{else}}{{#if userData}}{{userData.first_name}} {{userData.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
+              <input type="text" id="ownerName" value="{{#if store}}{{store.owner_name}}{{else}}{{#if user}}{{user.first_name}} {{user.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
             </div>
           </div>
           <div class="profile-actions">
@@ -102,15 +102,17 @@
             <h3>Information</h3>
             <div class="info-item">
               <i class="fas fa-map-marker-alt"></i>
-              <span id="location">{{#if storeData}}{{storeData.location}}{{else}}No Location{{/if}}</span>
+              <span id="location">{{#if store.location}}{{store.location}}{{else}}No Location{{/if}}</span>
             </div>
             <div class="info-item">
               <i class="fas fa-envelope"></i>
-              <span id="email">{{#if userData}}{{userData.user_email}}{{else}}No Email{{/if}}</span>
+              <span id="email">{{#if user.user_email}}{{user.user_email}}{{else}}No Email{{/if}}</span>
             </div>
             <div class="info-item">
               <i class="fas fa-phone"></i>
-              <span id="contactNumber">{{#if userData}}{{userData.contact_number}}{{else}}{{#if storeData}}{{storeData.owner_contact}}{{else}}No Contact{{/if}}{{/if}}</span>
+             <span id="contactNumber">
+              {{#if user.contact_number}}{{user.contact_number}}{{else if store.owner_contact}}{{store.owner_contact}}{{else}}No Contact{{/if}}
+              </span>
               <div class="contact-badge">
                 <i class="fas fa-at"></i>
               </div>
@@ -131,30 +133,14 @@
                   </tr>
                 </thead>
                 <tbody>
+                  {{#each vendors}}
                   <tr>
-                    <td>Vendor Name</td>
-                    <td>+639123456789</td>
-                    <td>vendor@example.com</td>
-                    <td><span class="status-badge active">Active</span></td>
+                    <td>{{first_name}} {{last_name}}</td>
+                    <td>{{username}}</td>
+                    <td>{{contact_number}}</td>
+                    <td>{{user_email}}</td>
                   </tr>
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
+                  {{#each}}
                 </tbody>
               </table>
             </div>
