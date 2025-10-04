@@ -11,6 +11,7 @@ import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js';
+import ownerProductsRoute from './api/routes/ownerProductsRoutes.js';
 import ownerRoutes from './api/routes/ownerRoutes.js';
 import ownerTransactionRoutes from './api/routes/ownerTransactionRoutes.js';
 import ownerStoresRoutes from './api/routes/ownerStoresRoutes.js';
@@ -114,6 +115,7 @@ app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/owner/profile/data', ownerProfileRoutes);
 app.use('/api/owner', ownerRoutes);
+app.use('/owner/products', ownerProductsRoute);
 app.use('/api/owner/transactions', ownerTransactionRoutes);
 app.use('/api/owner/stores', ownerStoresRoutes);
 
