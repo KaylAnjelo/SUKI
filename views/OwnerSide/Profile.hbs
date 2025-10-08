@@ -17,7 +17,7 @@
       <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
       <div class="logo">SUKI Incorporation</div>
       <nav class="nav">
-        <a href="/owner-dashboard" class="nav-item">
+        <a href="/owner/dashboard" class="nav-item">
           <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
         </a>
         <a href="/owner/sales-report" class="nav-item">
@@ -211,7 +211,9 @@
         editProfileBtn.addEventListener('click', async () => {
           try {
             // Fetch current profile data
-            const response = await fetch('/api/owner/profile-data');
+            const response = await fetch('/owner/profile', {
+              headers: { 'Accept' : 'application/json' }
+            });
             const data = await response.json();
             
             if (response.ok) {
@@ -301,7 +303,7 @@
           const formData = new FormData(editForm);
           
           try {
-            const response = await fetch('/api/owner/profile', {
+            const response = await fetch('/owner/profile', {
               method: 'PUT',
               body: formData // Send FormData directly for file upload
             });

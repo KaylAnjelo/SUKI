@@ -1,0 +1,361 @@
+   .product-statistic {
+      min-height: 400px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .category-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-select {
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      font-size: 12px;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #7c0f0f;
+      box-shadow: 0 0 0 2px rgba(124, 15, 15, 0.1);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-text {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .legend-name {
+      font-weight: 500;
+    }
+
+    .legend-value {
+      font-weight: 600;
+      color: #7c0f0f;
+    }
+
+    .chart-stats {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .stat-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .no-data {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .no-data i {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: #d1d5db;
+    }
+
+    /* Customer Engagement Chart Styles */
+    .customer-engagement {
+      min-height: 400px;
+    }
+
+    /* Recommendations Styles */
+    .recommendation {
+      min-height: 400px;
+    }
+
+    .recommendation-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-btn {
+      background: #7c0f0f;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      font-size: 12px;
+    }
+
+    .refresh-btn:hover {
+      background: #5a0000;
+    }
+
+    .recommendations-container {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .recommendation-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .recommendation-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .recommendation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .recommendation-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+      flex: 1;
+    }
+
+    .recommendation-priority {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .priority-high {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .priority-medium {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .priority-low {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .recommendation-description {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .recommendation-action {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .action-text {
+      font-size: 11px;
+      color: #7c0f0f;
+      font-weight: 500;
+    }
+
+    .recommendation-type {
+      font-size: 10px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .recommendation-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 16px;
+      opacity: 0.3;
+    }
+
+    .recommendation-icon.customer-segment {
+      color: #7c0f0f;
+    }
+
+    .recommendation-icon.product-optimization {
+      color: #059669;
+    }
+
+    .recommendation-icon.operational-optimization {
+      color: #dc2626;
+    }
+
+    .recommendation-icon.promotional-strategy {
+      color: #d97706;
+    }
+
+    .no-recommendations {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+
+    .no-recommendations i {
+      font-size: 32px;
+      margin-bottom: 12px;
+      color: #d1d5db;
+    }
+
+    .recommendation-stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .stat-badge {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .engagement-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .engagement-chart-container {
+      position: relative;
+      height: 250px;
+      margin-bottom: 16px;
+    }
+
+    .engagement-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .engagement-stat-item {
+      text-align: center;
+      padding: 8px;
+    }
+
+    .engagement-stat-value {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+      color: #7c0f0f;
+      margin-bottom: 4px;
+    }
+
+    .engagement-stat-label {
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 768px) {
+      .card-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .chart-container {
+        height: 200px;
+      }
+
+      .engagement-chart-container {
+        height: 200px;
+      }
+
+      .engagement-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }

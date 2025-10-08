@@ -115,7 +115,7 @@ export const login = async (req, res) => {
       case 'owner':
         console.log("👑 Owner login detected, redirecting to OwnerDashboard");
         console.log("🔍 About to redirect to: /owner-dashboard");
-        return res.redirect("/owner-dashboard");
+        return res.redirect("/owner/dashboard");
         
       case 'customer':
       default:
