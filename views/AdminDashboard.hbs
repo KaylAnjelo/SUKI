@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/AdminStyles.css">
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/admin-dashboard" class="nav-item active">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/reports" class="nav-item">
+          <i class="fas fa-file-alt"></i><span class="label">Reports</span>
+        </a>
+        <a href="/transac" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="users/UserManagement" class="nav-item">
+          <i class="fa-solid fa-fingerprint"></i><span class="label">Users</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <h1>Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Top Row Metrics -->
+      <div class="metrics-row-1">
+        <div class="metrics-left-column">
+          <div class="metric-card total-sales">
+            <div class="card-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+              <h3>Total Store Owners</h3>
+              <div class="metric-value">{{total_owners}}</div>
+              <div class="metric-comparison">Stores vs last month</div>
+              <div class="metric-change {{owners_growth_class}}">
+                <i class="fas {{owners_icon}}"></i>
+                {{owners_growth}}%
+              </div>
+            </div>
+          </div>
+          
+          <div class="metric-card total-orders">
+            <div class="card-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="card-content">
+              <h3>Total Customers</h3>
+              <div class="metric-value">{{total_customers}}</div>
+              <div class="metric-comparison">Customers vs last month</div>
+              <div class="metric-change {{customers_growth_class}}">
+                <i class="fas {{customers_icon}}"></i>
+                {{customers_growth}}%
+              </div>
+            </div>
+          </div>
+          
+          <div class="metric-card visitor">
+            <div class="card-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+              <h3>Total Points Earned</h3>
+              <div class="metric-value">{{total_points}}</div>
+              <div class="metric-comparison">Points vs last month</div>
+              <div class="metric-change {{points_growth_class}}">
+                <i class="fas {{points_icon}}"></i>
+                {{points_growth}}%
+              </div>
+            </div>
+          </div>
+          
+          <div class="metric-card total-sold">
+            <div class="card-icon">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="card-content">
+              <h3>Total Points Redeemed</h3>
+              <div class="metric-value">{{redeemed_points}}</div>
+              <div class="metric-comparison">Points vs last month</div>
+              <div class="metric-change {{redeemed_growth_class}}">
+                <i class="fas {{redeemed_icon}}"></i>
+                {{redeemed_growth}}%
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Donut Chart -->
+        <div class="metric-card product-stats">
+          <div class="card-header">
+            <h3>Product Statistic</h3>
+            <p>Track your product sales</p>
+            <div class="dropdown-container">
+              <select id="storeFilter" class="store-dropdown">
+                <option value="">All Stores</option>
+              </select>
+            </div>
+          </div>
+          <div class="donut-chart-container">
+            <canvas id="productStatsChart"></canvas>
+            <div class="chart-center">
+              <div class="center-value">{{total_points}}</div>
+              <div class="center-label">Total Points</div>
+              <div class="metric-change {{product_growth_class}}">
+                <i class="fas {{product_icon}}"></i>
+                {{product_growth}}%
+              </div>
+            </div>
+          </div>
+          <!-- Fixed: Changed id to match JavaScript -->
+          <div id="productCategoryList" class="category-list"></div>
+        </div>
+      </div>
+      
+      <!-- Bottom Row Charts -->
+      <div class="charts-row">
+        <div class="chart-card customer-habits">
+          <div class="chart-header">
+            <h3>Customer Engagement</h3>
+            <p>Track Customer Engagement</p>
+            <div class="dropdown-container">
+              <select id="timeFilter" class="time-dropdown">
+                <option value="year">Year</option>
+                <option value="month" selected>Month</option>
+                <option value="week">Week</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <span class="legend-dot sales"></span>
+              <span>Points Earned</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="customerHabitsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let engagementChart;
+    let productChart;
+
+    // Load store dropdown
+    async function loadStores() {
+      try {
+        const response = await fetch("/api/stores");
+        const stores = await response.json();
+
+        const storeSelect = document.getElementById("storeFilter");
+        storeSelect.innerHTML = `<option value="">All Stores</option>`;
+        stores.forEach(store => {
+          const opt = document.createElement("option");
+          opt.value = store.store_id;
+          opt.textContent = store.store_name;
+          storeSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Error loading stores:", err);
+      }
+    }
+
+    // Engagement Line Chart - Updated to use backend sorted data
+    async function loadEngagement(storeId = '', period = 'month') {
+      try {
+        const res = await fetch(`/api/engagement?storeId=${storeId}&period=${period}`);
+        const { labels, data } = await res.json();
+
+        if (engagementChart) engagementChart.destroy();
+
+        const ctx = document.getElementById('customerHabitsChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, '#C72C41');
+        gradient.addColorStop(1, '#7D0006');
+
+        // Use the backend-sorted labels directly instead of predefined arrays
+        engagementChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels, // Use backend sorted labels
+            datasets: [{
+              label: 'Customer Engagement',
+              data: data,
+              borderColor: '#7D0006',
+              borderWidth: 2,
+              fill: false,
+              tension: 0,
+              pointBackgroundColor: '#C72C41',
+              pointBorderColor: '#7D0006',
+              pointRadius: 5,
+              pointHoverRadius: 7
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `Points: ${context.parsed.y}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { 
+                  display: true, 
+                  text: period === 'week' ? 'Days of Week' : 
+                        period === 'month' ? 'Months' : 'Years' 
+                }
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Points Earned'
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error loading engagement data:', error);
+      }
+    }
+
+    // Donut Chart
+// Donut Chart
+async function loadProductBreakdown(store = '') {
+  try {
+    const res = await fetch(`/api/product-breakdown?store=${store}`);
+    const { labels, data, totalPoints } = await res.json();
+
+    if (productChart) productChart.destroy();
+
+    const ctx = document.getElementById('productStatsChart').getContext('2d');
+    const colors = ['#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60', '#8E44AD', '#E67E22'];
+
+    const listEl = document.getElementById('productCategoryList');
+    const centerEl = document.querySelector('.chart-center .center-value');
+
+    // 🔹 Helper: animate numbers smoothly
+    function animateValue(el, start, end, duration = 500) {
+      if (isNaN(start)) start = 0;
+      if (isNaN(end)) end = 0;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = Math.floor(start + (end - start) * progress);
+        el.textContent = value;
+
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    // 🔹 Helper: re-render the center value + category list
+    function renderCategoryList(chart, animate = true) {
+      const dataset = chart.data.datasets[0];
+
+      // Compute visible total
+      const visibleTotal = dataset.data.reduce((sum, val, i) => {
+        return chart.getDataVisibility(i) ? sum + val : sum;
+      }, 0);
+
+      // Update center value
+      let currentCenter = Number(centerEl.textContent.replace(/[^\d]/g, ''));
+      if (isNaN(currentCenter)) currentCenter = 0;
+
+      if (animate) {
+        animateValue(centerEl, currentCenter, visibleTotal, 500);
+      } else {
+        centerEl.textContent = visibleTotal;
+      }
+
+      // Build category list
+      const visibleBreakdown = chart.data.labels
+        .map((label, i) => {
+          if (chart.getDataVisibility(i)) {
+            return {
+              product_type: label,
+              total_points: dataset.data[i]
+            };
+          }
+          return null;
+        })
+        .filter(item => item !== null);
+
+      if (visibleBreakdown.length > 0) {
+        listEl.innerHTML = visibleBreakdown.map((item, i) => {
+          const percentage = visibleTotal > 0 ? (item.total_points / visibleTotal * 100).toFixed(1) : 0;
+          return `
+            <div class="category-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0; background: #f5f5f5; border-radius: 4px;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: ${colors[i % colors.length]}"></span>
+                ${item.product_type}
+              </span>
+              <span style="font-weight: bold;">
+                ${item.total_points} <span style="color:#555; font-weight: normal;">(${percentage}%)</span>
+              </span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        listEl.innerHTML = '<div style="text-align: center; color: #666;">No product data available</div>';
+      }
+    }
+
+    // 🔹 Create chart
+    productChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 0,
+          cutout: '70%'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { 
+            display: true,
+            position: 'bottom',
+            onClick: function(e, legendItem, legend) {
+              const chart = legend.chart; // ✅ correct way in v4
+
+              // ✅ run default toggle behavior
+              Chart.overrides.doughnut.plugins.legend.onClick.call(this, e, legendItem, legend);
+
+              // ✅ re-render center + list
+              setTimeout(() => {
+                renderCategoryList(chart, true);
+              }, 0);
+            }
+          }
+        }
+      }
+    });
+
+    // ✅ Initial render without animation
+    centerEl.textContent = totalPoints;
+    renderCategoryList(productChart, false);
+
+  } catch (error) {
+    console.error('Error loading product breakdown:', error);
+  }
+}
+
+    // Initialize on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStores();
+      loadProductBreakdown();
+      loadEngagement(); // Default to month view
+
+      // Store filter for donut chart
+      document.getElementById('storeFilter').addEventListener('change', (e) => {
+        loadProductBreakdown(e.target.value);
+        // Also update engagement chart with same store filter
+        const period = document.getElementById('timeFilter').value;
+        loadEngagement(e.target.value, period);
+      });
+
+      // Time filter for engagement chart
+      document.getElementById('timeFilter').addEventListener('change', (e) => {
+        const period = e.target.value;
+        const storeId = document.getElementById('storeFilter').value;
+        loadEngagement(storeId, period);
+      });
+    });
+  </script>
+</body>
+</html>

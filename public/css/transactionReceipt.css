@@ -1,0 +1,117 @@
+.receipt-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receipt-content {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 370px;
+  max-width: 95vw;
+  padding: 28px 24px 18px 24px;
+  font-family: 'Poppins', Arial, sans-serif;
+  position: relative;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.receipt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.receipt-logo {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #C72C41;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipt-header .close {
+  font-size: 1.5em;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.receipt-header .close:hover {
+  color: #C72C41;
+}
+
+.receipt-title h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.15em;
+  font-weight: 500;
+  color: #7D0006;
+}
+.receipt-number {
+  font-size: 0.95em;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.receipt-info {
+  margin-bottom: 12px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.98em;
+}
+.info-row .label {
+  color: #555;
+  font-weight: 500;
+}
+.info-row .value {
+  color: #222;
+}
+
+.receipt-summary {
+  margin: 14px 0 10px 0;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1em;
+  margin-bottom: 4px;
+}
+.summary-row .label {
+  color: #333;
+  font-weight: 600;
+}
+.summary-row .value.amount {
+  color: #C72C41;
+  font-weight: 700;
+}
+.summary-row .value.points {
+  color: #27AE60;
+  font-weight: 700;
+}
+
+.receipt-footer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.95em;
+  color: #888;
+}
+.receipt-footer .footer-note {
+  font-size: 0.85em;
+  color: #bbb;
+  margin-top: 2px;
+}

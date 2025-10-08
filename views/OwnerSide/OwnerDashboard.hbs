@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard</title>
+  <link rel="stylesheet" href="/css/OwnerStyles.css">
+  <link rel="stylesheet" href="/css/ownerDashboardStyles.css">
+  <script src="/js/owner/dashboard.js" defer></script>
+  <script src="/js/notifications.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+  <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+      <div class="logo">SUKI Incorporation</div>
+      <nav class="nav">
+        <a href="/owner/dashboard" class="nav-item active">
+          <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
+        </a>
+        <a href="/owner/sales-report" class="nav-item">
+          <i class="fas fa-chart-bar"></i><span class="label">Sales Report</span>
+        </a>
+        <a href="/owner/transactions" class="nav-item">
+          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
+        </a>
+        <a href="/owner/products" class="nav-item">
+          <i class="fas fa-box"></i><span class="label">Products</span>
+        </a>
+        <a href="/owner/promotions" class="nav-item">
+          <i class="fas fa-percentage"></i><span class="label">Promotions</span>
+        </a>
+        <a href="/owner/profile/data" class="nav-item">
+          <i class="fas fa-user"></i><span class="label">Profile</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <h1>Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <button id="notificationsBtn" class="notif-button"><i class="fas fa-bell"></i></button>
+          <div id="notificationsDropdown" style="display: none;">
+            <ul id="notificationsList"></ul>
+          </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
+          <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout">Log out</button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Dashboard Content -->
+      <div class="dashboard-content">
+        <!-- Top Row Cards -->
+        <div class="sales-summary">
+          <div class="metric-card total-sales">
+            <h3>Total Sales: <span id="totalSales">₱0.00</span></h3>
+            <div class="metric-placeholder" id="salesPlaceholder">
+              Loading sales data...
+            </div>
+          </div>
+          
+          <div class="metric-card total-orders">
+            <h3>Total Orders: <span id="totalOrders">0</span></h3>
+            <div class="metric-placeholder" id="ordersPlaceholder">
+              Loading orders data...
+            </div>
+          </div>
+        </div>
+                
+        <!-- Right Column Cards -->
+        <div class="right-column">
+          <div class="metric-card product-statistic">
+            <div class="card-header">
+              <h3>Top Products</h3>
+              <div class="category-filter">
+                <select id="categoryFilter" class="filter-select">
+                  <option value="all">All Categories</option>
+                  <option value="snacks">Snacks</option>
+                  <option value="drinks">Drinks</option>
+                  <option value="meals">Meals</option>
+                  <option value="desserts">Desserts</option>
+                  <option value="beverages">Beverages</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="chart-container">
+                <canvas id="productChart" width="400" height="300"></canvas>
+              </div>
+              <div class="chart-legend" id="chartLegend">
+                <!-- Legend will be populated by JavaScript -->
+              </div>
+              <div class="chart-stats" id="chartStats">
+                <!-- Additional stats will be shown here -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="metric-card recommendation">
+            <div class="card-header">
+              <h3>Recommendations</h3>
+              <div class="recommendation-controls">
+                <button id="refreshRecommendations" class="refresh-btn" title="Refresh Recommendations">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="recommendations-container" id="recommendationsContainer">
+                <div class="loading">
+                  <i class="fas fa-brain fa-spin"></i>
+                  <div>Analyzing data with K-means clustering...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Bottom Left Card -->
+        <div class="bottom-left">
+          <div class="metric-card customer-engagement">
+            <div class="card-header">
+              <h3>Customer Engagement</h3>
+              <div class="engagement-controls">
+                <select id="engagementPeriodFilter" class="filter-select">
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d" selected>Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="1y">Last Year</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="engagement-chart-container">
+                <canvas id="engagementChart" width="400" height="200"></canvas>
+              </div>
+              <div class="engagement-stats" id="engagementStats">
+                <!-- Engagement statistics will be shown here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
