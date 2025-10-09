@@ -125,20 +125,6 @@ tbody tr:hover {
     align-items: center;
 }
 
-/* Inner content box */
-.receipt-modal .receipt-content {
-    background: #fff;
-    border-radius: 12px;
-    width: 92%;
-    max-width: 400px;
-    max-height: 85vh;
-    overflow: hidden; /* header sticky within content */
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    margin: 40px auto;
-    display: flex;
-    flex-direction: column;
-}
-
 .receipt-modal .receipt-body {
     padding: 16px 20px;
     overflow-y: auto;

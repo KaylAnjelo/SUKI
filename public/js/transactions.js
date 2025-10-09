@@ -24,11 +24,8 @@ function renderTransactions(rows) {
     const tr = document.createElement("tr");
 
     const ref = tx.reference_number || "N/A";
-    const userName = tx.users?.username || "N/A";
-    const storeName = tx.stores?.store_name || "N/A";
-    const productName = tx.products?.product_name || "N/A";
-    const amountNum = Number(tx.quantity) * Number(tx.price || 0);
-    const amount = isFinite(amountNum) ? amountNum.toFixed(2) : "0.00";
+    const storeName = tx.store || "N/A";
+    const amount = tx.total?.toFixed(2) || "0.00";
     const points = tx.points ?? 0;
     const type = tx.transaction_type || "";
     const date = new Date(tx.transaction_date).toLocaleString();
@@ -41,7 +38,7 @@ function renderTransactions(rows) {
       <td>${type}</td>
       <td>${date}</td>
       <td>
-        <button class="details-btn" title="View details" data-id="${tx.id}">
+        <button class="details-btn" title="View details" data-ref="${tx.reference_number}">
           <i class="fas fa-receipt"></i>
         </button>
       </td>
@@ -50,12 +47,11 @@ function renderTransactions(rows) {
     tbody.appendChild(tr);
   });
 
-  // Attach event listener for details buttons
+  // Attach modal button listeners
   document.querySelectorAll(".details-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      const id = e.currentTarget.getAttribute("data-id");
-      const transaction = FILTERED_DATA.find(t => String(t.id) === String(id))
-        || TXN_DATA.find(t => String(t.id) === String(id));
+      const ref = e.currentTarget.getAttribute("data-ref");
+      const transaction = FILTERED_DATA.find(t => t.reference_number === ref);
       showDetails(transaction);
     });
   });
@@ -139,38 +135,78 @@ function initTypeFilter() {
 }
 
 // Show modal with transaction details
+// 🪟 Show modal
 function showDetails(tx) {
   if (!tx) return;
 
-  document.getElementById("modalRef").textContent = tx.reference_number || "N/A";
-  document.getElementById("modalUser").textContent = tx.users?.username || "N/A";
-  document.getElementById("modalStore").textContent = tx.stores?.store_name || "N/A";
-  document.getElementById("modalProduct").textContent = tx.products?.product_name || "N/A";
-  document.getElementById("modalQty").textContent = tx.quantity ?? 0;
-  const priceNum = Number(tx.price || 0);
-  const amountNum = Number(tx.quantity) * priceNum;
-  document.getElementById("modalPrice").textContent = `₱${isFinite(priceNum) ? priceNum.toFixed(2) : "0.00"}`;
-  document.getElementById("modalAmount").textContent = `₱${isFinite(amountNum) ? amountNum.toFixed(2) : "0.00"}`;
-  document.getElementById("modalPoints").textContent = tx.points ?? 0;
-  document.getElementById("modalType").textContent = tx.transaction_type || "N/A";
-  document.getElementById("modalDate").textContent = new Date(tx.transaction_date).toLocaleString();
-
-  // Show modal
   const modal = document.getElementById("detailsModal");
-  // ensure starts hidden to avoid random open on load
-  modal.style.display = "";
-  modal.classList.add('open');
-  document.body.classList.add('modal-open');
+  if (!modal) return console.error("Modal not found in DOM");
+
+  // Helper: safely set text
+  const safeText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+    else console.warn(`⚠️ Element with id "${id}" not found`);
+  };
+
+  // Basic fields
+  safeText("modalRef", tx.reference_number || "N/A");
+  safeText("modalType", tx.transaction_type || "N/A");
+  safeText("modalDate", new Date(tx.transaction_date).toLocaleString());
+  safeText("modalPoints", tx.points ?? 0);
+
+  // Dynamic product list
+  const productSection = modal.querySelector(".receipt-info");
+  if (productSection) {
+    const productList = (tx.items || [])
+      .map(item => `
+        <div class="info-row">
+          <span class="label">Product:</span>
+          <span class="value">${item.product_name}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Quantity:</span>
+          <span class="value">${item.quantity}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Price:</span>
+          <span class="value">₱${Number(item.price).toFixed(2)}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Subtotal:</span>
+          <span class="value">₱${Number(item.subtotal).toFixed(2)}</span>
+        </div>
+        <hr>
+      `).join("");
+
+    productSection.innerHTML = `
+      <div class="info-row">
+        <span class="label">User:</span>
+        <span class="value">${tx.user || "N/A"}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Store:</span>
+        <span class="value">${tx.store || "N/A"}</span>
+      </div>
+      ${productList || "<p>No products found</p>"}
+    `;
+  }
+
+  safeText("modalAmount", `₱${Number(tx.total || 0).toFixed(2)}`);
+
+  // Open modal
+  modal.style.display = "flex"; // show modal visually
+  modal.classList.add("open");
+  document.body.classList.add("modal-open");
 }
 
-// Close modal when clicking close button
 function closeModal() {
   const modal = document.getElementById("detailsModal");
   if (modal) {
-    modal.classList.remove('open');
     modal.style.display = "none";
+    modal.classList.remove("open");
   }
-  document.body.classList.remove('modal-open');
+  document.body.classList.remove("modal-open");
 }
 
 function initModalHandlers() {
