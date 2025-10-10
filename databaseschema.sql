@@ -34,31 +34,6 @@ execute FUNCTION link_vendor_to_store ();
 create trigger store_code_trigger BEFORE INSERT on stores for EACH row
 execute FUNCTION generate_store_code ();
 
-create table public.stores (
-  owner_id serial not null,
-  store_name character varying(100) not null,
-  location character varying(100) null,
-  is_active boolean null default true,
-  store_code text null,
-  store_image text null,
-  owner_name text null,
-  owner_contact numeric null,
-  store_id integer not null,
-  constraint stores_pkey primary key (store_id),
-  constraint stores_store_code_key unique (store_code),
-  constraint stores_store_name_key unique (store_name),
-  constraint stores_owner_id_fkey foreign KEY (owner_id) references users (user_id) on delete CASCADE
-) TABLESPACE pg_default;
-
-create trigger link_vendor_store_trigger
-after INSERT
-or
-update on stores for EACH row
-execute FUNCTION link_vendor_to_store ();
-
-create trigger store_code_trigger BEFORE INSERT on stores for EACH row
-execute FUNCTION generate_store_code ();
-
 create table public.transactions (
   id serial not null,
   transaction_date timestamp without time zone not null default now(),
@@ -67,7 +42,7 @@ create table public.transactions (
   product_id integer not null,
   quantity integer not null,
   price numeric(10, 2) not null,
-  total numeric GENERATED ALWAYS as (((quantity)::numeric * price)) STORED (10, 2) null,
+  total numeric GENERATED ALWAYS as (((quantity)::numeric * price)) STORED,
   points integer not null default 0,
   reference_number character varying(100) null,
   transaction_type text not null default 'Purchase'::text,

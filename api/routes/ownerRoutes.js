@@ -521,6 +521,113 @@ router.get('/products', async (req, res) => {
   }
 });
 
+// Add new product
+router.post('/products/add', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { productName, product_type, productPrice, productStock, productDescription, storeId, isActive } = req.body;
+
+    // Validate required fields
+    if (!productName || !product_type || !productPrice || !storeId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Get the store_id for the owner
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('owner_id', userId)
+      .eq('store_id', storeId)
+      .single();
+
+    if (storeError || !storeData) {
+      console.error('Error finding store:', storeError);
+      return res.status(400).json({ error: 'Store not found or access denied' });
+    }
+
+    // Insert the new product
+    const { data: newProduct, error: insertError } = await supabase
+      .from('products')
+      .insert({
+        product_name: productName,
+        product_type: product_type,
+        price: parseFloat(productPrice),
+        store_id: storeData.store_id
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error adding product:', insertError);
+      return res.status(500).json({ error: 'Failed to add product' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Product added successfully',
+      product: newProduct 
+    });
+
+  } catch (error) {
+    console.error('Error in POST /api/owner/products/add:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete product
+router.post('/products/delete/:id', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const productId = req.params.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+
+    // First, verify the product belongs to the owner's store
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select('id, store_id, stores!inner(owner_id)')
+      .eq('id', productId)
+      .eq('stores.owner_id', userId)
+      .single();
+
+    if (productError || !productData) {
+      console.error('Error finding product:', productError);
+      return res.status(404).json({ error: 'Product not found or access denied' });
+    }
+
+    // Delete the product
+    const { error: deleteError } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId);
+
+    if (deleteError) {
+      console.error('Error deleting product:', deleteError);
+      return res.status(500).json({ error: 'Failed to delete product' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Product deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error in POST /api/owner/products/delete:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Promotions API routes
 router.get('/promotions', async (req, res) => {
   try {

@@ -268,8 +268,8 @@
         <button class="close-btn" id="closeModal">&times;</button>
       </div>
       
-      <form id="productForm" action="api/owner/products/add" method="POST" enctype="multipart/form-data">
-        <input type="hidden" id="productID" name="{{store_id}}" value="{{store_id}}">
+      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
+        <input type="hidden" id="storeId" name="storeId" value="{{store_id}}">
         
         <div class="form-row">
           <div class="form-group">
@@ -278,7 +278,7 @@
           </div>
           <div class="form-group">
             <label for="productCategory">Category *</label>
-            <select id="productCategory" name="productCategory" required>
+            <select id="productCategory" name="product_type" required>
               <option value="">Select Category</option>
               <option value="food">Food</option>
               <option value="beverage">Beverage</option>
