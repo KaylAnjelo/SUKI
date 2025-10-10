@@ -1,9 +1,10 @@
 import express from "express";
 import multer from "multer";
+import { v4 as uuidv4 } from "uuid";
 import supabase from "../../config/db.js";
 import { generateSalesReportPDF } from "../utils/pdfGenerator.js";
 
-const upload = multer();
+const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
 
 
@@ -522,7 +523,7 @@ router.get('/products', async (req, res) => {
 });
 
 // Add new product
-router.post('/products/add', async (req, res) => {
+router.post('/products/add', upload.single('productImage'), async (req, res) => {
   try {
     const userId = req.session.userId;
     
@@ -550,6 +551,34 @@ router.post('/products/add', async (req, res) => {
       return res.status(400).json({ error: 'Store not found or access denied' });
     }
 
+    // Optional: upload product image to Supabase Storage and get public URL
+    let productImageUrl = null;
+    if (req.file) {
+      try {
+        const fileExt = req.file.originalname.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt || 'png'}`;
+        const path = `owners/${storeData.store_id}/products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product_image')
+          .upload(path, req.file.buffer, {
+            contentType: req.file.mimetype || 'image/png',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Image upload failed:', uploadError);
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from('product_image')
+            .getPublicUrl(path);
+          productImageUrl = publicUrlData?.publicUrl || null;
+        }
+      } catch (imgErr) {
+        console.error('Error during image upload:', imgErr);
+      }
+    }
+
     // Insert the new product
     const { data: newProduct, error: insertError } = await supabase
       .from('products')
@@ -557,7 +586,8 @@ router.post('/products/add', async (req, res) => {
         product_name: productName,
         product_type: product_type,
         price: parseFloat(productPrice),
-        store_id: storeData.store_id
+        store_id: storeData.store_id,
+        product_image: productImageUrl
       })
       .select()
       .single();
