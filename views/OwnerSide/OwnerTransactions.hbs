@@ -76,7 +76,6 @@
             <option value="Redemption">Redemption</option>
             <option value="Refund">Refund</option>
           </select>
-          <button class="apply-filters-btn">Apply Filters</button>
         </div>
         <div class="filter-group">
           <label for="storeFilter">Store:</label>
@@ -109,15 +108,12 @@
      <!-- Receipt Modal -->
       <div id="detailsModal" class="receipt-modal" style="display:none;">
         <div class="receipt-content">
-          <!-- Modal Header -->
           <div class="receipt-header">
             <div class="receipt-logo">
               <i class="fas fa-receipt"></i> SUKI Receipt
             </div>
             <span class="close" onclick="closeModal()">&times;</span>
           </div>
-
-          <!-- Modal Body -->
           <div class="receipt-body">
           <!-- Title and Reference -->
           <div class="receipt-title">
@@ -134,18 +130,6 @@
             <div class="info-row">
               <span class="label">Store:</span>
               <span class="value" id="modalStore"></span>
-            </div>
-            <div class="info-row">
-              <span class="label">Product:</span>
-              <span class="value" id="modalProduct"></span>
-            </div>
-            <div class="info-row">
-              <span class="label">Quantity:</span>
-              <span class="value" id="modalQty"></span>
-            </div>
-            <div class="info-row">
-              <span class="label">Price:</span>
-              <span class="value" id="modalPrice"></span>
             </div>
             <div class="info-row">
               <span class="label">Transaction Type:</span>

@@ -1,19 +1,31 @@
 import express from 'express';
 import {
-  createOwnerTransaction,
+  getOwnerStores,
   getOwnerTransactions,
   getOwnerTransactionById,
+  createOwnerTransaction,
   updateOwnerTransaction,
   deleteOwnerTransaction
 } from '../controllers/ownerTransactionController.js';
 
 const router = express.Router();
 
-// --- Owner Transaction Endpoints ---
-router.get('/', getOwnerTransactions);            // GET all transactions for owner's stores
-router.get('/:id', getOwnerTransactionById);      // GET by ID (owner's stores only)
-router.post('/', createOwnerTransaction);         // CREATE (Purchase / Redemption / Refund)
-router.put('/:id', updateOwnerTransaction);       // UPDATE (owner's stores only)
-router.delete('/:id', deleteOwnerTransaction);    // DELETE (owner's stores only)
+// GET /api/owner/stores
+router.get('/stores', getOwnerStores);
+
+// GET /api/owner/transactions
+router.get('/transactions', getOwnerTransactions);
+
+// GET /api/owner/transactions/:id
+router.get('/transactions/:id', getOwnerTransactionById);
+
+// POST /api/owner/transactions
+router.post('/transactions', createOwnerTransaction);
+
+// PUT /api/owner/transactions/:id
+router.put('/transactions/:id', updateOwnerTransaction);
+
+// DELETE /api/owner/transactions/:id
+router.delete('/transactions/:id', deleteOwnerTransaction);
 
 export default router;

@@ -8,46 +8,83 @@ import { generateReferenceNumber } from '../utils/reference.js';
  */
 export const getOwnerTransactions = async (req, res) => {
   try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.session?.userId || req.session?.user?.user_id || req.session?.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const storeIdParam = req.params.storeId;
+    const storeId = storeIdParam ? parseInt(storeIdParam, 10) : null;
+    if (storeIdParam && Number.isNaN(storeId)) {
+      return res.status(400).json({ error: 'Invalid store id' });
     }
 
-    // First get all stores owned by the user
-    const { data: userStores, error: storesError } = await supabase
+    const { data: ownedStores } = await supabase
       .from('stores')
       .select('store_id')
       .eq('owner_id', userId);
 
-    if (storesError) {
-      console.error('Error fetching user stores:', storesError);
-      return res.status(500).json({ error: 'Failed to fetch user stores' });
-    }
+    const ownedStoreIds = (ownedStores || []).map(s => s.store_id);
+    if (ownedStoreIds.length === 0) return res.json([]);
 
-    if (!userStores || userStores.length === 0) {
-      return res.status(200).json([]);
-    }
+    const targetStoreIds = storeId ? ownedStoreIds.filter(id => id === storeId) : ownedStoreIds;
 
-    const storeIds = userStores.map(store => store.store_id);
-
-    // Get transactions from owner's stores only
     const { data, error } = await supabase
       .from('transactions')
       .select(`
-        *,
-        products (product_name),
-        users (username),
-        stores (store_name)
+        id,
+        reference_number,
+        store_id,
+        transaction_date,
+        transaction_type,
+        price,
+        quantity,
+        points,
+        users:user_id ( username ),
+        products:product_id ( product_name ),
+        stores:store_id ( store_name )
       `)
-      .in('store_id', storeIds)
+      .in('store_id', targetStoreIds)
       .order('transaction_date', { ascending: false });
 
-    if (error) throw error;
-    return res.status(200).json(data);
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      return res.status(500).json({ error: error.message || 'DB error' });
+    }
+
+    const groups = {};
+    (data || []).forEach(tx => {
+      const ref = tx.reference_number || `ref_${tx.id}`;
+      if (!groups[ref]) {
+        groups[ref] = {
+          reference_number: ref,
+          store_id: tx.store_id,
+          store_name: tx.stores?.store_name || 'N/A', // <- add store_name here
+          transaction_date: tx.transaction_date,
+          total_amount: 0,
+          total_points: 0,
+          items: []
+        };
+      }
+      const amount = (Number(tx.price) || 0) * (Number(tx.quantity) || 0);
+      groups[ref].total_amount += amount;
+      groups[ref].total_points += Number(tx.points) || 0;
+      groups[ref].items.push({
+        id: tx.id,
+        transaction_id: tx.id,
+        product_name: tx.products?.product_name || null,
+        quantity: tx.quantity,
+        price: tx.price,
+        amount,
+        username: tx.users?.username || null,
+        transaction_date: tx.transaction_date,
+        transaction_type: tx.transaction_type,
+        store_name: tx.stores?.store_name || null // include store_name on item too
+      });
+    });
+
+    return res.json(Object.values(groups));
   } catch (err) {
-    console.error('Error fetching owner transactions:', err);
-    return res.status(500).json({ error: err.message });
+    console.error('Unexpected error getOwnerTransactionsApi:', err);
+    return res.status(500).json({ error: err.message || 'Server error' });
   }
 };
 
@@ -56,14 +93,11 @@ export const getOwnerTransactions = async (req, res) => {
  */
 export const getOwnerTransactionById = async (req, res) => {
   try {
-    const userId = req.session.userId;
-    const { id } = req.params;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const userId = req.session?.userId || req.session?.user?.user_id || req.session?.user?.id;
+    const id = parseInt(req.params.id, 10);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid transaction id' });
 
-    // First get all stores owned by the user
     const { data: userStores, error: storesError } = await supabase
       .from('stores')
       .select('store_id')
@@ -74,7 +108,7 @@ export const getOwnerTransactionById = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch user stores' });
     }
 
-    const storeIds = userStores.map(store => store.store_id);
+    const storeIds = (userStores || []).map(store => store.store_id);
 
     const { data, error } = await supabase
       .from('transactions')
@@ -84,17 +118,16 @@ export const getOwnerTransactionById = async (req, res) => {
         users (username),
         stores (store_name)
       `)
-      .eq('id', id)
+      .eq('id', id)           // use id column
       .in('store_id', storeIds)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: 'Transaction not found or access denied' });
-      }
-      throw error;
+      console.error('Error fetching transaction by id:', error);
+      return res.status(500).json({ error: error.message });
     }
-    
+    if (!data) return res.status(404).json({ error: 'Transaction not found or access denied' });
+
     return res.status(200).json(data);
   } catch (err) {
     console.error('Error fetching owner transaction:', err);
@@ -238,7 +271,7 @@ export const updateOwnerTransaction = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch user stores' });
     }
 
-    const storeIds = userStores.map(store => store.store_id);
+    const storeIds = (userStores || []).map(store => store.store_id);
 
     // Verify transaction belongs to owner's store
     const { data: existingTransaction, error: fetchError } = await supabase
@@ -296,7 +329,7 @@ export const deleteOwnerTransaction = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch user stores' });
     }
 
-    const storeIds = userStores.map(store => store.store_id);
+    const storeIds = (userStores || []).map(store => store.store_id);
 
     // Verify transaction belongs to owner's store
     const { data: existingTransaction, error: fetchError } = await supabase
@@ -321,5 +354,31 @@ export const deleteOwnerTransaction = async (req, res) => {
   } catch (err) {
     console.error('Error deleting owner transaction:', err);
     return res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET owner's stores
+ */
+export const getOwnerStores = async (req, res) => {
+  try {
+    const userId = req.session?.userId || req.session?.user?.user_id || req.session?.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data: stores, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name')
+      .eq('owner_id', userId)
+      .order('store_id', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching stores:', error);
+      return res.status(500).json({ error: error.message || 'DB error' });
+    }
+
+    return res.json(stores);
+  } catch (err) {
+    console.error('Unexpected error getOwnerStoresApi:', err);
+    return res.status(500).json({ error: err.message || 'Server error' });
   }
 };

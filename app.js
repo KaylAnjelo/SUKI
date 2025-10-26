@@ -13,9 +13,7 @@ import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerDashboardRoutes from './api/routes/ownerDashboardRoutes.js';
 import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js';
 import ownerProductsRoute from './api/routes/ownerProductsRoutes.js';
-// import ownerRoutes from './api/routes/ownerRoutes.js';
 import ownerTransactionRoutes from './api/routes/ownerTransactionRoutes.js';
-import ownerStoresRoutes from './api/routes/ownerStoresRoutes.js';
 import { setUser } from './middleware/setUser.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -116,10 +114,8 @@ app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/owner/profile/data', ownerProfileRoutes);
 app.use('/owner/dashboard', ownerDashboardRoutes);
-// app.use('/api/owner', ownerRoutes);
 app.use('/owner/products', ownerProductsRoute);
-app.use('/api/owner/transactions', ownerTransactionRoutes);
-app.use('/api/owner/stores', ownerStoresRoutes);
+app.use('/api/owner', ownerTransactionRoutes);
 
 
 // Views
