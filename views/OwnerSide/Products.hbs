@@ -268,8 +268,8 @@
         <button class="close-btn" id="closeModal">&times;</button>
       </div>
       
-      <form id="productForm" action="api/owner/products/add" method="POST" enctype="multipart/form-data">
-        <input type="hidden" id="productID" name="{{store_id}}" value="{{store_id}}">
+      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
+        <input type="hidden" id="store_id" name="store_id" value="{{store.store_id}}">
         
         <div class="form-row">
           <div class="form-group">

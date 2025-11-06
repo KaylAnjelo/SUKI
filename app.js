@@ -1,5 +1,5 @@
-import express from 'express';
 import path from 'path';
+import express from 'express';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
@@ -15,6 +15,9 @@ import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js'; // <--- add
 import { fileURLToPath } from 'url'; // <--- added import
 import cron from 'node-cron';
 import recommendationKMeans from './api/controllers/recommendationKMeansController.js';
+import * as ownerTransactions from './api/controllers/ownerTransactionController.js';
+import * as ownerSales from './api/controllers/ownerSalesController.js';
+import ownerProductsRoutes from './api/routes/ownerProductsRoutes.js';
 
 // For __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -247,6 +250,34 @@ app.get("/owner/promotions", async (req, res) => {
 //   return res.redirect(302, "/owner/profile");
 // });
 
+// body parser & session middleware must be registered earlier
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours default
+  }
+}));
+
+// static middleware
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// mount owner products routes
+app.use('/owner/products', ownerProductsRoutes);
+
+// Mount owner API routes needed by frontend
+app.get('/api/owner/stores', ownerTransactions.getOwnerStores);
+app.get('/api/owner/transactions', ownerTransactions.getOwnerTransactions);
+app.get('/api/owner/transactions/:id', ownerTransactions.getOwnerTransactionById);
+
+// Sales-report endpoints used by frontend
+app.get('/api/owner/sales-report/stores/dropdown', ownerSales.getStoresDropdown);
+app.get('/api/owner/sales-report', ownerSales.getSalesReport);
+
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
 });
@@ -285,3 +316,5 @@ function scheduleBiWeeklyRecompute() {
 
 // call the scheduler after app startup
 scheduleBiWeeklyRecompute();
+
+export default app;

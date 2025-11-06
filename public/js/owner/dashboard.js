@@ -324,7 +324,7 @@ if (window._ownerDashboardInit) {
     const engagementFilter = document.getElementById("engagementPeriodFilter");
     if (engagementFilter) engagementFilter.addEventListener("change", (e) => loadEngagementData(e.target.value));
     const refreshBtn = document.getElementById("refreshRecommendations");
-    if (refreshBtn) refreshBtn.addEventListener("click", () => loadRecommendations());
+    if (refreshBtn) refreshBtn.addEventListener("click", () => loadRecommendations(true)); // <-- force refresh
   });
 } // end init guard
 
@@ -368,3 +368,113 @@ function renderEngagementStats(summary) {
 if (typeof window.loadTopProducts === 'undefined') window.loadTopProducts = (c,l) => loadProductData(c,l);
 if (typeof window.loadRecommendations === 'undefined') window.loadRecommendations = () => loadRecommendations();
 if (typeof window.renderTopProducts === 'undefined') window.renderTopProducts = (items)=> renderTopProducts(items);
+
+// Add enriched renderer and helper
+async function enrichRecommendations(rawRecs) {
+  // rawRecs might be rows like { product_id, recommended_product_id, score }
+  if (!Array.isArray(rawRecs) || rawRecs.length === 0) return [];
+
+  const grouped = new Map();
+  let needsEnrich = false;
+  for (const r of rawRecs) {
+    const a = r.product_id ?? r.productId ?? null;
+    const b = r.recommended_product_id ?? r.recommendedProductId ?? r.recommended_id ?? null;
+    if (a != null && b != null) {
+      needsEnrich = true;
+      if (!grouped.has(a)) grouped.set(a, []);
+      grouped.get(a).push({ product_id: Number(b), score: Number(r.score ?? r.count ?? 0) });
+    } else {
+      // already enriched shape, return as-is
+      return rawRecs;
+    }
+  }
+
+  if (!needsEnrich) return rawRecs;
+
+  // fetch owner products (use existing loader to get product metadata)
+  // loadProductData returns array of product objects with product_id, product_name, image_url
+  let products = [];
+  try {
+    products = await loadProductData('all', 200);
+  } catch (e) {
+    console.warn('Could not fetch product metadata for enrichment', e);
+    products = [];
+  }
+  const prodMap = new Map((products || []).map(p => [Number(p.product_id), p]));
+  
+  const enriched = [];
+  for (const [pid, arr] of grouped.entries()) {
+    const p = prodMap.get(Number(pid)) || { product_id: Number(pid), product_name: `#${pid}`, image_url: '' };
+    const recs = arr
+      .map(r => {
+        const rp = prodMap.get(r.product_id) || { product_id: r.product_id, product_name: `#${r.product_id}`, image_url: '' };
+        return { product_id: rp.product_id, product_name: rp.product_name, image_url: rp.image_url, score: r.score };
+      })
+      .sort((a,b) => b.score - a.score);
+    enriched.push({ product_id: p.product_id, product_name: p.product_name, image_url: p.image_url, recommended: recs });
+  }
+
+  return enriched;
+}
+
+function renderRecommendations(recs = []) {
+  const container = document.getElementById('recommendationsContainer');
+  if (!container) return;
+  const placeholderSvg = encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><rect width='100%' height='100%' fill='%23f5f5f5' rx='6' /><g fill='%237c0f0f' font-family='sans-serif' font-size='8' text-anchor='middle'><text x='50%' y='45%'>No</text><text x='50%' y='60%'>Img</text></g></svg>`
+  );
+  const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
+
+  if (!Array.isArray(recs) || recs.length === 0) {
+    container.innerHTML = '<div class="muted">No recommendations available</div>';
+    return;
+  }
+
+  container.innerHTML = recs.map(r => {
+    const title = escapeHtml(r.product_name || `#${r.product_id || ''}`);
+    const img = r.image_url ? escapeHtml(r.image_url) : placeholder;
+    const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
+    const recList = recommended.length
+      ? `<ul class="rec-list">${recommended.map(x => {
+          const ix = x.image_url ? escapeHtml(x.image_url) : placeholder;
+          return `<li class="rec-item"><img src="${ix}" alt="${escapeHtml(x.product_name||`#${x.product_id||''}`)}" onerror="this.onerror=null;this.src='${placeholder}';" /><div class="rec-meta"><div class="rec-name">${escapeHtml(x.product_name || `#${x.product_id || ''}`)}</div><div class="rec-score">(${x.score ?? 0})</div></div></li>`;
+        }).join('')}</ul>`
+      : '<div class="muted">No related items</div>';
+
+    return `<div class="recommendation-card"><div class="rec-head"><img class="rec-head-img" src="${img}" onerror="this.onerror=null;this.src='${placeholder}';" /><div class="rec-head-title">${title}</div></div><div class="rec-body">${recList}</div></div>`;
+  }).join('');
+}
+
+// Integrate enrichment into loadRecommendations
+async function loadRecommendations(force = false) {
+  if (!force && Array.isArray(_recommendationsCache) && _recommendationsCache.length) {
+    console.debug('Recommendations: using cached data, skipping network fetch');
+    if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
+    return _recommendationsCache;
+  }
+
+  setRecommendationsLoading(true);
+  const url = `/api/owner/dashboard/recommendations`;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    const text = await res.text();
+    if (!res.ok) {
+      console.error('Recommendations API', res.status, text.slice(0,200));
+      throw new Error(`${res.status}: ${text}`);
+    }
+    const payload = JSON.parse(text);
+    const raw = Array.isArray(payload) ? payload : (Array.isArray(payload.recommendations) ? payload.recommendations : (Array.isArray(payload.items) ? payload.items : []));
+    // enrich raw rows into grouped objects with product metadata
+    const enriched = await enrichRecommendations(raw);
+    _recommendationsCache = enriched;
+    setRecommendationsLoading(false);
+    if (typeof renderRecommendations === 'function') renderRecommendations(enriched);
+    return enriched;
+  } catch (err) {
+    console.error('Error loading recommendations:', err);
+    _recommendationsCache = _recommendationsCache || [];
+    setRecommendationsLoading(false);
+    if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
+    return _recommendationsCache;
+  }
+}
