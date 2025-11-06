@@ -1,4 +1,4 @@
-   .product-statistic {
+.product-statistic {
       min-height: 400px;
     }
 
@@ -339,6 +339,80 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+
+    /* Dashboard top-products card list */
+body { background: #f5f5f5; }
+
+.top-products-list-wrapper,
+#topProductsList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#topProductsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* Card */
+.product-card {
+  list-style: none;
+  margin: 0;
+}
+.product-card-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.product-card-inner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.product-thumb {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg,#f5f5f5 0%, #fff 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display:block;
+}
+
+/* Text */
+.product-body { flex:1; min-width:0; }
+.product-name { font-weight:700; color:#7c0f0f; font-size:15px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.product-meta { font-size:13px; color:#6b6b6b; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.product-meta .purchased-count strong,
+.product-meta .sales-amount strong { color:#222; }
+
+/* Sales amount highlight */
+.sales-amount { background:#fff0f0; color:#7c0f0f; padding:4px 8px; border-radius:6px; font-weight:600; }
+
+/* fallback list (used by renderTopProductsChart) */
+.top-products-list-wrapper { padding: 8px 4px; }
+.top-products-list { padding: 0; margin: 0; }
+.top-products-list .tp-item { display:flex; gap:12px; align-items:center; padding:10px; background:#fff; border-radius:8px; margin-bottom:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+.tp-rank { font-weight:700; color:#7c0f0f; width:28px; text-align:center; }
+.tp-name { font-weight:600; color:#222; }
+.tp-meta { color:#666; font-size:13px; }
 
     @media (max-width: 768px) {
       .card-header {

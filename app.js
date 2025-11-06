@@ -11,16 +11,14 @@ import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerDashboardRoutes from './api/routes/ownerDashboardRoutes.js';
-import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js';
-import ownerProductsRoute from './api/routes/ownerProductsRoutes.js';
-import ownerTransactionRoutes from './api/routes/ownerTransactionRoutes.js';
-import { setUser } from './middleware/setUser.js';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js'; // <--- added import
+import { fileURLToPath } from 'url'; // <--- added import
+import cron from 'node-cron';
+import recommendationKMeans from './api/controllers/recommendationKMeansController.js';
 
 // For __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename); // use path.dirname
 
 dotenv.config({ path: './.env' });
 
@@ -104,6 +102,13 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
+
+// Simple setUser middleware (ensure res.locals.user is available)
+function setUser(req, res, next) {
+  res.locals.user = req.session?.user || null;
+  next();
+}
+
 // Routes
 app.use(setUser);
 app.use('/', authRoutes);
@@ -113,9 +118,10 @@ app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/owner/profile/data', ownerProfileRoutes);
-app.use('/owner/dashboard', ownerDashboardRoutes);
-app.use('/owner/products', ownerProductsRoute);
-app.use('/api/owner', ownerTransactionRoutes);
+// expose both view and api paths the frontend may call
+app.use('/owner/dashboard', ownerDashboardRoutes);      // view paths
+app.use('/api/owner/dashboard', ownerDashboardRoutes);  // canonical API path frontend uses
+app.use('/api/owner', ownerDashboardRoutes); // compatibility
 
 
 // Views
@@ -244,3 +250,38 @@ app.get("/owner/promotions", async (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);
 });
+
+// after your app is configured and DB client is ready, add the scheduled job:
+function scheduleBiWeeklyRecompute() {
+  // Cron: every 14 days at 03:00 (starts on day 1 and repeats every 14 days)
+  // Note: this uses day-of-month step (*/14) — acceptable for typical bi-weekly runs.
+  cron.schedule('0 3 */14 * *', async () => {
+    console.log('[scheduler] Bi-weekly recompute started', new Date().toISOString());
+    try {
+      // fetch all owners (adjust column names to your users/owners table)
+      const { data: owners, error } = await supabase.from('owners').select('id').limit(1000);
+      if (error) {
+        console.error('[scheduler] failed to fetch owners', error);
+        return;
+      }
+      for (const owner of (owners || [])) {
+        try {
+          const ownerId = owner.id;
+          // run recompute with sensible defaults; this runs server-side (no session)
+          const res = await recommendationKMeans.computeKMeansForOwner(ownerId, { period: '30d', topFeatures: 100, k: 8, minCount: 5, topPerProduct: 5 });
+          console.log(`[scheduler] recompute owner=${ownerId} result:`, res);
+        } catch (err) {
+          console.error('[scheduler] recompute error for owner', owner, err);
+        }
+      }
+      console.log('[scheduler] Bi-weekly recompute finished', new Date().toISOString());
+    } catch (err) {
+      console.error('[scheduler] unexpected error', err);
+    }
+  }, {
+    timezone: 'UTC' // change to your server timezone if desired
+  });
+}
+
+// call the scheduler after app startup
+scheduleBiWeeklyRecompute();

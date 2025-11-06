@@ -210,3 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initial validation
 validateDates();
+
+// Replace fragile element access with guarded access
+const dateFromEl = document.getElementById('dateFrom');
+const dateToEl = document.getElementById('dateTo');
+if (dateFromEl) dateFromEl.value = /* default or computed value */ '';
+if (dateToEl) dateToEl.value = /* default or computed value */ '';

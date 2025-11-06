@@ -1,562 +1,370 @@
-let productChart = null;
-let engagementChart = null;
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('📊 Owner Dashboard fully loaded');
+if (window._ownerDashboardInit) {
+  console.warn("Dashboard already initialized.");
+} else {
+  window._ownerDashboardInit = true;
+  console.log("📊 Owner Dashboard fully loaded");
 
-  // === 🧾 SALES SUMMARY ===
-  try {
-    const response = await fetch('/owner/dashboard/sales-summary');
-    const data = await response.json();
-
-    if (response.ok) {
-      document.getElementById('totalSales').textContent = `₱${data.totalSales.toFixed(2)}`;
-      document.getElementById('totalOrders').textContent = data.totalTransactions;
-    } else {
-      document.getElementById('salesPlaceholder').textContent = 'Unable to load sales data';
-      document.getElementById('ordersPlaceholder').textContent = 'Unable to load orders data';
+  // Safe fetch helper (single canonical API path per endpoint)
+  async function tryFetchJson(url) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`${res.status}: ${text}`);
+      return JSON.parse(text);
+    } catch (err) {
+      throw err;
     }
-
-    document.getElementById('salesPlaceholder').textContent = '';
-    document.getElementById('ordersPlaceholder').textContent = '';
-  } catch (error) {
-    console.error('❌ Error fetching sales summary:', error);
-    document.getElementById('salesPlaceholder').textContent = 'Error loading data';
-    document.getElementById('ordersPlaceholder').textContent = 'Error loading data';
   }
 
-  // === 🥧 PRODUCT CHART ===
-  initializeProductChart();
-  setupCategoryFilter();
+  // Small HTML-escape helper
+  function escapeHtml(input) {
+    if (input === null || input === undefined) return '';
+    return String(input).replace(/[&<>"'`=\/]/g, function (s) {
+      return ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+        "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+      })[s];
+    });
+  }
 
-  // === 📈 CUSTOMER ENGAGEMENT ===
-  loadEngagementData('30d'); // Default to last 30 days
-  setupEngagementPeriodFilter();
-
-  // === 💡 RECOMMENDATIONS ===
-  initializeRecommendations();
-  setupRecommendationRefresh();
-});
-    // Initialize the product pie chart
-    function initializeProductChart() {
-      const ctx = document.getElementById('productChart').getContext('2d');
-      loadProductData('all');
+  // Engagement
+  async function loadEngagementData(period = "30d") {
+    const url = `/api/owner/dashboard/customer-engagement?period=${encodeURIComponent(period)}`;
+    try {
+      const payload = await tryFetchJson(url);
+      console.log("📦 Engagement API response:", payload);
+      if (typeof renderEngagementChart === "function") renderEngagementChart(payload);
+      if (typeof renderEngagementStats === "function") renderEngagementStats(payload.summary || {});
+      return payload;
+    } catch (err) {
+      console.error("❌ Error loading engagement data:", err);
+      if (typeof renderEngagementChart === "function") renderEngagementChart({ labels: [], datasets: [{ data: [] }] });
+      if (typeof renderEngagementStats === "function") renderEngagementStats({ totalCustomers: 0, totalVisits: 0, totalPoints: 0 });
+      return null;
     }
+  }
 
-    // Setup category filter event listener
-    function setupCategoryFilter() {
-      const categoryFilter = document.getElementById('categoryFilter');
-      categoryFilter.addEventListener('change', (e) => {
-        loadProductData(e.target.value);
+  /* ------------------------
+     Top products: loader + renderers (robust)
+     ------------------------ */
+
+  // create / populate category dropdown and attach listener
+  function ensureCategoryDropdown(defaultValue = 'all') {
+    let sel = document.getElementById('categoryFilter');
+    // find sensible parent to insert the dropdown (above topProductsList)
+    const parent = document.querySelector('#productsPanel') || document.querySelector('.metric-card') || document.querySelector('.dashboard-content') || document.body;
+    if (!sel) {
+      sel = document.createElement('select');
+      sel.id = 'categoryFilter';
+      sel.className = 'category-filter';
+      // default option
+      const opt = document.createElement('option');
+      opt.value = 'all';
+      opt.textContent = 'All categories';
+      sel.appendChild(opt);
+      // insert before the products list if present
+      const ref = parent.querySelector('#topProductsList') || parent.firstElementChild;
+      parent.insertBefore(sel, ref);
+      // attach change handler
+      sel.addEventListener('change', (e) => {
+        // call loader with selected category and default limit
+        loadProductData(e.target.value, 5).catch(err => console.error('loadProductData error', err));
       });
     }
-
-    // Load product data from API
-   
-    async function loadProductData() {
-  try {
-    const response = await fetch('/owner/dashboard/top-products?category=all&limit=5');
-    const data = await response.json();
-    console.log('📦 Product API response:', data);
-
-    // ✅ Safely handle API data
-    const products = data?.topProducts || [];
-
-    if (products.length === 0) {
-      console.log('📦 No products found');
-      return;
-    }
-
-    // ✅ Prepare chart data
-    const labels = products.map(p => p.product_name);
-    const values = products.map(p => p.total_sales);
-
-    // ✅ Render chart (make sure the <canvas id="productChart"> exists)
-    const ctx = document.getElementById('productChart');
-    if (!ctx) {
-      console.warn('⚠️ productChart canvas not found in DOM');
-      return;
-    }
-
-    const chartContext = ctx.getContext('2d');
-
-    new Chart(chartContext, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Top Products (₱ Sales)',
-          data: values,
-          backgroundColor: 'rgba(75, 192, 192, 0.3)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 2,
-        }],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true },
-        },
-      },
-    });
-
-  } catch (error) {
-    console.error('Error loading product data:', error);
+    sel.value = defaultValue;
+    return sel;
   }
+
+  // update loader to capture categories and populate dropdown
+  async function loadProductData(category = 'all', limit = 5) {
+    const qs = `?category=${encodeURIComponent(category)}&limit=${encodeURIComponent(limit)}`;
+    const url = `/api/owner/dashboard/top-products${qs}`;
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      const text = await res.text();
+      if (!res.ok) {
+        console.error('Top products fetch failed', res.status, text.slice(0,200));
+        throw new Error(`${res.status}: ${text}`);
+      }
+      let payload;
+      try { payload = JSON.parse(text); } catch (e) { payload = text; }
+      console.log('📦 Product API response:', payload);
+
+      // normalize possible payload shapes to an array of items
+      let items = [];
+      if (Array.isArray(payload)) items = payload;
+      else if (Array.isArray(payload.items)) items = payload.items;
+      else if (Array.isArray(payload.data)) items = payload.data;
+      else if (Array.isArray(payload.rows)) items = payload.rows;
+      else if (payload && Array.isArray(payload.results)) items = payload.results;
+      else items = [];
+
+      // normalize fields for each item (include product_type)
+      items = items.map(it => ({
+        product_id: Number(it.id ?? it.product_id ?? it.productId ?? 0),
+        product_name: it.product_name ?? it.name ?? it.title ?? '',
+        image_url: it.image_url ?? it.image ?? it.thumbnail ?? it.product_image ?? '', // <-- add product_image
+        product_type: it.product_type ?? it.type ?? it.productType ?? null,
+        total_quantity: Number(it.total_quantity ?? it.quantity ?? it.count ?? it.purchased_count ?? it.total_qty ?? 0),
+        total_sales: Number(it.total_sales ?? it.total_amount ?? it.total ?? it.sales ?? 0)
+      }));
+
+      // derive categories present and populate dropdown
+      const categories = Array.from(new Set(items.map(i => i.product_type).filter(Boolean))).sort();
+      const dropdown = ensureCategoryDropdown(category || 'all');
+      // remove existing non-default options
+      Array.from(dropdown.options).forEach(opt => { if (opt.value !== 'all' && !categories.includes(opt.value)) opt.remove(); });
+      // add new category options
+      categories.forEach(cat => {
+        if (![...dropdown.options].some(o => o.value === cat)) {
+          const o = document.createElement('option');
+          o.value = cat;
+          o.textContent = String(cat).charAt(0).toUpperCase() + String(cat).slice(1);
+          dropdown.appendChild(o);
+        }
+      });
+      // ensure selected value exists
+      if (![...dropdown.options].some(o => o.value === category)) dropdown.value = 'all';
+
+      // if server doesn't filter by category, filter client-side
+      const filtered = (category && category !== 'all') ? items.filter(i => String(i.product_type) === String(category)) : items;
+
+      // render
+      renderTopProducts(filtered);
+      renderTopProductsChart(filtered);
+      return filtered;
+    } catch (err) {
+      console.error('❌ Error loading product data:', err);
+      renderTopProducts([]);
+      renderTopProductsChart([]);
+      return [];
+    }
+  }
+
+  function ensureTopProductsContainer() {
+    let list = document.getElementById('topProductsList');
+    if (list) return list;
+    // try to find sensible parent
+    const parent = document.querySelector('.metric-card.recommendation') || document.querySelector('#productsPanel') || document.querySelector('.dashboard-content') || document.body;
+    const ul = document.createElement('ul');
+    ul.id = 'topProductsList';
+    ul.className = 'top-products-list';
+    parent.appendChild(ul);
+    console.warn('Placeholder created: #topProductsList appended to', parent.tagName);
+    return ul;
+  }
+
+  function renderTopProducts(items = []) {
+    const list = ensureTopProductsContainer();
+    if (!Array.isArray(items) || items.length === 0) {
+      list.innerHTML = `<li class="muted">No top products</li>`;
+      return;
+    }
+
+    // inline SVG placeholder (no external file)
+    const placeholderSvg = encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'>
+         <rect width='100%' height='100%' fill='%23f5f5f5' rx='8' />
+         <g fill='%237c0f0f' font-family='sans-serif' font-size='10' text-anchor='middle'>
+           <text x='50%' y='45%'>No</text>
+           <text x='50%' y='60%'>Image</text>
+         </g>
+       </svg>`
+    );
+    const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
+
+    list.innerHTML = items.map(it => {
+      const name = escapeHtml(it.product_name || it.name || 'Unnamed product');
+      const purchases = Number(it.total_quantity || 0);
+      const sales = Number(it.total_sales || 0).toLocaleString();
+      const imgSrc = it.image_url ? (String(it.image_url).startsWith('/') ? escapeHtml(it.image_url) : '/' + escapeHtml(it.image_url)) : placeholder;
+
+      return `
+        <li class="product-card">
+          <div class="product-card-inner">
+            <div class="product-thumb">
+              <img src="${imgSrc}" alt="${name}" onerror="this.onerror=null;this.src='${placeholder}';" />
+            </div>
+            <div class="product-body">
+              <div class="product-name">${name}</div>
+              <div class="product-meta">
+                <span class="purchased-count">Purchased: <strong>${purchases}</strong></span>
+                <span class="sales-amount">₱${sales}</span>
+              </div>
+            </div>
+          </div>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function renderTopProductsChart(items = []) {
+    // keep API compatibility but do NOT render an additional list (avoids duplicate lists)
+    if (window._ownerProductChart instanceof Chart) {
+      try { window._ownerProductChart.destroy(); } catch (e) { /* ignore */ }
+      window._ownerProductChart = null;
+    }
+
+    // keep chart wrapper clean — we already render the image card list via renderTopProducts()
+    const wrapper = document.getElementById('chartWrapper');
+    if (!wrapper) return;
+
+    // Clear any previous chart content so only the card list remains visible
+    wrapper.innerHTML = '';
+
+    // Optional: show a small summary instead of a list (uncomment if desired)
+    // if (Array.isArray(items) && items.length) {
+    //   wrapper.innerHTML = `<div class="tp-summary">Top ${items.length} products</div>`;
+    // }
+
+    return;
+  }
+
+  // Recommendations
+  /* ------------------------
+     Recommendations cache + loading (patched)
+     ------------------------ */
+
+  let _recommendationsCache = null;
+  let _recommendationsLoading = false;
+
+  function setRecommendationsLoading(show) {
+    const container = document.getElementById('recommendationsContainer');
+    if (!container) return;
+    // if data already loaded, don't overwrite with loading indicator
+    if (show && !_recommendationsCache) {
+      _recommendationsLoading = true;
+      container.innerHTML = '<div class="loading">Loading recommendations…</div>';
+    } else {
+      _recommendationsLoading = false;
+      // only call renderRecommendations if it's defined
+      if (typeof renderRecommendations === 'function') {
+        renderRecommendations(_recommendationsCache && _recommendationsCache.length ? _recommendationsCache : []);
+      } else {
+        // fallback simple render if function not present
+        if (_recommendationsCache && _recommendationsCache.length) {
+          container.innerHTML = _recommendationsCache.map(r => {
+            const title = (r.product_name || r.title || `#${r.product_id || ''}`);
+            const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
+            const recList = recommended.length ? `<ul>${recommended.map(x => `<li>${(x.product_name||x.title||`#${x.product_id||''}`)}</li>`).join('')}</ul>` : '<div class="muted">No related items</div>';
+            return `<div class="recommendation-card"><div class="rec-title"><strong>${escapeHtml(title)}</strong></div><div class="rec-body">${recList}</div></div>`;
+          }).join('');
+        } else {
+          container.innerHTML = '<div class="muted">No recommendations available</div>';
+        }
+      }
+    }
+  }
+
+  async function loadRecommendations(force = false) {
+    
+    if (!force && Array.isArray(_recommendationsCache) && _recommendationsCache.length) {
+      console.debug('Recommendations: using cached data, skipping network fetch');
+      // ensure we do not show loader over existing content
+      if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
+      return _recommendationsCache;
+    }
+
+    setRecommendationsLoading(true);
+    const url = `/api/owner/dashboard/recommendations`;
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      const text = await res.text();
+      if (!res.ok) {
+        console.error('Recommendations API', res.status, text.slice(0,200));
+        throw new Error(`${res.status}: ${text}`);
+      }
+      const payload = JSON.parse(text);
+      const recs = Array.isArray(payload) ? payload : (Array.isArray(payload.recommendations) ? payload.recommendations : (Array.isArray(payload.items) ? payload.items : []));
+      _recommendationsCache = recs;
+      setRecommendationsLoading(false);
+      if (typeof renderRecommendations === 'function') renderRecommendations(recs);
+      return recs;
+    } catch (err) {
+      console.error('Error loading recommendations:', err);
+      _recommendationsCache = _recommendationsCache || [];
+      setRecommendationsLoading(false);
+      if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
+      return _recommendationsCache;
+    }
+  }
+
+  // Dashboard summary
+  async function loadDashboardSummary() {
+    const url = `/api/owner/dashboard/sales-summary`;
+    try {
+      const payload = await tryFetchJson(url);
+      console.debug('Parsed summary payload:', payload);
+      if (typeof renderTotalSales === 'function') renderTotalSales(payload.totalSales ?? payload.total_amount ?? 0);
+      if (typeof renderTotalOrders === 'function') renderTotalOrders(payload.totalOrders ?? payload.total_orders ?? 0);
+      return payload;
+    } catch (err) {
+      console.warn('Summary fetch failed', err);
+      if (typeof renderTotalSales === 'function') renderTotalSales(0);
+      if (typeof renderTotalOrders === 'function') renderTotalOrders(0);
+      return null;
+    }
+  }
+
+  // DOM init (single listener)
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ DOM fully loaded, initializing dashboard...");
+    // export aliases for any inline callers
+    window.loadTopProducts = loadProductData;
+    window.loadRecommendations = loadRecommendations;
+    // start loaders
+    loadEngagementData().catch(() => {});
+    loadProductData().catch(() => {});
+    loadRecommendations().catch(() => {});
+    loadDashboardSummary().catch(() => {});
+
+    // UI hooks
+    const categoryFilter = document.getElementById("categoryFilter");
+    if (categoryFilter) categoryFilter.addEventListener("change", (e) => loadProductData(e.target.value));
+    const engagementFilter = document.getElementById("engagementPeriodFilter");
+    if (engagementFilter) engagementFilter.addEventListener("change", (e) => loadEngagementData(e.target.value));
+    const refreshBtn = document.getElementById("refreshRecommendations");
+    if (refreshBtn) refreshBtn.addEventListener("click", () => loadRecommendations());
+  });
+} // end init guard
+
+// ------------------------
+// Renderers (safe)
+// ------------------------
+function renderTotalSales(value) {
+  const el = document.getElementById('totalSales');
+  if (!el) return;
+  el.textContent = Number(value || 0).toLocaleString(undefined, { style:'currency', currency:'PHP' });
+}
+function renderTotalOrders(value) {
+  const el = document.getElementById('totalOrders');
+  if (!el) return;
+  el.textContent = String(value || 0);
 }
 
-
-    // Show loading state
-    function showLoading() {
-      const chartContainer = document.querySelector('.chart-container');
-      chartContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-      
-      document.getElementById('chartLegend').innerHTML = '';
-      document.getElementById('chartStats').innerHTML = '';
-    }
-
-    // Show no data state
-    function showNoData(category) {
-      const chartContainer = document.querySelector('.chart-container');
-      const categoryText = category === 'all' ? 'all categories' : category;
-      chartContainer.innerHTML = `
-        <div class="no-data">
-          <i class="fas fa-chart-pie"></i>
-          <div>No sales data found for ${categoryText}</div>
-        </div>
-      `;
-      
-      document.getElementById('chartLegend').innerHTML = '';
-      document.getElementById('chartStats').innerHTML = '';
-    }
-
-    // Show error state
-    function showError(message) {
-      const chartContainer = document.querySelector('.chart-container');
-      chartContainer.innerHTML = `
-        <div class="no-data">
-          <i class="fas fa-exclamation-triangle"></i>
-          <div>Error: ${message}</div>
-        </div>
-      `;
-      
-      document.getElementById('chartLegend').innerHTML = '';
-      document.getElementById('chartStats').innerHTML = '';
-    }
-
-    // Render the pie chart
-    function renderChart(data) {
-      const ctx = document.getElementById('productChart').getContext('2d');
-      
-      // Destroy existing chart if it exists
-      if (productChart) {
-        productChart.destroy();
-      }
-
-      productChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: data.labels,
-          datasets: [{
-            data: data.data,
-            backgroundColor: data.backgroundColors,
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false // We'll use custom legend
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const product = data.products[context.dataIndex];
-                  return [
-                    product.product_name,
-                    `Quantity: ${product.total_quantity}`,
-                    `Revenue: ₱${product.total_revenue.toFixed(2)}`,
-                    `Store: ${product.store_name}`
-                  ];
-                }
-              }
-            }
-          },
-          animation: {
-            animateRotate: true,
-            duration: 1000
-          }
-        }
-      });
-    }
-
-    // Render custom legend
-    function renderLegend(data) {
-      const legendContainer = document.getElementById('chartLegend');
-      legendContainer.innerHTML = '';
-
-      data.products.forEach((product, index) => {
-        const legendItem = document.createElement('div');
-        legendItem.className = 'legend-item';
-        legendItem.innerHTML = `
-          <div class="legend-color" style="background-color: ${data.backgroundColors[index]}"></div>
-          <div class="legend-text">
-            <span class="legend-name">${product.product_name}</span>
-            <span class="legend-value">${product.total_quantity} sold</span>
-          </div>
-        `;
-        legendContainer.appendChild(legendItem);
-      });
-    }
-
-    // Render additional statistics
-    function renderStats(data) {
-      const statsContainer = document.getElementById('chartStats');
-      
-      const totalQuantity = data.data.reduce((sum, value) => sum + value, 0);
-      const totalRevenue = data.products.reduce((sum, product) => sum + product.total_revenue, 0);
-      const avgPrice = totalRevenue / totalQuantity || 0;
-
-      statsContainer.innerHTML = `
-        <div class="stat-item">
-          <span>Total Items Sold:</span>
-          <span>${totalQuantity}</span>
-        </div>
-        <div class="stat-item">
-          <span>Total Revenue:</span>
-          <span>₱${totalRevenue.toFixed(2)}</span>
-        </div>
-        <div class="stat-item">
-          <span>Average Price:</span>
-          <span>₱${avgPrice.toFixed(2)}</span>
-        </div>
-        <div class="stat-item">
-          <span>Category:</span>
-          <span>${data.category === 'all' ? 'All Categories' : data.category.charAt(0).toUpperCase() + data.category.slice(1)}</span>
-        </div>
-      `;
-    }
-
-    // ===== CUSTOMER ENGAGEMENT CHART FUNCTIONS =====
-
-    // Initialize the customer engagement line chart
-    function initializeEngagementChart() {
-      loadEngagementData('30d');
-    }
-
-    // Setup engagement period filter event listener
-    function setupEngagementPeriodFilter() {
-      const periodFilter = document.getElementById('engagementPeriodFilter');
-      periodFilter.addEventListener('change', (e) => {
-        loadEngagementData(e.target.value);
-      });
-    }
-
-    // Load engagement data from API
-    async function loadEngagementData(period) {
-      try {
-        showEngagementLoading();
-        
-        const response = await fetch(`/owner/dashboard/customer-engagement?period=${period}`);
-        const data = await response.json();
-        console.log('📦 Engagement API response:', data);
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch engagement data');
-        }
-
-        if (data.labels.length === 0) {
-          showEngagementNoData(period);
-          return;
-        }
-
-        renderEngagementChart(data);
-        renderEngagementStats(data);
-
-      } catch (error) {
-        console.error('Error loading engagement data:', error);
-        showEngagementError(error.message);
-      }
-    }
-
-    // Show loading state for engagement chart
-    function showEngagementLoading() {
-      const chartContainer = document.querySelector('.engagement-chart-container');
-      chartContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading engagement data...</div>';
-      document.getElementById('engagementStats').innerHTML = '';
-    }
-
-    // Show no data state for engagement chart
-    function showEngagementNoData(period) {
-      const chartContainer = document.querySelector('.engagement-chart-container');
-      const periodText = getPeriodText(period);
-      chartContainer.innerHTML = `
-        <div class="no-data">
-          <i class="fas fa-chart-line"></i>
-          <div>No engagement data found for ${periodText}</div>
-        </div>
-      `;
-      document.getElementById('engagementStats').innerHTML = '';
-    }
-
-    // Show error state for engagement chart
-    function showEngagementError(message) {
-      const chartContainer = document.querySelector('.engagement-chart-container');
-      chartContainer.innerHTML = `
-        <div class="no-data">
-          <i class="fas fa-exclamation-triangle"></i>
-          <div>Error: ${message}</div>
-        </div>
-      `;
-      document.getElementById('engagementStats').innerHTML = '';
-    }
-
-    // Render the engagement line chart
-function renderEngagementChart(data) {
-  const canvas = document.getElementById("engagementChart");
-  if (!canvas) {
-    console.warn("⚠️ Engagement chart canvas not found");
-    return;
-  }
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.warn("⚠️ Failed to get 2D context for engagement chart");
-    return;
-  }
-
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: data.labels,
-      datasets: data.datasets,
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: "Customer Engagement (Last 30 Days)",
-        },
-      },
-    },
+function renderEngagementChart(payload) {
+  const ctx = document.getElementById("engagementChart");
+  if (!ctx) return;
+  const labels = payload.labels || [];
+  const data = payload.datasets?.[0]?.data || [];
+  if (window._engagementChartInstance) window._engagementChartInstance.destroy();
+  window._engagementChartInstance = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets: [{ label: "Customer Engagement", data, borderColor: "#4e73df", backgroundColor: "rgba(78,115,223,0.1)", fill:true, tension:0.3 }] },
+    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
   });
 }
-
-
-    // Render engagement statistics
-    function renderEngagementStats(data) {
-  const statsContainer = document.getElementById('engagementStats');
-  const summary = data.summary || {};
-
-  // Define labels for known metrics
-  const labelMap = {
-    totalCustomers: 'Total Customers',
-    totalVisits: 'Total Visits',
-    totalPoints: 'Total Points',
-    totalTransactions: 'Transactions',
-    avgPointsPerTransaction: 'Avg Points / Transaction',
-    avgVisitsPerCustomer: 'Avg Visits / Customer',
-  };
-
-  // Build HTML dynamically
-  statsContainer.innerHTML = Object.entries(summary)
-    .map(([key, value]) => {
-      const label = labelMap[key] || key;
-      const formattedValue =
-        typeof value === 'number'
-          ? value.toLocaleString(undefined, { maximumFractionDigits: 1 })
-          : value ?? '—';
-      return `
-        <div class="engagement-stat-item">
-          <span class="engagement-stat-value">${formattedValue}</span>
-          <span class="engagement-stat-label">${label}</span>
-        </div>
-      `;
-    })
-    .join('');
-
-  // Fallback if summary is empty
-  if (!Object.keys(summary).length) {
-    statsContainer.innerHTML = `
-      <div class="engagement-stat-item">
-        <span class="engagement-stat-value">—</span>
-        <span class="engagement-stat-label">No Data Available</span>
-      </div>
-    `;
-  }
+function renderEngagementStats(summary) {
+  const container = document.getElementById("engagementStats");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="stat-item">👥 Total Customers: <strong>${summary.totalCustomers ?? 0}</strong></div>
+    <div class="stat-item">🛍️ Total Visits: <strong>${summary.totalVisits ?? 0}</strong></div>
+    <div class="stat-item">⭐ Total Points: <strong>${summary.totalPoints ?? 0}</strong></div>
+  `;
 }
 
-
-    // Helper function to get period text
-    function getPeriodText(period) {
-      switch (period) {
-        case '7d': return 'Last 7 Days';
-        case '30d': return 'Last 30 Days';
-        case '90d': return 'Last 90 Days';
-        case '1y': return 'Last Year';
-        default: return 'Selected Period';
-      }
-    }
-
-    // ===== K-MEANS RECOMMENDATIONS FUNCTIONS =====
-
-    // Initialize recommendations
-    function initializeRecommendations() {
-      loadRecommendations();
-    }
-
-    // Setup recommendation refresh button
-    function setupRecommendationRefresh() {
-      const refreshBtn = document.getElementById('refreshRecommendations');
-      refreshBtn.addEventListener('click', () => {
-        loadRecommendations();
-      });
-    }
-
-    // Load recommendations from API
-    async function loadRecommendations() {
-      try {
-        showRecommendationsLoading();
-        
-        const response = await fetch('/owner/dashboard/recommendations');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch recommendations');
-        }
-
-        if (data.recommendations.length === 0) {
-          showNoRecommendations();
-          return;
-        }
-
-        renderRecommendations(data.recommendations);
-
-      } catch (error) {
-        console.error('Error loading recommendations:', error);
-        showRecommendationsError(error.message);
-      }
-    }
-
-    // Show loading state for recommendations
-    function showRecommendationsLoading() {
-      const container = document.getElementById('recommendationsContainer');
-      container.innerHTML = `
-        <div class="loading">
-          <i class="fas fa-brain fa-spin"></i>
-          <div>Analyzing data with K-means clustering...</div>
-        </div>
-      `;
-    }
-
-    // Show no recommendations state
-    function showNoRecommendations() {
-      const container = document.getElementById('recommendationsContainer');
-      container.innerHTML = `
-        <div class="no-recommendations">
-          <i class="fas fa-lightbulb"></i>
-          <div>No recommendations available</div>
-          <div style="font-size: 11px; margin-top: 4px;">Need more transaction data to generate insights</div>
-        </div>
-      `;
-    }
-
-    // Show error state for recommendations
-    function showRecommendationsError(message) {
-      const container = document.getElementById('recommendationsContainer');
-      container.innerHTML = `
-        <div class="no-recommendations">
-          <i class="fas fa-exclamation-triangle"></i>
-          <div>Error loading recommendations</div>
-          <div style="font-size: 11px; margin-top: 4px;">${message}</div>
-        </div>
-      `;
-    }
-
-    // Render recommendations
-    function renderRecommendations(recommendations) {
-      const container = document.getElementById('recommendationsContainer');
-      container.innerHTML = '';
-
-      recommendations.forEach((rec, index) => {
-        const recommendationElement = createRecommendationElement(rec, index);
-        container.appendChild(recommendationElement);
-      });
-    }
-
-    // Create individual recommendation element
-    function createRecommendationElement(rec, index) {
-      const div = document.createElement('div');
-      div.className = 'recommendation-item';
-      
-      const iconClass = getRecommendationIcon(rec.type);
-      const priorityClass = `priority-${rec.priority}`;
-      
-      div.innerHTML = `
-        <div class="recommendation-icon ${iconClass}">
-          <i class="fas ${getRecommendationIconClass(rec.type)}"></i>
-        </div>
-        <div class="recommendation-header">
-          <h4 class="recommendation-title">${rec.title}</h4>
-          <span class="recommendation-priority ${priorityClass}">${rec.priority}</span>
-        </div>
-        <div class="recommendation-description">${rec.description}</div>
-        <div class="recommendation-action">
-          <span class="action-text">${rec.action}</span>
-          <span class="recommendation-type">${(rec.type || 'unkonwn_type').replace('_', ' ')}</span>
-        </div>
-        ${rec.count ? `<div class="recommendation-stats">
-          <span class="stat-badge">${rec.count} customers</span>
-        </div>` : ''}
-        ${rec.revenue ? `<div class="recommendation-stats">
-          <span class="stat-badge">₱${rec.revenue.toFixed(2)} revenue</span>
-        </div>` : ''}
-      `;
-      
-      return div;
-    }
-
-    // Get recommendation icon class
-    function getRecommendationIcon(type) {
-      switch (type) {
-        case 'customer_segment':
-        case 'customer_retention':
-        case 'customer_growth':
-          return 'customer-segment';
-        case 'product_optimization':
-        case 'product_improvement':
-          return 'product-optimization';
-        case 'operational_optimization':
-          return 'operational-optimization';
-        case 'promotional_strategy':
-          return 'promotional-strategy';
-        default:
-          return 'customer-segment';
-      }
-    }
-
-    // Get FontAwesome icon class
-    function getRecommendationIconClass(type) {
-      switch (type) {
-        case 'customer_segment':
-        case 'customer_retention':
-        case 'customer_growth':
-          return 'fa-users';
-        case 'product_optimization':
-        case 'product_improvement':
-          return 'fa-box';
-        case 'operational_optimization':
-          return 'fa-cogs';
-        case 'promotional_strategy':
-          return 'fa-bullhorn';
-        case 'store_optimization':
-          return 'fa-store';
-        case 'insufficient_data':
-          return 'fa-database';
-        default:
-          return 'fa-lightbulb';
-      }
-    }
+// Backwards compatibility aliases
+if (typeof window.loadTopProducts === 'undefined') window.loadTopProducts = (c,l) => loadProductData(c,l);
+if (typeof window.loadRecommendations === 'undefined') window.loadRecommendations = () => loadRecommendations();
+if (typeof window.renderTopProducts === 'undefined') window.renderTopProducts = (items)=> renderTopProducts(items);
