@@ -1,3 +1,24 @@
+    /* Top summary row on the LEFT only: two cards (Sales, Orders) */
+    .sales-summary {
+      grid-column: 1; /* left column */
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      position: relative;
+    }
+
+    /* Place the small recommendations card in the top-right cell */
+    .recommendation-top {
+      grid-column: 2; /* right column of the main grid */
+      min-height: 120px;
+      height: 120px;
+    }
+
+    .sales-summary .summary-controls {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+    }
 .product-statistic {
       min-height: 400px;
     }
@@ -133,12 +154,20 @@
 
     /* Customer Engagement Chart Styles */
     .customer-engagement {
-      min-height: 400px;
+      min-height: 380px; /* smaller to align with Top Products card */
+    }
+
+    /* Make Top Products card longer to align with Customer Engagement */
+    #productsPanel.product-statistic {
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Recommendations Styles */
     .recommendation {
-      min-height: 400px;
+      min-height: 120px; /* align height with Total Sales/Orders cards */
+      height: 120px;
     }
 
     .recommendation-controls {
@@ -307,8 +336,16 @@
 
     .engagement-chart-container {
       position: relative;
-      height: 250px;
+      height: auto;
+      flex: 1;
+      min-height: 240px; /* smaller graph to align with Top Products */
       margin-bottom: 16px;
+    }
+
+    .engagement-chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
     }
 
     .engagement-stats {
@@ -426,7 +463,7 @@ body { background: #f5f5f5; }
       }
 
       .engagement-chart-container {
-        height: 200px;
+        min-height: 360px;
       }
 
       .engagement-stats {

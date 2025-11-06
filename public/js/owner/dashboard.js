@@ -44,6 +44,20 @@ if (window._ownerDashboardInit) {
     }
   }
 
+  // Order Rate
+  async function loadOrderRate(period = "30d") {
+    const url = `/api/owner/dashboard/order-rate?period=${encodeURIComponent(period)}`;
+    try {
+      const payload = await tryFetchJson(url);
+      if (typeof renderOrderRateChart === 'function') renderOrderRateChart(payload);
+      return payload;
+    } catch (err) {
+      console.error('❌ Error loading order rate:', err);
+      if (typeof renderOrderRateChart === 'function') renderOrderRateChart({ labels: [], datasets: [{ data: [] }], summary: { totalOrders:0, avgPerDay:0 } });
+      return null;
+    }
+  }
+
   /* ------------------------
      Top products: loader + renderers (robust)
      ------------------------ */
@@ -291,17 +305,21 @@ if (window._ownerDashboardInit) {
 
   // Dashboard summary
   async function loadDashboardSummary() {
-    const url = `/api/owner/dashboard/sales-summary`;
+    const daysSel = document.getElementById('salesSummaryPeriod');
+    const days = daysSel ? parseInt(daysSel.value, 10) || 30 : 30;
+    const url = `/api/owner/dashboard/sales-summary?days=${encodeURIComponent(days)}`;
     try {
       const payload = await tryFetchJson(url);
       console.debug('Parsed summary payload:', payload);
       if (typeof renderTotalSales === 'function') renderTotalSales(payload.totalSales ?? payload.total_amount ?? 0);
       if (typeof renderTotalOrders === 'function') renderTotalOrders(payload.totalOrders ?? payload.total_orders ?? 0);
+      if (typeof renderAvgOrderValue === 'function') renderAvgOrderValue(payload.avgOrderValue ?? 0);
       return payload;
     } catch (err) {
       console.warn('Summary fetch failed', err);
       if (typeof renderTotalSales === 'function') renderTotalSales(0);
       if (typeof renderTotalOrders === 'function') renderTotalOrders(0);
+      if (typeof renderAvgOrderValue === 'function') renderAvgOrderValue(0);
       return null;
     }
   }
@@ -314,6 +332,7 @@ if (window._ownerDashboardInit) {
     window.loadRecommendations = loadRecommendations;
     // start loaders
     loadEngagementData().catch(() => {});
+    // order rate removed
     loadProductData().catch(() => {});
     loadRecommendations().catch(() => {});
     loadDashboardSummary().catch(() => {});
@@ -323,6 +342,9 @@ if (window._ownerDashboardInit) {
     if (categoryFilter) categoryFilter.addEventListener("change", (e) => loadProductData(e.target.value));
     const engagementFilter = document.getElementById("engagementPeriodFilter");
     if (engagementFilter) engagementFilter.addEventListener("change", (e) => loadEngagementData(e.target.value));
+    // order rate removed
+    const salesFilter = document.getElementById('salesSummaryPeriod');
+    if (salesFilter) salesFilter.addEventListener('change', () => loadDashboardSummary());
     const refreshBtn = document.getElementById("refreshRecommendations");
     if (refreshBtn) refreshBtn.addEventListener("click", () => loadRecommendations());
   });
@@ -342,6 +364,12 @@ function renderTotalOrders(value) {
   el.textContent = String(value || 0);
 }
 
+function renderAvgOrderValue(value) {
+  const el = document.getElementById('avgOrderValue');
+  if (!el) return;
+  el.textContent = Number(value || 0).toLocaleString(undefined, { style:'currency', currency:'PHP' });
+}
+
 function renderEngagementChart(payload) {
   const ctx = document.getElementById("engagementChart");
   if (!ctx) return;
@@ -351,7 +379,7 @@ function renderEngagementChart(payload) {
   window._engagementChartInstance = new Chart(ctx, {
     type: "line",
     data: { labels, datasets: [{ label: "Customer Engagement", data, borderColor: "#4e73df", backgroundColor: "rgba(78,115,223,0.1)", fill:true, tension:0.3 }] },
-    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+    options: { responsive:true, maintainAspectRatio: false, scales:{ y:{ beginAtZero:true } } }
   });
 }
 function renderEngagementStats(summary) {
@@ -362,6 +390,19 @@ function renderEngagementStats(summary) {
     <div class="stat-item">🛍️ Total Visits: <strong>${summary.totalVisits ?? 0}</strong></div>
     <div class="stat-item">⭐ Total Points: <strong>${summary.totalPoints ?? 0}</strong></div>
   `;
+}
+
+function renderOrderRateChart(payload) {
+  const ctx = document.getElementById('orderRateChart');
+  if (!ctx) return;
+  const labels = payload.labels || [];
+  const data = payload.datasets?.[0]?.data || [];
+  if (window._orderRateChartInstance) window._orderRateChartInstance.destroy();
+  window._orderRateChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Orders per day', data, backgroundColor: 'rgba(124,15,15,0.25)', borderColor: '#7c0f0f', borderWidth: 1 }] },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
 }
 
 // Backwards compatibility aliases
