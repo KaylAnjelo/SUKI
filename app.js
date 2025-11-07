@@ -202,8 +202,41 @@ app.get("/owner/products", async (req, res) => {
       return res.redirect('/login');
     }
 
+    // Get the owner's store information
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('owner_id', userId)
+      .single();
+
+    if (storeError) {
+      console.error('Error fetching store data:', storeError);
+      return res.status(500).render('OwnerSide/Products', { 
+        user: req.session.user,
+        error: 'Failed to fetch store data'
+      });
+    }
+
+    // Get products for the store
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', storeData.store_id)
+      .order('id', { ascending: false });
+
+    if (productsError) {
+      console.error('Error fetching products:', productsError);
+      return res.status(500).render('OwnerSide/Products', { 
+        user: req.session.user,
+        store_id: storeData.store_id,
+        error: 'Failed to fetch products'
+      });
+    }
+
     res.render('OwnerSide/Products', {
-      user: req.session.user
+      user: req.session.user,
+      store_id: storeData.store_id,
+      products: products || []
     });
   } catch (error) {
     console.error('Error in /owner/products route:', error);
