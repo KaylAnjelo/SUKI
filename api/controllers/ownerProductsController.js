@@ -10,13 +10,22 @@ export const upload = multer({ storage });
 export async function getOwnerProducts(req, res) {
   try {
     const ownerId = req.session?.userId || req.session?.user?.id;
-    if (!ownerId) return res.redirect('/login');
+    console.log('getOwnerProducts called, ownerId=', ownerId); // <--- debug
+
+    if (!ownerId) {
+      console.log('getOwnerProducts: no ownerId, redirecting to /login');
+      return res.redirect('/login');
+    }
 
     const { data: stores, error: storesErr } = await supabase
       .from('stores')
       .select('store_id, store_name')
       .eq('owner_id', ownerId);
-    if (storesErr) throw storesErr;
+    if (storesErr) {
+      console.error('getOwnerProducts: storesErr', storesErr);
+      throw storesErr;
+    }
+    console.log('getOwnerProducts: stores found=', (stores || []).length);
 
     const storeIds = (stores || []).map(s => s.store_id);
     if (!storeIds.length) {
@@ -28,14 +37,18 @@ export async function getOwnerProducts(req, res) {
       .select('id, product_name, price, store_id, product_type, product_image')
       .in('store_id', storeIds)
       .order('id', { ascending: true });
-    if (prodErr) throw prodErr;
+    if (prodErr) {
+      console.error('getOwnerProducts: prodErr', prodErr);
+      throw prodErr;
+    }
 
+    console.log('getOwnerProducts: productsData length=', (productsData || []).length);
     const products = (productsData || []).map(p => ({
       id: p.id,
       product_name: p.product_name,
       price: p.price,
       product_type: p.product_type,
-      product_image: p.product_image
+      product_image: p.product_image || null
     }));
 
     const store = (stores || [])[0] || null;

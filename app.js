@@ -11,8 +11,8 @@ import transactionsRoutes from './api/routes/transactions.js';
 import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerDashboardRoutes from './api/routes/ownerDashboardRoutes.js';
-import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js'; // <--- added import
-import { fileURLToPath } from 'url'; // <--- added import
+import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js'; 
+import { fileURLToPath } from 'url';
 import cron from 'node-cron';
 import recommendationKMeans from './api/controllers/recommendationKMeansController.js';
 import * as ownerTransactions from './api/controllers/ownerTransactionController.js';
@@ -194,22 +194,21 @@ app.get("/owner/transactions", async (req, res) => {
   }
 });
 
-app.get("/owner/products", async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.redirect('/login');
-    }
-
-    res.render('OwnerSide/Products', {
-      user: req.session.user
-    });
-  } catch (error) {
-    console.error('Error in /owner/products route:', error);
-    res.status(500).send('Internal server error');
-  }
-});
+// REMOVE this block (it short-circuits the router and renders an empty page):
+// app.get("/owner/products", async (req, res) => {
+//   try {
+//     const userId = req.session.userId;
+//     if (!userId) {
+//       return res.redirect('/login');
+//     }
+//     res.render('OwnerSide/Products', {
+//       user: req.session.user
+//     });
+//   } catch (error) {
+//     console.error('Error in /owner/products route:', error);
+//     res.status(500).send('Internal server error');
+//   }
+// });
 
 app.get("/owner/promotions", async (req, res) => {
   try {
