@@ -150,6 +150,245 @@
       font-size: 14px;
       margin: 0;
     }
+
+    /* Modal styling to match promotion form design */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background-color: #f8f9fa;
+      margin: 5% auto;
+      padding: 0;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: #7c0f0f;
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      opacity: 0.8;
+    }
+
+    /* Form styling */
+    #productForm {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #7c0f0f;
+      box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Price input with currency symbol */
+    .price-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .currency-symbol {
+      position: absolute;
+      left: 16px;
+      color: #6b7280;
+      font-weight: 500;
+      z-index: 1;
+    }
+
+    .price-input-container input {
+      padding-left: 32px;
+    }
+
+    /* File upload styles */
+    .file-upload-container {
+      margin-top: 8px;
+    }
+
+    .file-upload-display {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .file-upload-display:hover {
+      border-color: #7c0f0f;
+      background: #fef2f2;
+    }
+
+    .image-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+    }
+
+    .image-preview i {
+      font-size: 32px;
+      color: #9ca3af;
+    }
+
+    .image-preview span {
+      font-size: 14px;
+    }
+
+    .file-name {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    /* Checkbox styles */
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      margin-right: 8px;
+      width: 16px;
+      height: 16px;
+      accent-color: #7c0f0f;
+    }
+
+    /* Form actions */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .cancel-btn {
+      background: white;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cancel-btn:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    .submit-btn {
+      background: #7c0f0f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      background: #5a0000;
+    }
+
+    /* Form validation styles */
+    .form-group input:invalid {
+      border-color: #ef4444;
+    }
+
+    .form-group input:valid {
+      border-color: #10b981;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -271,32 +510,33 @@
       <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
         <input type="hidden" id="store_id" name="store_id" value="{{store.store_id}}">
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productName">Product Name *</label>
-            <input type="text" id="productName" name="productName" required>
-          </div>
-          <div class="form-group">
-            <label for="productCategory">Category *</label>
-            <select id="productCategory" name="productCategory" required>
-              <option value="">Select Category</option>
-              <option value="food">Food</option>
-              <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
-              <option value="dessert">Dessert</option>
-            </select>
+        <div class="form-group">
+          <label for="productName">Product Name</label>
+          <input type="text" id="productName" name="productName" placeholder="e.g., Premium Coffee" required>
+        </div>
+
+        <div class="form-group">
+          <label for="productCategory">Category</label>
+          <select id="productCategory" name="product_type" required>
+            <option value="">Select Category</option>
+            <option value="food">Food</option>
+            <option value="beverage">Beverage</option>
+            <option value="snacks">Snacks</option>
+            <option value="dessert">Dessert</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="productPrice">Price</label>
+          <div class="price-input-container">
+            <span class="currency-symbol">₱</span>
+            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" placeholder="e.g., 150" required>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
-          </div>
-          <div class="form-group">
-            <label for="productStock">Stock Quantity</label>
-            <input type="number" id="productStock" name="productStock" min="0" value="0">
-          </div>
+        <div class="form-group">
+          <label for="productStock">Stock Quantity</label>
+          <input type="number" id="productStock" name="productStock" min="0" value="0" placeholder="e.g., 50">
         </div>
 
         <div class="form-group">
@@ -307,13 +547,14 @@
         <div class="form-group">
           <label for="productImage">Product Image</label>
           <div class="file-upload-container">
-            <input type="file" id="productImage" name="productImage" accept="image/*">
-            <div class="file-upload-display">
+            <input type="file" id="productImage" name="productImage" accept="image/*" style="display: none;">
+            <div class="file-upload-display" onclick="document.getElementById('productImage').click()">
               <div id="imagePreview" class="image-preview">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <span>Click to upload product image</span>
               </div>
             </div>
+            <div id="fileName" class="file-name" style="display: none;"></div>
           </div>
         </div>
 
@@ -368,6 +609,14 @@
       addProductBtn.addEventListener('click', () => {
         document.getElementById('modalTitle').textContent = 'Add New Product';
         productForm.reset();
+        
+        // Reset file upload display
+        imagePreview.innerHTML = `
+          <i class="fas fa-cloud-upload-alt"></i>
+          <span>Click to upload product image</span>
+        `;
+        fileName.style.display = 'none';
+        
         productModal.style.display = 'flex';
       });
 
@@ -402,6 +651,11 @@
       productForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Validate form before submission
+        if (!validateForm()) {
+          return;
+        }
+
         const formData = new FormData(productForm);
 
         try {
@@ -414,13 +668,14 @@
 
           if (response.ok) {
             alert('✅ Product added successfully!');
+            productModal.style.display = 'none';
             window.location.reload();
           } else {
             alert(`❌ Failed to add product: ${result.message || 'Unknown error'}`);
           }
         } catch (error) {
           console.error('Error adding product:', error);
-          alert('❌ Something went wrong.');
+          alert('❌ Something went wrong. Please try again.');
         }
       });
 
@@ -460,20 +715,81 @@
         }
       });
 
-      // Handle image preview
+      // Handle image preview and file upload
       const productImage = document.getElementById('productImage');
       const imagePreview = document.getElementById('imagePreview');
+      const fileName = document.getElementById('fileName');
 
       productImage.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
+          // Validate file type
+          if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            e.target.value = '';
+            return;
+          }
+
+          // Validate file size (max 5MB)
+          if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB.');
+            e.target.value = '';
+            return;
+          }
+
+          // Show file name
+          fileName.textContent = `Selected: ${file.name}`;
+          fileName.style.display = 'block';
+
+          // Show image preview
           const reader = new FileReader();
           reader.onload = (e) => {
-            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">`;
+            imagePreview.innerHTML = `
+              <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px; object-fit: cover;">
+              <span style="margin-top: 8px; font-size: 12px; color: #6b7280;">Click to change image</span>
+            `;
           };
           reader.readAsDataURL(file);
+        } else {
+          // Reset to default state
+          imagePreview.innerHTML = `
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>Click to upload product image</span>
+          `;
+          fileName.style.display = 'none';
         }
       });
+
+      // Form validation
+      const validateForm = () => {
+        const productName = document.getElementById('productName').value.trim();
+        const productCategory = document.getElementById('productCategory').value;
+        const productPrice = document.getElementById('productPrice').value;
+
+        let isValid = true;
+        let errorMessage = '';
+
+        if (!productName) {
+          errorMessage += 'Product name is required.\n';
+          isValid = false;
+        }
+
+        if (!productCategory) {
+          errorMessage += 'Category is required.\n';
+          isValid = false;
+        }
+
+        if (!productPrice || parseFloat(productPrice) <= 0) {
+          errorMessage += 'Valid price is required.\n';
+          isValid = false;
+        }
+
+        if (!isValid) {
+          alert('Please fix the following errors:\n' + errorMessage);
+        }
+
+        return isValid;
+      };
     });
   </script>
 </body>

@@ -17,9 +17,7 @@ const upload = multer({
   }
 });
 
-/**
- * GET all stores for the authenticated owner
- */
+/*GET all stores for the authenticated owner*/
 export const getOwnerStores = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -46,9 +44,7 @@ export const getOwnerStores = async (req, res) => {
   }
 };
 
-/**
- * GET a specific store by ID (owner's stores only)
- */
+/*GET a specific store by ID (owner's stores only)*/
 export const getOwnerStoreById = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -80,9 +76,7 @@ export const getOwnerStoreById = async (req, res) => {
   }
 };
 
-/**
- * CREATE a new store for the authenticated owner
- */
+/*CREATE a new store for the authenticated owner*/
 export const createOwnerStore = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -105,17 +99,17 @@ export const createOwnerStore = async (req, res) => {
         const filePath = `stores/${Date.now()}_${file.originalname}`;
 
         console.log('📁 Uploading store image:', file.originalname);
-        console.log('📂 Target bucket: store_images');
+        console.log('📂 Target bucket: store_image');
 
         // Upload image to Supabase Storage
         const { error: uploadError } = await supabase.storage
-          .from('store_images')
+          .from('store_image')
           .upload(filePath, file.buffer, { contentType: file.mimetype });
 
         if (uploadError) {
           console.error('❌ Storage upload error:', uploadError);
           if (uploadError.message.includes('Bucket not found')) {
-            throw new Error('Storage bucket "store_images" not found. Please create it in your Supabase dashboard under Storage.');
+            throw new Error('Storage bucket "store_image" not found. Please create it in your Supabase dashboard under Storage.');
           }
           throw uploadError;
         }
@@ -124,7 +118,7 @@ export const createOwnerStore = async (req, res) => {
 
         // Get public URL
         const { data: publicURL, error: urlError } = supabase.storage
-          .from('store_images')
+          .from('store_image')
           .getPublicUrl(filePath);
 
         if (urlError) {
@@ -173,9 +167,7 @@ export const createOwnerStore = async (req, res) => {
   }
 };
 
-/**
- * UPDATE a store (owner's stores only)
- */
+/*UPDATE a store (owner's stores only)*/
 export const updateOwnerStore = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -210,7 +202,7 @@ export const updateOwnerStore = async (req, res) => {
 
         // Upload image to Supabase Storage
         const { error: uploadError } = await supabase.storage
-          .from('store_images')
+          .from('store_image')
           .upload(filePath, file.buffer, { contentType: file.mimetype });
 
         if (uploadError) {
@@ -220,7 +212,7 @@ export const updateOwnerStore = async (req, res) => {
 
         // Get public URL
         const { data: publicURL, error: urlError } = supabase.storage
-          .from('store_images')
+          .from('store_image')
           .getPublicUrl(filePath);
 
         if (urlError) {
@@ -273,9 +265,7 @@ export const updateOwnerStore = async (req, res) => {
   }
 };
 
-/**
- * DELETE a store (owner's stores only)
- */
+/*DELETE a store (owner's stores only)*/
 export const deleteOwnerStore = async (req, res) => {
   try {
     const userId = req.session.userId;
