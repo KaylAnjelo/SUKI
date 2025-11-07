@@ -121,7 +121,6 @@ app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
 app.use('/owner/profile/data', ownerProfileRoutes);
-// expose both view and api paths the frontend may call
 app.use('/owner/dashboard', ownerDashboardRoutes);      // view paths
 app.use('/api/owner/dashboard', ownerDashboardRoutes);  // canonical API path frontend uses
 app.use('/api/owner', ownerDashboardRoutes); // compatibility
@@ -193,22 +192,6 @@ app.get("/owner/transactions", async (req, res) => {
     res.status(500).send('Internal server error');
   }
 });
-
-// REMOVE this block (it short-circuits the router and renders an empty page):
-// app.get("/owner/products", async (req, res) => {
-//   try {
-//     const userId = req.session.userId;
-//     if (!userId) {
-//       return res.redirect('/login');
-//     }
-//     res.render('OwnerSide/Products', {
-//       user: req.session.user
-//     });
-//   } catch (error) {
-//     console.error('Error in /owner/products route:', error);
-//     res.status(500).send('Internal server error');
-//   }
-// });
 
 app.get("/owner/promotions", async (req, res) => {
   try {
