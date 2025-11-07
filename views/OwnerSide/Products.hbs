@@ -261,75 +261,66 @@
     </main>
   </div>
   <!-- Add/Edit Product Modal -->
-  <div id="productModal" class="modal">
+  <div id="productModal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">Add New Product</h2>
-        <button class="close-btn" id="closeModal">&times;</button>
+        <span id="closeModal" class="close-btn">&times;</span>
       </div>
-      
-      <form id="productForm" action="api/owner/products/add" method="POST" enctype="multipart/form-data">
-        <input type="hidden" id="productID" name="{{store_id}}" value="{{store_id}}">
-        
-        <div class="form-row">
+      <div class="modal-body">
+        <form id="productForm" data-product-id="">
           <div class="form-group">
             <label for="productName">Product Name *</label>
-            <input type="text" id="productName" name="productName" required>
+            <input type="text" id="productName" name="name" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Category *</label>
+              <select id="category" name="category" required>
+                <option value="">Select Category</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Apparel">Apparel</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Services">Services</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="price">Price *</label>
+              <input type="number" id="price" name="price" step="0.01" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="stock">Stock Quantity</label>
+              <input type="number" id="stock" name="stock" value="0">
+            </div>
           </div>
           <div class="form-group">
-            <label for="productCategory">Category *</label>
-            <select id="productCategory" name="productCategory" required>
-              <option value="">Select Category</option>
-              <option value="food">Food</option>
-              <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
-              <option value="dessert">Dessert</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
+            <label for="productDescription">Description</label>
+            <textarea id="productDescription" name="description" rows="3" placeholder="Enter product description..."></textarea>
           </div>
           <div class="form-group">
-            <label for="productStock">Stock Quantity</label>
-            <input type="number" id="productStock" name="productStock" min="0" value="0">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="productDescription">Description</label>
-          <textarea id="productDescription" name="productDescription" rows="3" placeholder="Enter product description..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="productImage">Product Image</label>
-          <div class="file-upload-container">
-            <input type="file" id="productImage" name="productImage" accept="image/*">
-            <div class="file-upload-display">
-              <div id="imagePreview" class="image-preview">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>Click to upload product image</span>
+            <label>Product Image</label>
+            <div class="file-upload-container">
+              <input type="file" id="productImage" name="image" class="file-input">
+              <div class="file-upload-area">
+                <div id="imagePreview" class="file-upload-content">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Click to upload product image</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="isActive" name="isActive" checked>
-            <span class="checkmark"></span>
-            Product is active
-          </label>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-          <button type="submit" class="submit-btn" id="submitBtn">Save Product</button>
-        </div>
-      </form>
+          <div class="form-group-inline">
+            <input type="checkbox" id="isActive" name="isActive">
+            <label for="isActive">Product is active</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelBtn" class="cancel-btn">Cancel</button>
+        <button type="submit" form="productForm" class="save-btn">Save Changes</button>
+      </div>
     </div>
   </div>
 
