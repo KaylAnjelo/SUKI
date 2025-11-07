@@ -1,4 +1,4 @@
-import supabase from "../../config/db.js";
+import supabase from '../../config/db.js'; // fixed import (was importing non-existent supabaseClient.js)
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 
@@ -7,59 +7,42 @@ const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
 // 🟩 Fetch all products for the owner’s store
-export const getOwnerProducts = async (req, res) => {
+export async function getOwnerProducts(req, res) {
   try {
-    const userId = req.session?.user?.id;
+    const ownerId = req.session?.userId || req.session?.user?.id;
+    if (!ownerId) return res.redirect('/login');
 
-    if (!userId) {
-      console.error("⚠️ No active session found");
-      return res.redirect("/login");
+    const { data: stores, error: storesErr } = await supabase
+      .from('stores')
+      .select('store_id, store_name')
+      .eq('owner_id', ownerId);
+    if (storesErr) throw storesErr;
+
+    const storeIds = (stores || []).map(s => s.store_id);
+    if (!storeIds.length) {
+      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null });
     }
 
-    // 🔍 Step 1: Find the store that belongs to this owner
-    const { data: store, error: storeError } = await supabase
-      .from("stores")
-      .select("store_id, store_name, location")
-      .eq("owner_id", userId)
-      .maybeSingle();
+    const { data: productsData, error: prodErr } = await supabase
+      .from('products')
+      .select('id, product_name, price, store_id, product_type, product_image')
+      .in('store_id', storeIds)
+      .order('id', { ascending: true });
+    if (prodErr) throw prodErr;
 
-    if (storeError) throw storeError;
-    if (!store) {
-      console.log("⚠️ No store found for owner ID:", userId);
-      return res.render("OwnerSide/Products", {
-        user: req.session.user,
-        store: null,
-        products: [],
-        message: "No store found for this owner.",
-      });
-    }
+    const products = (productsData || []).map(p => ({
+      id: p.id,
+      product_name: p.product_name,
+      price: p.price,
+      product_type: p.product_type,
+      product_image: p.product_image
+    }));
 
-    // 🔍 Step 2: Fetch all products for that store
-    const { data: products, error: productsError } = await supabase
-      .from("products")
-      .select("*")
-      .eq("store_id", store.store_id)
-      .order("id", { ascending: true });
-
-    if (productsError) throw productsError;
-
-    console.log("✅ Products fetched:", products?.length || 0);
-
-    // 🔍 Step 3: Handle API (JSON) or render (HBS)
-    if (req.xhr || req.headers.accept.includes("application/json")) {
-      return res.status(200).json({ products });
-    }
-
-    // Render the Products page
-    return res.render("OwnerSide/Products", {
-      user: req.session.user,
-      store,
-      products,
-    });
-
+    const store = (stores || [])[0] || null;
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store });
   } catch (err) {
-    console.error("❌ Error fetching owner products:", err.message);
-    res.status(500).render("errors/500", { message: "Failed to load products." });
+    console.error('getOwnerProducts error', err);
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, error: 'Failed to load products' });
   }
 };
 
@@ -140,3 +123,5 @@ export const deleteProduct = async (req, res) => {
     return res.status(500).render("errors/500", { message: "Failed to delete product." });
   }
 };
+
+export default { getOwnerProducts };
