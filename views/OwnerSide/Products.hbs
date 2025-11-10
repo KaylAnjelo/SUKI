@@ -152,75 +152,254 @@
     }
     /* Modal and form styles for Add/Edit Product */
     .modal {
-      display: none; /* shown via JS */
+      display: none;
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 1000;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 9999;
+      display: none;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      overflow: auto;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .modal-content {
       background: #fff;
-      border-radius: 8px;
-      width: 820px;
-      max-width: 100%;
-      max-height: calc(100% - 48px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      border-radius: 12px;
+      width: 370px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      font-family: 'Poppins', Arial, sans-serif;
+      position: relative;
+      animation: fadeIn 0.3s;
     }
 
     .modal-header {
-      background: #7c0f0f;
-      color: #fff;
-      padding: 16px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
+      padding: 28px 24px 18px 24px;
+      background: #C72C41;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
-    .modal-header h2 { margin: 0; font-size: 18px; }
-    .close-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+    .modal-header h2 { 
+      margin: 0; 
+      font-size: 1.15em;
+      font-weight: 500;
+      color: #fff;
+    }
+    
+    .close-btn { 
+      background: transparent; 
+      border: none; 
+      color: #888; 
+      font-size: 1.5em; 
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .close-btn:hover {
+      color: #C72C41;
+    }
 
-    .modal-content form { padding: 18px 20px 0 20px; overflow: auto; }
+    .modal-content form {
+      padding: 14px 24px;
+    }
 
-    .form-row { display: flex; gap: 18px; margin-bottom: 12px; }
-    .form-group { flex: 1; display: flex; flex-direction: column; }
-    .form-group label { margin-bottom: 6px; font-weight: 600; color: #374151; }
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.98em;
+      margin-bottom: 4px;
+    }
+
     .form-group input[type="text"],
     .form-group input[type="number"],
     .form-group select,
-    .form-group textarea { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827; }
+    .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.98em;
+      color: #222;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
 
-    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
 
-    .file-upload-container { border: 1px dashed #d1d5db; border-radius: 6px; overflow: hidden; }
-    .file-upload-container input[type="file"] { display: block; width: 100%; padding: 10px; background: #fff; }
-    .file-upload-display { padding: 14px; background: #fafafa; display: flex; align-items: center; justify-content: center; }
-    .image-preview { cursor: pointer; color: #9ca3af; display:flex; flex-direction:column; align-items:center; gap:8px; padding: 10px 0; }
-    .image-preview img { max-width: 100%; max-height: 200px; border-radius: 6px; }
+    /* Required field style */
+    .form-group label[for*="required"]::after,
+    .form-group label[for*="productName"]::after,
+    .form-group label[for*="productPrice"]::after {
+      content: ' *';
+      color: #C72C41;
+    }
 
-    .form-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 20px 20px 20px; }
-    .cancel-btn { background: #f3f4f6; border: 1px solid #d1d5db; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
-    .submit-btn { background: #7c0f0f; color: #fff; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+    .file-upload-container {
+      position: relative;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      transition: all 0.2s ease;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-upload-container.drag-over {
+      border-color: #C72C41;
+      background: #fff9f9;
+    }
+
+    .file-upload-container input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-preview {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .image-preview i {
+      font-size: 32px;
+      color: #C72C41;
+    }
+
+    .image-preview span {
+      font-size: 0.95em;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 14px 24px 18px;
+      border-top: 1px solid #eee;
+      margin-top: 10px;
+    }
+
+    .cancel-btn {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      background: #C72C41;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #7D0006;
+    }
 
     .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
-  /* Status (Active / Inactive) styles */
-  .status-options { display: flex; gap: 12px; align-items: center; }
-  .status-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #374151; font-weight: 600; }
-  .status-label input { display: none; }
-  .status-box { width: 18px; height: 18px; border: 2px solid #7c0f0f; border-radius: 4px; display: inline-block; position: relative; }
-  .status-box::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); opacity: 0; }
-  .status-label input:checked + .status-box { background: #7c0f0f; }
-  .status-label input:checked + .status-box::after { opacity: 1; }
+    /* Status (Active / Inactive) styles */
+    .status-options {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #555;
+      font-size: 0.98em;
+    }
+    
+    .status-label input { display: none; }
+    
+    .status-box {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #C72C41;
+      border-radius: 4px;
+      display: inline-block;
+      position: relative;
+    }
+    
+    .status-box::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+    
+    .status-label input:checked + .status-box {
+      background: #C72C41;
+      border-color: #C72C41;
+    }
+    
+    .status-label input:checked + .status-box::after {
+      opacity: 1;
+    }
 
     /* Responsive: stack columns on narrow screens */
     @media (max-width: 700px) {
@@ -357,23 +536,17 @@
             <label for="productCategory">Category *</label>
             <select id="productCategory" name="product_type" required>
               <option value="">Select Category</option>
-              <option value="food">Food</option>
+              <option value="meal">Meal</option>
+              <option value="sides">Sides</option>
               <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
               <option value="dessert">Dessert</option>
             </select>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
-          </div>
-          <div class="form-group">
-            <label for="productStock">Stock Quantity</label>
-            <input type="number" id="productStock" name="productStock" min="0" value="0">
-          </div>
+        <div class="form-group">
+          <label for="productPrice">Price *</label>
+          <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
         </div>
 
         <div class="form-group">
@@ -383,13 +556,11 @@
 
         <div class="form-group">
           <label for="productImage">Product Image</label>
-          <div class="file-upload-container">
+          <div class="file-upload-container" id="dropZone">
             <input type="file" id="productImage" name="productImage" accept="image/*">
-            <div class="file-upload-display">
-              <div id="imagePreview" class="image-preview">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>Click to upload product image</span>
-              </div>
+            <div id="imagePreview" class="image-preview">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>Click or drag to upload product image</span>
             </div>
           </div>
         </div>
@@ -559,7 +730,43 @@
           };
           reader.readAsDataURL(file);
         }
-      });
+        });
+
+        // Handle drag and drop
+        const dropZone = document.getElementById('dropZone');
+      
+        function handleFile(file) {
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 180px; border-radius: 6px;">`;
+            };
+            reader.readAsDataURL(file);
+          
+            // Update the file input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            productImage.files = dataTransfer.files;
+          }
+        }
+
+        // Handle drag events
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+          const file = e.dataTransfer.files[0];
+          handleFile(file);
+        });
 
       // Product status: two styled checkboxes (Active / Inactive) with hidden field for submission
       const statusActive = document.getElementById('statusActive');
