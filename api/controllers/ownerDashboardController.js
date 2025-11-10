@@ -109,6 +109,14 @@ export const getSalesSummary = async (req, res) => {
 
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
+    // Optional time window in days (defaults to 30)
+    const days = Math.max(1, parseInt(req.query.days ?? '30', 10) || 30);
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (days - 1));
+    start.setHours(0,0,0,0);
+    end.setHours(23,59,59,999);
+
     const { data: stores, error: storeError } = await supabase
       .from("stores")
       .select("store_id")
@@ -125,7 +133,9 @@ export const getSalesSummary = async (req, res) => {
     const { data: transactions, error: txError } = await supabase
       .from("transactions")
       .select("total, transaction_date")
-      .in("store_id", stores.map(s => s.store_id));
+      .in("store_id", stores.map(s => s.store_id))
+      .gte('transaction_date', start.toISOString())
+      .lte('transaction_date', end.toISOString());
 
     console.log("📊 [SalesSummary] Transactions:", transactions?.length);
 
@@ -133,16 +143,17 @@ export const getSalesSummary = async (req, res) => {
 
     const totalSales = transactions.reduce((sum, t) => sum + parseFloat(t.total || 0), 0);
     const totalTransactions = transactions.length;
+    const avgOrderValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
 
     console.log("✅ [SalesSummary] Total sales:", totalSales, "Transactions:", totalTransactions);
 
-    const payload = { totalSales, totalOrders: totalTransactions };
+    const payload = { totalSales, totalOrders: totalTransactions, avgOrderValue, days };
     console.log('Sales summary payload:', payload);
     return res.json(payload);
   } catch (err) {
     console.error('getSalesSummary error:', err && err.stack ? err.stack : err);
     // return safe zeroed summary
-    return res.status(200).json({ totalSales: 0, totalOrders: 0 });
+    return res.status(200).json({ totalSales: 0, totalOrders: 0, avgOrderValue: 0, days: parseInt(req?.query?.days || '30', 10) || 30 });
   }
 };
 
@@ -310,3 +321,57 @@ export const getRecommendations = async (req, res) => {
   }
 };
 
+/**
+ * API: Get Order Rate (orders per day within a period)
+ */
+export const getOrderRate = async (req, res) => {
+  try {
+    const userId = req.session?.userId || req.session?.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { period = '30d' } = req.query;
+    const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (days - 1));
+    start.setHours(0,0,0,0);
+    end.setHours(23,59,59,999);
+
+    const storeIds = await fetchOwnedStoreIds(userId);
+    if (!storeIds.length) return res.json({ labels: [], datasets: [{ data: [] }], summary: { totalOrders:0, avgPerDay:0 } });
+
+    const { data: txs, error } = await supabase
+      .from('transactions')
+      .select('transaction_date')
+      .in('store_id', storeIds)
+      .gte('transaction_date', start.toISOString())
+      .lte('transaction_date', end.toISOString())
+      .order('transaction_date', { ascending: true });
+    if (error) throw error;
+
+    const labels = [];
+    const map = {};
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().slice(0,10);
+      labels.push(key);
+      map[key] = 0;
+    }
+    (txs || []).forEach(t => {
+      if (!t || !t.transaction_date) return;
+      const key = new Date(t.transaction_date).toISOString().slice(0,10);
+      if (map[key] !== undefined) map[key] += 1;
+    });
+    const dataSeries = labels.map(l => map[l] || 0);
+    const totalOrders = dataSeries.reduce((a,b)=>a+b,0);
+    const avgPerDay = days > 0 ? totalOrders / days : 0;
+
+    return res.json({
+      labels: labels.map(l => (new Date(l + 'T00:00:00')).toLocaleDateString(undefined, { month:'short', day:'2-digit' })),
+      datasets: [{ label: 'Orders per day', data: dataSeries }],
+      summary: { totalOrders, avgPerDay }
+    });
+  } catch (err) {
+    console.error('getOrderRate error', err);
+    return res.status(500).json({ error: 'Failed to fetch order rate' });
+  }
+};
