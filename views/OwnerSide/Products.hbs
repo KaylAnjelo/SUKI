@@ -150,6 +150,83 @@
       font-size: 14px;
       margin: 0;
     }
+    /* Modal and form styles for Add/Edit Product */
+    .modal {
+      display: none; /* shown via JS */
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: auto;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 8px;
+      width: 820px;
+      max-width: 100%;
+      max-height: calc(100% - 48px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: #7c0f0f;
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    .modal-header h2 { margin: 0; font-size: 18px; }
+    .close-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+    .modal-content form { padding: 18px 20px 0 20px; overflow: auto; }
+
+    .form-row { display: flex; gap: 18px; margin-bottom: 12px; }
+    .form-group { flex: 1; display: flex; flex-direction: column; }
+    .form-group label { margin-bottom: 6px; font-weight: 600; color: #374151; }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827; }
+
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .file-upload-container { border: 1px dashed #d1d5db; border-radius: 6px; overflow: hidden; }
+    .file-upload-container input[type="file"] { display: block; width: 100%; padding: 10px; background: #fff; }
+    .file-upload-display { padding: 14px; background: #fafafa; display: flex; align-items: center; justify-content: center; }
+    .image-preview { cursor: pointer; color: #9ca3af; display:flex; flex-direction:column; align-items:center; gap:8px; padding: 10px 0; }
+    .image-preview img { max-width: 100%; max-height: 200px; border-radius: 6px; }
+
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 20px 20px 20px; }
+    .cancel-btn { background: #f3f4f6; border: 1px solid #d1d5db; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+    .submit-btn { background: #7c0f0f; color: #fff; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+  /* Status (Active / Inactive) styles */
+  .status-options { display: flex; gap: 12px; align-items: center; }
+  .status-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #374151; font-weight: 600; }
+  .status-label input { display: none; }
+  .status-box { width: 18px; height: 18px; border: 2px solid #7c0f0f; border-radius: 4px; display: inline-block; position: relative; }
+  .status-box::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); opacity: 0; }
+  .status-label input:checked + .status-box { background: #7c0f0f; }
+  .status-label input:checked + .status-box::after { opacity: 1; }
+
+    /* Responsive: stack columns on narrow screens */
+    @media (max-width: 700px) {
+      .modal-content { width: 96%; }
+      .form-row { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -318,11 +395,20 @@
         </div>
 
         <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="isActive" name="isActive" checked>
-            <span class="checkmark"></span>
-            Product is active
-          </label>
+          <label for="productStatus">Product Status</label>
+          <div class="status-options">
+            <label class="status-label">
+              <input type="checkbox" id="statusActive">
+              <span class="status-box"></span>
+              Active
+            </label>
+            <label class="status-label">
+              <input type="checkbox" id="statusInactive">
+              <span class="status-box"></span>
+              Inactive
+            </label>
+            <input type="hidden" id="isActiveHidden" name="isActive" value="1">
+          </div>
         </div>
 
         <div class="form-actions">
@@ -474,6 +560,41 @@
           reader.readAsDataURL(file);
         }
       });
+
+      // Product status: two styled checkboxes (Active / Inactive) with hidden field for submission
+      const statusActive = document.getElementById('statusActive');
+      const statusInactive = document.getElementById('statusInactive');
+      const isActiveHidden = document.getElementById('isActiveHidden');
+
+      // initialize: default to Active
+      if (statusActive && statusInactive && isActiveHidden) {
+        statusActive.checked = true;
+        statusInactive.checked = false;
+        isActiveHidden.value = '1';
+
+        statusActive.addEventListener('change', () => {
+          if (statusActive.checked) {
+            statusInactive.checked = false;
+            isActiveHidden.value = '1';
+          } else {
+            // prevent both unchecked: keep at least one selected
+            if (!statusInactive.checked) {
+              statusActive.checked = true;
+            }
+          }
+        });
+
+        statusInactive.addEventListener('change', () => {
+          if (statusInactive.checked) {
+            statusActive.checked = false;
+            isActiveHidden.value = '0';
+          } else {
+            if (!statusActive.checked) {
+              statusInactive.checked = true;
+            }
+          }
+        });
+      }
     });
   </script>
 </body>
