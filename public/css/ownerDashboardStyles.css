@@ -2,7 +2,8 @@
     .sales-summary {
       grid-column: 1; /* left column */
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 320px));
+      justify-content: start;
       gap: 16px;
       position: relative;
     }
@@ -536,7 +537,8 @@ body { background: #f5f5f5; }
 /* Add grid layout for dashboard-content and span helpers */
 .dashboard-content {
   display: grid;
-  grid-template-columns: 1fr 360px; /* left flexible column, right narrow column */
+  /* increased left column weight so Top Products aligns with the two summary cards above */
+  grid-template-columns: 4fr 360px; /* was 1fr 360px or 2fr; increase as needed */
   grid-auto-rows: auto;
   gap: 16px;
   align-items: start;
@@ -613,6 +615,22 @@ body { background: #f5f5f5; }
   gap: 10px;
 }
 
+/* Reduce width of the two summary cards (Total Sales / Total Orders) */
+.sales-summary {
+  /* keep two columns but let cards be a fixed narrower size */
+  grid-template-columns: repeat(2, minmax(0, 320px));
+  justify-content: start;
+}
+
+.sales-summary .metric-card,
+.sales-summary .total-sales,
+.sales-summary .total-orders {
+  width: 75%;
+  max-width: 760px;
+  box-sizing: border-box;
+  justify-self: start; /* keep them aligned to the left of the left column */
+}
+
 /* Reduce overall customer engagement card & chart height so it fits under top products */
 .customer-engagement {
   min-height: 260px;      /* reduced from 380px */
@@ -642,4 +660,100 @@ body { background: #f5f5f5; }
     max-height: 420px;
   }
   .customer-engagement { min-height: 220px; }
+}
+
+/* REDUCE WIDTHS: make left column narrower and cap card widths so Top Products aligns with cards */
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* reduced right column width, left column now narrower */
+  grid-auto-rows: auto;
+  gap: 12px;
+  align-items: start;
+}
+
+/* cap metric cards so they don't grow too wide */
+.metric-card {
+  width: 100%;
+  max-width: 100%; /* reduced max width */
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* products panel constrained to left column width */
+#productsPanel {
+  grid-column: 1;
+  width: 100%;
+  max-width: 650px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px;
+}
+
+/* make Top Products items narrower so the list fits the reduced column */
+#topProductsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* reduced min card width */
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Recommendations aligned to metric cards, match right column width */
+.recommendation-top {
+  grid-column: 2;
+  align-self: start;
+  width: 100%;
+  max-width: 300px; /* match right column */
+  margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* recommendations container height/scroll */
+.recommendations-container {
+  padding: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* customer engagement smaller to fit new layout */
+.customer-engagement {
+  grid-column: 1 / span 2;
+  min-height: 200px;
+  margin: 0;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* responsive adjustments */
+@media (max-width: 900px) {
+  .dashboard-content { grid-template-columns: 1fr; }
+  .recommendation-top { grid-column: 1; max-width: 100%; }
+  #topProductsList { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .recommendations-container { max-height: 360px; }
+}
+
+/* ===== Recommendation width override (adjust the 320px value as needed) ===== */
+.dashboard-content {
+  /* keep layout but force right column width to match recommendations */
+  grid-template-columns: 1fr 320px !important;
+}
+
+.recommendation-top {
+  grid-column: 2;
+  width: 100% !important;
+  max-width: 320px !important; /* change this value to widen/narrow the recommendations */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px;
+  align-self: start;
+}
+
+/* ensure inner list doesn't overflow the fixed column */
+.recommendations-container {
+  max-width: 100%;
+  padding: 8px;
+  overflow-y: auto;
 }
