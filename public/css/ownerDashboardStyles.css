@@ -133,12 +133,12 @@
 
     /* Customer Engagement Chart Styles */
     .customer-engagement {
-      min-height: 400px;
+      min-height: auto;
     }
 
     /* Recommendations Styles */
     .recommendation {
-      min-height: 400px;
+      min-height: auto;
     }
 
     .recommendation-controls {
@@ -146,6 +146,70 @@
       align-items: center;
       gap: 8px;
     }
+
+.dashboard-top {
+  display: grid;
+  grid-template-columns: 1fr 1.7fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+.top-left-metrics .metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 15px;
+}
+
+.top-right-product-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-right-product-stats .card-content {
+  flex: 1;
+  min-height: 300px;
+}
+
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 1;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+@media (max-width: 992px) {
+  .dashboard-top {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .top-right-product-stats .card-content {
+    min-height: 220px;
+  }
+}
 
     .refresh-btn {
       background: #7c0f0f;

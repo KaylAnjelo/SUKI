@@ -63,33 +63,38 @@
           </form>
         </div>
       </div>
-      
-      <!-- Dashboard Content -->
-      <div class="dashboard-content">
-        <!-- Top Row Cards -->
-        <div class="sales-summary">
-          <div class="metric-card total-sales">
-            <h3>Total Sales: <span id="totalSales">₱0.00</span></h3>
-            <div class="metric-placeholder" id="salesPlaceholder">
-              Loading sales data...
+
+      <!-- Top Row Metrics and Product Stats -->
+        <!-- Top Row: Left metrics (stacked) and Right Top Products (large) -->
+        <div class="dashboard-top">
+          <div class="top-left-metrics">
+            <div class="metrics-grid">
+              <div class="metric-card total-sales">
+                <div class="card-icon"><i class="fas fa-coins"></i></div>
+                <div class="card-content">
+                  <h3>Total Sales</h3>
+                  <div class="metric-value" id="totalSales">₱0.00</div>
+                  <div class="metric-comparison">Sales vs last period</div>
+                  <div class="metric-change neutral" id="salesChange">--</div>
+                </div>
+              </div>
+
+              <div class="metric-card total-orders">
+                <div class="card-icon"><i class="fas fa-shopping-bag"></i></div>
+                <div class="card-content">
+                  <h3>Total Orders</h3>
+                  <div class="metric-value" id="totalOrders">0</div>
+                  <div class="metric-comparison">Orders vs last period</div>
+                  <div class="metric-change neutral" id="ordersChange">--</div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="metric-card total-orders">
-            <h3>Total Orders: <span id="totalOrders">0</span></h3>
-            <div class="metric-placeholder" id="ordersPlaceholder">
-              Loading orders data...
-            </div>
-          </div>
-        </div>
-                
-        <!-- Right Column Cards -->
-        <div class="right-column">
-          <!-- add id productsPanel so script can target it -->
-          <div id="productsPanel" class="metric-card product-statistic">
+
+          <div class="top-right-product-stats">
             <div class="card-header">
               <h3>Top Products</h3>
-              <div class="category-filter">
+              <div class="dropdown-container">
                 <select id="categoryFilter" class="filter-select">
                   <option value="all">All Categories</option>
                   <option value="snacks">Snacks</option>
@@ -101,14 +106,15 @@
               </div>
             </div>
             <div class="card-content">
-              <!-- chartWrapper is used by the script; keep canvas for compatibility -->
-              <!-- top products list: script will render into this UL (keeps markup consistent) -->
               <ul id="topProductsList" class="top-products-list" aria-live="polite"></ul>
             </div>
           </div>
-          
-          <div class="metric-card recommendation">
-            <div class="card-header">
+        </div>
+
+        <!-- Bottom Row: Recommendations and Customer Engagement (line graph) -->
+        <div class="dashboard-bottom">
+          <div class="chart-card recommendation">
+            <div class="chart-header">
               <h3>Recommendations</h3>
               <div class="recommendation-controls">
                 <button id="refreshRecommendations" class="refresh-btn" title="Refresh Recommendations">
@@ -125,12 +131,9 @@
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Bottom Left Card -->
-        <div class="bottom-left">
-          <div class="metric-card customer-engagement">
-            <div class="card-header">
+
+          <div class="chart-card customer-engagement">
+            <div class="chart-header">
               <h3>Customer Engagement</h3>
               <div class="engagement-controls">
                 <select id="engagementPeriodFilter" class="filter-select">
@@ -143,7 +146,7 @@
             </div>
             <div class="card-content">
               <div class="engagement-chart-container">
-                <canvas id="engagementChart" width="400" height="200"></canvas>
+                <canvas id="engagementChart" width="600" height="300"></canvas>
               </div>
               <div class="engagement-stats" id="engagementStats">
                 <!-- Engagement statistics will be shown here -->
@@ -151,7 +154,6 @@
             </div>
           </div>
         </div>
-      </div>
     </main>
   </div>
   <script src="/js/owner/dashboard.js" defer></script>
