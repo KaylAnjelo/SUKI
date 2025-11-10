@@ -350,7 +350,7 @@ function renderEngagementChart(payload) {
   if (window._engagementChartInstance) window._engagementChartInstance.destroy();
   window._engagementChartInstance = new Chart(ctx, {
     type: "line",
-    data: { labels, datasets: [{ label: "Customer Engagement", data, borderColor: "#4e73df", backgroundColor: "rgba(78,115,223,0.1)", fill:true, tension:0.3 }] },
+    data: { labels, datasets: [{ label: "Customer Engagement", data, borderColor: "#7C0F0F", backgroundColor: "rgba(124, 15, 15, 0.1)", fill:true, tension:0.3 }] },
     options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
   });
 }
