@@ -1,9 +1,37 @@
+<<<<<<< HEAD
 .dashboard-content {
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
+=======
+/* Top summary row on the LEFT only: two cards (Sales, Orders) */
+    .sales-summary {
+      grid-column: 1; /* left column */
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 320px));
+      justify-content: start;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* Place the small recommendations card in the top-right cell */
+    .recommendation-top {
+      grid-column: 2; /* right column of the main grid */
+      min-height: 120px;
+      height: 120px;
+    }
+
+    .sales-summary .summary-controls {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+    }
+.product-statistic {
+      min-height: 400px;
+    }
+>>>>>>> 41077c8e518e41470a285c54ace5455775cb535b
 
 /* Stats Row */
 .stats-row {
@@ -232,12 +260,20 @@
 
     /* Customer Engagement Chart Styles */
     .customer-engagement {
-      min-height: 400px;
+      min-height: 380px; /* smaller to align with Top Products card */
+    }
+
+    /* Make Top Products card longer to align with Customer Engagement */
+    #productsPanel.product-statistic {
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Recommendations Styles */
     .recommendation {
-      min-height: 400px;
+      min-height: 120px; /* align height with Total Sales/Orders cards */
+      height: 120px;
     }
 
     .recommendation-controls {
@@ -262,63 +298,145 @@
     }
 
     .recommendations-container {
-      max-height: 350px;
-      overflow-y: auto;
-    }
-
-    .recommendation-item {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .recommendation-item:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-
-    .recommendation-header {
+      box-sizing: border-box;
+      padding: 12px;
+      max-height: 320px;            /* constrain height so card doesn't overflow page */
+      overflow-y: auto;             /* scroll when too many recommendations */
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Each recommendation block */
+    .recommendation-card {
+      display: flex;
+      gap: 12px;
       align-items: flex-start;
-      margin-bottom: 8px;
+      padding: 10px;
+      background: var(--card-bg, #fff);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 64px;
     }
 
-    .recommendation-title {
-      font-size: 14px;
+    /* Header area with main product */
+    .rec-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 200px;            /* reserve space for main product */
+      min-width: 140px;
+    }
+
+    /* main product image */
+    .rec-head-img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    /* main product title with ellipsis */
+    .rec-head-title {
       font-weight: 600;
-      color: #111827;
+      font-size: 0.98rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 8px);
+    }
+
+    /* Recommended list area */
+    .rec-body {
+      flex: 1 1 auto;
+      min-width: 0;               /* allow overflow hidden to work inside flex */
+    }
+
+    /* horizontal flow of recommended items, wraps to multiple rows */
+    .rec-list {
+      list-style: none;
       margin: 0;
-      flex: 1;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
     }
 
-    .recommendation-priority {
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* each recommended item */
+    .rec-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--rec-item-bg, #f9fafb);
+      border-radius: 6px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      min-width: 140px;
+      max-width: 100%;
     }
 
-    .priority-high {
-      background: #fef2f2;
-      color: #dc2626;
+    /* small image for recommended product */
+    .rec-item img {
+      width: 36px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
     }
 
-    .priority-medium {
-      background: #fef3c7;
-      color: #d97706;
+    /* metadata inside recommended item */
+    .rec-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
-    .priority-low {
-      background: #f0fdf4;
-      color: #16a34a;
+    .rec-name {
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
     }
+
+    .rec-score {
+      font-size: 0.78rem;
+      color: #6b6b6b;
+    }
+
+    /* fallback / empty state styling */
+    .recommendations-container .muted {
+      color: #7a7a7a;
+      padding: 16px;
+      text-align: center;
+    }
+
+    /* responsive adjustments */
+    @media (max-width: 900px) {
+      .recommendation-card {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .rec-head {
+        flex: 0 0 auto;
+        width: 100%;
+      }
+      .rec-head-title { white-space: normal; }
+      .rec-list { gap: 6px; }
+      .rec-item { min-width: 100%; }
+    }
+
+    /* ensure the recommendation card section itself doesn't push beyond its parent */
+    .recommendation.recommendation-top .card-content {
+      overflow: hidden;
+    }
+
+    /* small polish: ensure images never exceed container */
+    .recommendations-container img { max-width: 100%; height: auto; display: block; }
 
     .recommendation-description {
       font-size: 12px;
@@ -406,8 +524,16 @@
 
     .engagement-chart-container {
       position: relative;
-      height: 250px;
+      height: auto;
+      flex: 1;
+      min-height: 240px; /* smaller graph to align with Top Products */
       margin-bottom: 16px;
+    }
+
+    .engagement-chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
     }
 
     .engagement-stats {
@@ -513,6 +639,44 @@ body { background: #f5f5f5; }
 .tp-name { font-weight:600; color:#222; }
 .tp-meta { color:#666; font-size:13px; }
 
+/* Add grid layout for dashboard-content and span helpers */
+.dashboard-content {
+  display: grid;
+  /* increased left column weight so Top Products aligns with the two summary cards above */
+  grid-template-columns: 4fr 360px; /* was 1fr 360px or 2fr; increase as needed */
+  grid-auto-rows: auto;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ensure the sales-summary occupies left column */
+.sales-summary { grid-column: 1; }
+
+/* recommendations stay in the right column, top */
+.recommendation-top { grid-column: 2; }
+
+/* top products sits under the summary in the left column */
+#productsPanel { grid-column: 1; }
+
+/* customer engagement should span both columns below */
+.customer-engagement.full-span { grid-column: 1 / span 2; }
+
+/* tweak max widths for the small right column content */
+.recommendation-top { max-width: 360px; width: 100%; }
+
+/* responsive: stack into single column on small screens */
+@media (max-width: 900px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+  .recommendation-top,
+  #productsPanel,
+  .sales-summary,
+  .customer-engagement.full-span {
+    grid-column: 1;
+  }
+}
+
     @media (max-width: 768px) {
       .card-header {
         flex-direction: column;
@@ -525,10 +689,176 @@ body { background: #f5f5f5; }
       }
 
       .engagement-chart-container {
-        height: 200px;
+        min-height: 360px;
       }
 
       .engagement-stats {
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
+/* Adjustments: small right margin, taller recommendations area, smaller engagement chart */
+.recommendation-top {
+  /* keep existing placement but add a tiny right margin so content doesn't hug the edge */
+  margin-right: 8px;
+  align-self: start;
+  width: 100%;
+  max-width: 360px;
+  height: auto;           /* allow vertical growth */
+  max-height: 720px;      /* allow the card to expand more vertically on tall screens */
+  overflow: visible;
+}
+
+/* Make the internal recommendations list taller and scrollable */
+.recommendations-container {
+  box-sizing: border-box;
+  padding: 12px;
+  max-height: 520px;      /* increased so more items are visible before scrolling */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Reduce width of the two summary cards (Total Sales / Total Orders) */
+.sales-summary {
+  /* keep two columns but let cards be a fixed narrower size */
+  grid-template-columns: repeat(2, minmax(0, 320px));
+  justify-content: start;
+}
+
+.sales-summary .metric-card,
+.sales-summary .total-sales,
+.sales-summary .total-orders {
+  width: 75%;
+  max-width: 760px;
+  box-sizing: border-box;
+  justify-self: start; /* keep them aligned to the left of the left column */
+}
+
+/* Reduce overall customer engagement card & chart height so it fits under top products */
+.customer-engagement {
+  min-height: 260px;      /* reduced from 380px */
+}
+
+.engagement-chart-container {
+  position: relative;
+  height: auto;
+  flex: 1;
+  min-height: 160px;      /* smaller chart height */
+  margin-bottom: 12px;
+}
+
+.engagement-chart-container canvas {
+  width: 100% !important;
+  height: 160px !important; /* force chart to use the reduced height */
+  display: block;
+}
+
+/* Responsive tweak to keep recommendations usable on narrow screens */
+@media (max-width: 900px) {
+  .recommendation-top {
+    max-height: 520px;
+    margin-right: 0;
+  }
+  .recommendations-container {
+    max-height: 420px;
+  }
+  .customer-engagement { min-height: 220px; }
+}
+
+/* REDUCE WIDTHS: make left column narrower and cap card widths so Top Products aligns with cards */
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* reduced right column width, left column now narrower */
+  grid-auto-rows: auto;
+  gap: 12px;
+  align-items: start;
+}
+
+/* cap metric cards so they don't grow too wide */
+.metric-card {
+  width: 100%;
+  max-width: 100%; /* reduced max width */
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* products panel constrained to left column width */
+#productsPanel {
+  grid-column: 1;
+  width: 100%;
+  max-width: 650px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px;
+}
+
+/* make Top Products items narrower so the list fits the reduced column */
+#topProductsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* reduced min card width */
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Recommendations aligned to metric cards, match right column width */
+.recommendation-top {
+  grid-column: 2;
+  align-self: start;
+  width: 100%;
+  max-width: 300px; /* match right column */
+  margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* recommendations container height/scroll */
+.recommendations-container {
+  padding: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* customer engagement smaller to fit new layout */
+.customer-engagement {
+  grid-column: 1 / span 2;
+  min-height: 200px;
+  margin: 0;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* responsive adjustments */
+@media (max-width: 900px) {
+  .dashboard-content { grid-template-columns: 1fr; }
+  .recommendation-top { grid-column: 1; max-width: 100%; }
+  #topProductsList { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .recommendations-container { max-height: 360px; }
+}
+
+/* ===== Recommendation width override (adjust the 320px value as needed) ===== */
+.dashboard-content {
+  /* keep layout but force right column width to match recommendations */
+  grid-template-columns: 1fr 320px !important;
+}
+
+.recommendation-top {
+  grid-column: 2;
+  width: 100% !important;
+  max-width: 320px !important; /* change this value to widen/narrow the recommendations */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px;
+  align-self: start;
+}
+
+/* ensure inner list doesn't overflow the fixed column */
+.recommendations-container {
+  max-width: 100%;
+  padding: 8px;
+  overflow-y: auto;
+}
