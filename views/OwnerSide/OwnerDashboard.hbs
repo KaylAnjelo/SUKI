@@ -64,9 +64,9 @@
         </div>
       </div>
       
-      <!-- Dashboard Content -->
+      <!-- Dashboard Content: use a 2-column grid -->
       <div class="dashboard-content">
-        <!-- Top Row Cards -->
+        <!-- Row 1 (left): Total Sales + Total Orders -->
         <div class="sales-summary">
           <div class="summary-controls" style="margin-left:auto;">
             <label for="salesSummaryPeriod" class="sr-only">Summary Period</label>
@@ -78,21 +78,36 @@
           </div>
           <div class="metric-card total-sales">
             <h3>Total Sales: <span id="totalSales">₱0.00</span></h3>
-            <div class="metric-placeholder" id="salesPlaceholder">
-              Loading sales data...
-            </div>
+            <div class="metric-placeholder" id="salesPlaceholder">Loading sales data...</div>
           </div>
-          
+
           <div class="metric-card total-orders">
             <h3>Total Orders: <span id="totalOrders">0</span></h3>
-            <div class="metric-placeholder" id="ordersPlaceholder">
-              Loading orders data...
+            <div class="metric-placeholder" id="ordersPlaceholder">Loading orders data...</div>
+          </div>
+
+         <div id="productsPanel" class="metric-card product-statistic">
+          <div class="card-header">
+            <h3>Top Products</h3>
+            <div class="category-filter">
+              <select id="categoryFilter" class="filter-select">
+                <option value="all">All Categories</option>
+                <option value="snacks">Snacks</option
+                <option value="drinks">Drinks</option>
+                <option value="meals">Meals</option>
+                <option value="desserts">Desserts</option>
+                <option value="beverages">Beverages</option>
+              </select>
             </div>
           </div>
-          
+          <div class="card-content">
+            <ul id="topProductsList" class="top-products-list" aria-live="polite"></ul>
+          </div>
         </div>
-        
-        <!-- Top-right: Recommendations aligned with summary cards -->
+
+        </div>
+
+        <!-- Row 1 (right): Recommendations (stay at top-right) -->
         <div class="metric-card recommendation recommendation-top">
           <div class="card-header">
             <h3>Recommendations</h3>
@@ -111,64 +126,33 @@
             </div>
           </div>
         </div>
-        
-        <!-- Bottom Left: Customer Engagement (directly under summary) -->
-        <div class="bottom-left">
-          <div class="metric-card customer-engagement">
-            <div class="card-header">
-              <h3>Customer Engagement</h3>
-              <div class="engagement-controls">
-                <select id="engagementPeriodFilter" class="filter-select">
-                  <option value="7d">Last 7 Days</option>
-                  <option value="30d" selected>Last 30 Days</option>
-                  <option value="90d">Last 90 Days</option>
-                  <option value="1y">Last Year</option>
-                </select>
-              </div>
-            </div>
-            <div class="card-content">
-              <div class="engagement-chart-container">
-                <canvas id="engagementChart"></canvas>
-              </div>
-              <div class="engagement-stats" id="engagementStats">
-                <!-- Engagement statistics will be shown here -->
-              </div>
+
+        <!-- Row 2 (left): Top Products under the totals -->
+       
+        <!-- Row 3: Customer Engagement spanning both columns (under Top Products & Recommendations) -->
+        <div class="metric-card customer-engagement full-span">
+          <div class="card-header">
+            <h3>Customer Engagement</h3>
+            <div class="engagement-controls">
+              <select id="engagementPeriodFilter" class="filter-select">
+                <option value="7d">Last 7 Days</option>
+                <option value="30d" selected>Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+                <option value="1y">Last Year</option>
+              </select>
             </div>
           </div>
-
-        </div>
-
-        <!-- Right Column Cards -->
-        <div class="right-column">
-          <!-- add id productsPanel so script can target it -->
-          <div id="productsPanel" class="metric-card product-statistic">
-            <div class="card-header">
-              <h3>Top Products</h3>
-              <div class="category-filter">
-                <select id="categoryFilter" class="filter-select">
-                  <option value="all">All Categories</option>
-                  <option value="snacks">Snacks</option>
-                  <option value="drinks">Drinks</option>
-                  <option value="meals">Meals</option>
-                  <option value="desserts">Desserts</option>
-                  <option value="beverages">Beverages</option>
-                </select>
-              </div>
+          <div class="card-content">
+            <div class="engagement-chart-container">
+              <canvas id="engagementChart"></canvas>
             </div>
-            <div class="card-content">
-              <!-- chartWrapper is used by the script; keep canvas for compatibility -->
-              <!-- top products list: script will render into this UL (keeps markup consistent) -->
-              <ul id="topProductsList" class="top-products-list" aria-live="polite"></ul>
-            </div>
+            <div class="engagement-stats" id="engagementStats"></div>
           </div>
-
-          
-
         </div>
-        
-      </div>
+      </div> <!-- end dashboard-content -->
     </main>
   </div>
+
   <script src="/js/owner/dashboard.js" defer></script>
 </body>
 </html>
