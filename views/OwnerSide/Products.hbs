@@ -261,11 +261,11 @@
     </main>
   </div>
   <!-- Add/Edit Product Modal -->
-  <div id="productModal" class="modal">
+  <div id="productModal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">Add New Product</h2>
-        <button class="close-btn" id="closeModal">&times;</button>
+        <span id="closeModal" class="close-btn">&times;</span>
       </div>
       
       <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
@@ -315,21 +315,16 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="isActive" name="isActive" checked>
-            <span class="checkmark"></span>
-            Product is active
-          </label>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-          <button type="submit" class="submit-btn" id="submitBtn">Save Product</button>
-        </div>
-      </form>
+          <div class="form-group-inline">
+            <input type="checkbox" id="isActive" name="isActive">
+            <label for="isActive">Product is active</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelBtn" class="cancel-btn">Cancel</button>
+        <button type="submit" form="productForm" class="save-btn">Save Changes</button>
+      </div>
     </div>
   </div>
 

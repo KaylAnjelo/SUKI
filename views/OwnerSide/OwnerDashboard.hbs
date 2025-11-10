@@ -68,6 +68,14 @@
       <div class="dashboard-content">
         <!-- Top Row Cards -->
         <div class="sales-summary">
+          <div class="summary-controls" style="margin-left:auto;">
+            <label for="salesSummaryPeriod" class="sr-only">Summary Period</label>
+            <select id="salesSummaryPeriod" class="filter-select">
+              <option value="7">Last 7 Days</option>
+              <option value="30" selected>Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+            </select>
+          </div>
           <div class="metric-card total-sales">
             <h3>Total Sales: <span id="totalSales">₱0.00</span></h3>
             <div class="metric-placeholder" id="salesPlaceholder">
@@ -81,8 +89,55 @@
               Loading orders data...
             </div>
           </div>
+          
         </div>
-                
+        
+        <!-- Top-right: Recommendations aligned with summary cards -->
+        <div class="metric-card recommendation recommendation-top">
+          <div class="card-header">
+            <h3>Recommendations</h3>
+            <div class="recommendation-controls">
+              <button id="refreshRecommendations" class="refresh-btn" title="Refresh Recommendations">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="recommendations-container" id="recommendationsContainer">
+              <div class="loading">
+                <i class="fas fa-brain fa-spin"></i>
+                <div>Analyzing data with K-means clustering...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Bottom Left: Customer Engagement (directly under summary) -->
+        <div class="bottom-left">
+          <div class="metric-card customer-engagement">
+            <div class="card-header">
+              <h3>Customer Engagement</h3>
+              <div class="engagement-controls">
+                <select id="engagementPeriodFilter" class="filter-select">
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d" selected>Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="1y">Last Year</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="engagement-chart-container">
+                <canvas id="engagementChart"></canvas>
+              </div>
+              <div class="engagement-stats" id="engagementStats">
+                <!-- Engagement statistics will be shown here -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
         <!-- Right Column Cards -->
         <div class="right-column">
           <!-- add id productsPanel so script can target it -->
@@ -106,51 +161,11 @@
               <ul id="topProductsList" class="top-products-list" aria-live="polite"></ul>
             </div>
           </div>
+
           
-          <div class="metric-card recommendation">
-            <div class="card-header">
-              <h3>Recommendations</h3>
-              <div class="recommendation-controls">
-                <button id="refreshRecommendations" class="refresh-btn" title="Refresh Recommendations">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-content">
-              <div class="recommendations-container" id="recommendationsContainer">
-                <div class="loading">
-                  <i class="fas fa-brain fa-spin"></i>
-                  <div>Analyzing data with K-means clustering...</div>
-                </div>
-              </div>
-            </div>
-          </div>
+
         </div>
         
-        <!-- Bottom Left Card -->
-        <div class="bottom-left">
-          <div class="metric-card customer-engagement">
-            <div class="card-header">
-              <h3>Customer Engagement</h3>
-              <div class="engagement-controls">
-                <select id="engagementPeriodFilter" class="filter-select">
-                  <option value="7d">Last 7 Days</option>
-                  <option value="30d" selected>Last 30 Days</option>
-                  <option value="90d">Last 90 Days</option>
-                  <option value="1y">Last Year</option>
-                </select>
-              </div>
-            </div>
-            <div class="card-content">
-              <div class="engagement-chart-container">
-                <canvas id="engagementChart" width="400" height="200"></canvas>
-              </div>
-              <div class="engagement-stats" id="engagementStats">
-                <!-- Engagement statistics will be shown here -->
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   </div>
