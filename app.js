@@ -106,6 +106,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Fix for Express 5.x - make next available on req for res.render()
+app.use((req, res, next) => {
+  req.next = next;
+  next();
+});
+
 // Simple setUser middleware (ensure res.locals.user is available)
 function setUser(req, res, next) {
   res.locals.user = req.session?.user || null;
