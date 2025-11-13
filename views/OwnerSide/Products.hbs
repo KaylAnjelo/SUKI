@@ -454,6 +454,262 @@
       font-size: 14px;
       margin: 0;
     }
+    /* Modal and form styles for Add/Edit Product */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 370px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      font-family: 'Poppins', Arial, sans-serif;
+      position: relative;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 24px 18px 24px;
+      background: #C72C41;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .modal-header h2 { 
+      margin: 0; 
+      font-size: 1.15em;
+      font-weight: 500;
+      color: #fff;
+    }
+    
+    .close-btn { 
+      background: transparent; 
+      border: none; 
+      color: #888; 
+      font-size: 1.5em; 
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .close-btn:hover {
+      color: #C72C41;
+    }
+
+    .modal-content form {
+      padding: 14px 24px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.98em;
+      margin-bottom: 4px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.98em;
+      color: #222;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Required field style */
+    .form-group label[for*="required"]::after,
+    .form-group label[for*="productName"]::after,
+    .form-group label[for*="productPrice"]::after {
+      content: ' *';
+      color: #C72C41;
+    }
+
+    .file-upload-container {
+      position: relative;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      transition: all 0.2s ease;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-upload-container.drag-over {
+      border-color: #C72C41;
+      background: #fff9f9;
+    }
+
+    .file-upload-container input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-preview {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .image-preview i {
+      font-size: 32px;
+      color: #C72C41;
+    }
+
+    .image-preview span {
+      font-size: 0.95em;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 14px 24px 18px;
+      border-top: 1px solid #eee;
+      margin-top: 10px;
+    }
+
+    .cancel-btn {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      background: #C72C41;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #7D0006;
+    }
+
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+    /* Status (Active / Inactive) styles */
+    .status-options {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #555;
+      font-size: 0.98em;
+    }
+    
+    .status-label input { display: none; }
+    
+    .status-box {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #C72C41;
+      border-radius: 4px;
+      display: inline-block;
+      position: relative;
+    }
+    
+    .status-box::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+    
+    .status-label input:checked + .status-box {
+      background: #C72C41;
+      border-color: #C72C41;
+    }
+    
+    .status-label input:checked + .status-box::after {
+      opacity: 1;
+    }
+
+    /* Responsive: stack columns on narrow screens */
+    @media (max-width: 700px) {
+      .modal-content { width: 96%; }
+      .form-row { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -572,11 +828,11 @@
     </main>
   </div>
   <!-- Add/Edit Product Modal -->
-  <div id="productModal" class="modal">
+  <div id="productModal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">Add New Product</h2>
-        <button class="close-btn" id="closeModal">&times;</button>
+        <span id="closeModal" class="close-btn">&times;</span>
       </div>
       
       <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data" style="padding: 0 24px 24px 24px;">
@@ -592,9 +848,9 @@
             <label for="productCategory">Category *</label>
             <select id="productCategory" name="product_type" required>
               <option value="">Select Category</option>
-              <option value="food">Food</option>
+              <option value="meal">Meal</option>
+              <option value="sides">Sides</option>
               <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
               <option value="dessert">Dessert</option>
             </select>
           </div>
@@ -612,7 +868,7 @@
 
         <div class="form-group">
           <label for="productImage">Product Image</label>
-          <div class="file-upload-container">
+          <div class="file-upload-container" id="dropZone">
             <input type="file" id="productImage" name="productImage" accept="image/*">
             <div class="file-upload-display" onclick="document.getElementById('productImage').click();">
               <div id="imagePreview" class="image-preview">
