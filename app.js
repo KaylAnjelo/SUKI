@@ -112,8 +112,34 @@ function setUser(req, res, next) {
   next();
 }
 
+// Load store for logged in owner so templates (header/etc.) can access store data
+async function setStore(req, res, next) {
+  try {
+    res.locals.store = null;
+    const userId = req.session?.user?.id;
+    if (!userId) return next();
+
+    // fetch store for this owner if available
+    const { data: store, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name, location, store_image, owner_name, owner_contact')
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (!error && store) {
+      res.locals.store = store;
+    }
+  } catch (err) {
+    console.error('Error loading store for template context:', err);
+    // don't block rendering the page if store lookup fails
+  } finally {
+    return next();
+  }
+}
+
 // Routes
 app.use(setUser);
+app.use(setStore);
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);
