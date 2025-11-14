@@ -216,6 +216,537 @@ app.get("/owner/promotions", async (req, res) => {
   }
 });
 
+// API route to create a new promotion
+app.post("/api/promotions", async (req, res) => {
+  console.log('POST /api/promotions route hit');
+  console.log('Session:', req.session);
+  try {
+    const userId = req.session.userId;
+    console.log('User ID from session:', userId);
+    
+    if (!userId) {
+      console.log('No user ID in session, returning 401');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const {
+      name,
+      discountType,
+      discountValue,
+      discountPercentage,
+      selectedProduct,
+      buyQuantity,
+      getQuantity,
+      buyProduct,
+      getProduct,
+      description,
+      points,
+      startDate,
+      endDate
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !discountType || !startDate || !endDate) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Get user's store_id - try direct store_id first, then owner relationship
+    let storeId = null;
+    
+    // First try to get store_id directly from user
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+    } else {
+      // If no direct store_id, try to find store where user is owner
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+      }
+    }
+
+    if (!storeId) {
+      console.error('No store found for user:', userId);
+      return res.status(400).json({ error: 'Store not found. Please contact administrator.' });
+    }
+    
+    console.log('Found store_id:', storeId);
+
+    // Prepare promotion data based on discount type
+    let finalDiscountValue;
+    let finalDescription;
+    
+    if (discountType === 'discount') {
+      finalDiscountValue = discountPercentage || 0;
+      finalDescription = `Get ${finalDiscountValue}% off your next purchase`;
+    } else if (discountType === 'free') {
+      // For free items, use the auto-generated description
+      if (!selectedProduct || !description) {
+        return res.status(400).json({ error: 'Product selection and description are required for free item promotions' });
+      }
+      finalDescription = description;
+      finalDiscountValue = 0; // No discount value for free items
+    } else if (discountType === 'buy_x_get_y') {
+      // For Buy X Get Y promotions, validate all required fields
+      if (!buyQuantity || !getQuantity || !buyProduct || !getProduct || !description) {
+        return res.status(400).json({ error: 'Buy quantity, get quantity, buy product, get product, and description are required for Buy X Get Y promotions' });
+      }
+      finalDescription = description;
+      finalDiscountValue = 0; // No discount value for Buy X Get Y
+    } else {
+      finalDiscountValue = discountValue || 0;
+      finalDescription = `${discountType} promotion - Available from ${startDate} to ${endDate}`;
+    }
+
+    // Validate points_required
+    const pointsRequired = parseInt(points, 10) || 1; // Default to 1 if 0 or invalid
+    if (pointsRequired < 1) {
+      return res.status(400).json({ error: 'Points required must be at least 1' });
+    }
+
+    console.log('About to insert reward:', {
+      store_id: storeId,
+      reward_name: name,
+      description: finalDescription,
+      points_required: pointsRequired,
+      promotion_type: discountType,
+      selected_product: selectedProduct || null,
+      buy_quantity: buyQuantity || null,
+      get_quantity: getQuantity || null,
+      buy_product: buyProduct || null,
+      get_product: getProduct || null
+    });
+
+    // Insert reward into database
+    const { data: reward, error } = await supabase
+      .from('rewards')
+      .insert([
+        {
+          store_id: storeId,
+          reward_name: name,
+          description: finalDescription,
+          points_required: pointsRequired,
+          is_active: true
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Detailed error creating reward:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ error: 'Failed to create promotion: ' + error.message });
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Promotion created successfully',
+      promotion: reward 
+    });
+
+  } catch (error) {
+    console.error('Detailed error in POST /api/promotions:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
+// API route to get promotions for a store
+app.get("/api/promotions", async (req, res) => {
+  console.log('GET /api/promotions route hit');
+  console.log('Session:', req.session);
+  try {
+    const userId = req.session.userId;
+    console.log('User ID from session:', userId);
+    
+    if (!userId) {
+      console.log('No user ID in session, returning 401');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get user's store_id - try direct store_id first, then owner relationship
+    let storeId = null;
+    
+    // First try to get store_id directly from user
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+    } else {
+      // If no direct store_id, try to find store where user is owner
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+      }
+    }
+
+    if (!storeId) {
+      console.error('No store found for user:', userId);
+      return res.status(400).json({ error: 'Store not found. Please contact administrator.' });
+    }
+    
+    console.log('Found store_id:', storeId);
+
+    // Get rewards for the store
+    const { data: rewards, error } = await supabase
+      .from('rewards')
+      .select('*')
+      .eq('store_id', storeId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Detailed error fetching rewards:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ error: 'Failed to fetch promotions: ' + error.message });
+    }
+
+    res.json({ promotions: rewards || [] });
+
+  } catch (error) {
+    console.error('Detailed error in GET /api/promotions:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
+// Get single promotion by ID
+app.get("/api/promotions/:id", async (req, res) => {
+  console.log('GET /api/promotions/:id route hit');
+  
+  try {
+    const userId = req.session.userId;
+    const promotionId = req.params.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    console.log('Fetching promotion:', promotionId, 'for user:', userId);
+    
+    // Get user's store_id
+    let storeId = null;
+    
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+    } else {
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+      }
+    }
+    
+    if (!storeId) {
+      return res.status(404).json({ error: 'Store not found for user' });
+    }
+    
+    // Fetch the specific promotion
+    const { data: promotion, error } = await supabase
+      .from('rewards')
+      .select('*')
+      .eq('reward_id', promotionId)
+      .eq('store_id', storeId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching promotion:', error);
+      return res.status(500).json({ error: 'Error fetching promotion: ' + error.message });
+    }
+    
+    if (!promotion) {
+      return res.status(404).json({ error: 'Promotion not found' });
+    }
+    
+    res.json({ promotion });
+    
+  } catch (error) {
+    console.error('Detailed error in GET /api/promotions/:id:', error);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
+// Update promotion by ID
+app.put("/api/promotions/:id", async (req, res) => {
+  console.log('PUT /api/promotions/:id route hit');
+  
+  try {
+    const userId = req.session.userId;
+    const promotionId = req.params.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    const {
+      name,
+      discountType,
+      discountValue,
+      discountPercentage,
+      selectedProduct,
+      buyQuantity,
+      getQuantity,
+      buyProduct,
+      getProduct,
+      description,
+      points,
+      startDate,
+      endDate
+    } = req.body;
+    
+    // Validate required fields
+    if (!name || !discountType || !startDate || !endDate) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Get user's store_id
+    let storeId = null;
+    
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+    } else {
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+      }
+    }
+    
+    if (!storeId) {
+      return res.status(400).json({ error: 'Store not found' });
+    }
+    
+    // Prepare promotion data based on discount type
+    let finalDescription;
+    
+    if (discountType === 'discount') {
+      const finalDiscountValue = discountPercentage || 0;
+      finalDescription = `Get ${finalDiscountValue}% off your next purchase`;
+    } else if (discountType === 'free') {
+      if (!selectedProduct || !description) {
+        return res.status(400).json({ error: 'Product selection and description are required for free item promotions' });
+      }
+      finalDescription = description;
+    } else if (discountType === 'buy_x_get_y') {
+      if (!buyQuantity || !getQuantity || !buyProduct || !getProduct || !description) {
+        return res.status(400).json({ error: 'Buy quantity, get quantity, buy product, get product, and description are required for Buy X Get Y promotions' });
+      }
+      finalDescription = description;
+    } else {
+      finalDescription = `${discountType} promotion`;
+    }
+    
+    const pointsRequired = parseInt(points, 10) || 1;
+    if (pointsRequired < 1) {
+      return res.status(400).json({ error: 'Points required must be at least 1' });
+    }
+    
+    // Update the promotion
+    const { data: updatedPromotion, error } = await supabase
+      .from('rewards')
+      .update({
+        reward_name: name,
+        description: finalDescription,
+        points_required: pointsRequired
+      })
+      .eq('reward_id', promotionId)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating promotion:', error);
+      return res.status(500).json({ error: 'Failed to update promotion: ' + error.message });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Promotion updated successfully',
+      promotion: updatedPromotion 
+    });
+    
+  } catch (error) {
+    console.error('Detailed error in PUT /api/promotions/:id:', error);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
+// Delete promotion by ID
+app.delete("/api/promotions/:id", async (req, res) => {
+  console.log('DELETE /api/promotions/:id route hit');
+  
+  try {
+    const userId = req.session.userId;
+    const promotionId = req.params.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    console.log('Deleting promotion:', promotionId, 'for user:', userId);
+    
+    // Get user's store_id
+    let storeId = null;
+    
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+    } else {
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+      }
+    }
+    
+    if (!storeId) {
+      return res.status(404).json({ error: 'Store not found for user' });
+    }
+    
+    // Delete the promotion
+    const { data: deletedPromotion, error } = await supabase
+      .from('rewards')
+      .delete()
+      .eq('reward_id', promotionId)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error deleting promotion:', error);
+      return res.status(500).json({ error: 'Failed to delete promotion: ' + error.message });
+    }
+    
+    if (!deletedPromotion) {
+      return res.status(404).json({ error: 'Promotion not found or already deleted' });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Promotion deleted successfully',
+      promotion: deletedPromotion 
+    });
+    
+  } catch (error) {
+    console.error('Detailed error in DELETE /api/promotions/:id:', error);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
+// Get products for promotion selection
+app.get("/api/products", async (req, res) => {
+  console.log('GET /api/products route hit');
+  
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    console.log('Fetching products for user:', userId);
+    
+    // Get user's store_id - try direct store_id first, then owner relationship
+    let storeId = null;
+    
+    // First try to get store_id directly from user
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('store_id')
+      .eq('user_id', userId)
+      .single();
+    
+    if (userData && userData.store_id) {
+      storeId = userData.store_id;
+      console.log('Found user store_id:', storeId);
+    } else {
+      // If no direct store_id, try to find store where user is owner
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId)
+        .single();
+      
+      if (storeData && storeData.store_id) {
+        storeId = storeData.store_id;
+        console.log('Found owner store_id:', storeId);
+      }
+    }
+    
+    if (!storeId) {
+      console.error('No store found for user:', userId);
+      return res.status(404).json({ error: 'Store not found for user' });
+    }
+    
+    // Fetch products for the store
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, product_name, price, product_type')
+      .eq('store_id', storeId)
+      .order('product_name');
+    
+    if (productsError) {
+      console.error('Error querying products:', productsError);
+      return res.status(500).json({ error: 'Error fetching products: ' + productsError.message });
+    }
+    
+    console.log('Found products:', products ? products.length : 0);
+    res.json({ products: products || [] });
+    
+  } catch (error) {
+    console.error('Detailed error in GET /api/products:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
 // app.get("/owner/profile", async (req, res) => {
 //   try {
 //     const userId = req.session.userId;
