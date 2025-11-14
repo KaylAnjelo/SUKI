@@ -67,7 +67,7 @@ export const getTopProducts = async (req, res) => {
     // Fetch relevant transactions with joined product info
     const { data: txs, error } = await supabase
       .from('transactions')
-      .select('product_id, quantity, total, products:product_id(id, product_name, product_type)')
+      .select('product_id, quantity, total, products:product_id(id, product_name, product_type, product_image)')
       .in('store_id', storeIds)
       .limit(20000); // fetch reasonable cap
 
@@ -78,7 +78,14 @@ export const getTopProducts = async (req, res) => {
     (txs || []).forEach(t => {
       const pid = Number(t.product_id);
       const prod = t.products || {};
-      if (!stats.has(pid)) stats.set(pid, { product_id: pid, product_name: prod.product_name || String(pid), product_type: prod.product_type || null, total_sales: 0, total_quantity: 0 });
+      if (!stats.has(pid)) stats.set(pid, { 
+        product_id: pid, 
+        product_name: prod.product_name || String(pid), 
+        product_type: prod.product_type || null,
+        product_image: prod.product_image || null,
+        total_sales: 0, 
+        total_quantity: 0 
+      });
       const s = stats.get(pid);
       s.total_sales += Number(t.total || 0);
       s.total_quantity += Number(t.quantity || 0);

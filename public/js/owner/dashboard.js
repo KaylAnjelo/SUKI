@@ -57,11 +57,22 @@ if (window._ownerDashboardInit) {
       sel = document.createElement('select');
       sel.id = 'categoryFilter';
       sel.className = 'category-filter';
-      // default option
-      const opt = document.createElement('option');
-      opt.value = 'all';
-      opt.textContent = 'All categories';
-      sel.appendChild(opt);
+      
+      // Add all allowed options
+      const options = [
+        { value: 'all', text: 'All Categories' },
+        { value: 'Meal', text: 'Meals' },
+        { value: 'Side', text: 'Sides' },
+        { value: 'Beverage', text: 'Beverages' }
+      ];
+      
+      options.forEach(({ value, text }) => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = text;
+        sel.appendChild(opt);
+      });
+      
       // insert before the products list if present
       const ref = parent.querySelector('#topProductsList') || parent.firstElementChild;
       parent.insertBefore(sel, ref);
@@ -103,23 +114,36 @@ if (window._ownerDashboardInit) {
       items = items.map(it => ({
         product_id: Number(it.id ?? it.product_id ?? it.productId ?? 0),
         product_name: it.product_name ?? it.name ?? it.title ?? '',
-        image_url: it.image_url ?? it.image ?? it.thumbnail ?? it.product_image ?? '', // <-- add product_image
+        image_url: it.image_url ?? it.image ?? it.thumbnail ?? it.product_image ?? '',
         product_type: it.product_type ?? it.type ?? it.productType ?? null,
         total_quantity: Number(it.total_quantity ?? it.quantity ?? it.count ?? it.purchased_count ?? it.total_qty ?? 0),
         total_sales: Number(it.total_sales ?? it.total_amount ?? it.total ?? it.sales ?? 0)
       }));
 
-      // derive categories present and populate dropdown
-      const categories = Array.from(new Set(items.map(i => i.product_type).filter(Boolean))).sort();
+      // Validate image URLs to prevent syntax errors
+      items = items.map(it => ({
+        ...it,
+        image_url: (it.image_url && typeof it.image_url === 'string' && (it.image_url.startsWith('http') || it.image_url.startsWith('/'))) ? it.image_url : ''
+      }));
+
+      // Only allow specific categories: Meal, Side, Beverage
+      const allowedCategories = ['Meal', 'Side', 'Beverage'];
+      const categories = Array.from(new Set(items.map(i => i.product_type).filter(cat => allowedCategories.includes(cat)))).sort();
       const dropdown = ensureCategoryDropdown(category || 'all');
-      // remove existing non-default options
-      Array.from(dropdown.options).forEach(opt => { if (opt.value !== 'all' && !categories.includes(opt.value)) opt.remove(); });
-      // add new category options
-      categories.forEach(cat => {
+      
+      // Keep only allowed categories in dropdown
+      Array.from(dropdown.options).forEach(opt => { 
+        if (opt.value !== 'all' && !allowedCategories.includes(opt.value)) {
+          opt.remove(); 
+        }
+      });
+      
+      // Ensure all allowed categories are present in dropdown
+      allowedCategories.forEach(cat => {
         if (![...dropdown.options].some(o => o.value === cat)) {
           const o = document.createElement('option');
           o.value = cat;
-          o.textContent = String(cat).charAt(0).toUpperCase() + String(cat).slice(1);
+          o.textContent = cat === 'Meal' ? 'Meals' : cat === 'Side' ? 'Sides' : 'Beverages';
           dropdown.appendChild(o);
         }
       });
@@ -177,7 +201,7 @@ if (window._ownerDashboardInit) {
       const name = escapeHtml(it.product_name || it.name || 'Unnamed product');
       const purchases = Number(it.total_quantity || 0);
       const sales = Number(it.total_sales || 0).toLocaleString();
-      const imgSrc = it.image_url ? (String(it.image_url).startsWith('/') ? escapeHtml(it.image_url) : '/' + escapeHtml(it.image_url)) : placeholder;
+      const imgSrc = it.image_url ? escapeHtml(it.image_url) : placeholder;
 
       return `
         <li class="product-card">
