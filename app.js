@@ -126,7 +126,7 @@ app.use('/', notificationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/users', userRouter);
-app.use('/owner/profile/data', ownerProfileRoutes);
+app.use('/owner/profile', ownerProfileRoutes);
 app.use('/owner/dashboard', ownerDashboardRoutes);      // view paths
 app.use('/api/owner/dashboard', ownerDashboardRoutes);  // canonical API path frontend uses
 app.use('/api/owner', ownerDashboardRoutes); // compatibility
@@ -843,6 +843,7 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 
 // mount owner products routes
 app.use('/owner/products', ownerProductsRoutes);
+app.use('/api/owner/products', ownerProductsRoutes);
 
 // Function to update promotion active states based on expiration
 async function updatePromotionActiveStates() {

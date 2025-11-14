@@ -65,8 +65,19 @@
     }
 
     .product-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      background-color: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+    }
+
+    .product-placeholder i {
       color: #9ca3af;
-      font-style: italic;
+      font-size: 18px;
     }
 
     .action-buttons {
@@ -150,6 +161,244 @@
       font-size: 14px;
       margin: 0;
     }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal[style*="display: block"] { 
+      display: flex !important; 
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+      overflow: visible;
+      margin: auto;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #111827;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .close-btn:hover {
+      color: #374151;
+    }
+
+    .modal-body {
+      padding: 16px 20px 80px 20px;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: calc(80vh - 140px);
+      min-height: 200px;
+      scrollbar-width: auto;
+      scrollbar-color: #9ca3af #e5e7eb;
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #7c0f0f;
+      box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
+    }
+
+    /* Neutralize browser red borders for invalid fields */
+    .form-group input:invalid,
+    .form-group select:invalid,
+    .form-group textarea:invalid {
+      border-color: #d1d5db;
+      box-shadow: none;
+    }
+    .form-group input:user-invalid,
+    .form-group select:user-invalid,
+    .form-group textarea:user-invalid {
+      border-color: #d1d5db;
+      box-shadow: none;
+    }
+
+    .file-upload-container {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      background: #f9fafb;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .file-upload-container:hover {
+      border-color: #7c0f0f;
+      background: #fef2f2;
+    }
+
+    .image-preview {
+      color: #374151;
+    }
+
+    .image-preview i {
+      font-size: 32px;
+      color: #7c0f0f;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .image-preview span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid #e5e7eb;
+      background: white;
+      flex-shrink: 0;
+      min-height: 60px;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .cancel-btn {
+      background: white;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cancel-btn:hover {
+      background: #f9fafb;
+    }
+
+    .submit-btn {
+      background: #7c0f0f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      background: #5a0000;
+    }
+
+    .submit-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+    }
   </style>
 </head>
 <body>
@@ -175,7 +424,7 @@
         <a href="/owner/promotions" class="nav-item">
           <i class="fas fa-percentage"></i><span class="label">Promotions</span>
         </a>
-        <a href="/owner/profile/data" class="nav-item">
+        <a href="/owner/profile" class="nav-item">
           <i class="fas fa-user"></i><span class="label">Profile</span>
         </a>
       </nav>
@@ -223,7 +472,9 @@
                       {{#if product_image}}
                         <img src="{{product_image}}" alt="{{product_name}}" class="product-image">
                       {{else}}
-                        <div class="product-placeholder">No Image</div>
+                        <div class="product-placeholder">
+                          <i class="fas fa-image"></i>
+                        </div>
                       {{/if}}
                       {{product_name}}
                     </div>
@@ -268,63 +519,46 @@
         <button class="close-btn" id="closeModal">&times;</button>
       </div>
       
-      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
-        <input type="hidden" id="store_id" name="store_id" value="{{store.store_id}}">
-        
-        <div class="form-row">
+      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data" novalidate>
+        <div class="modal-body">
+          <input type="hidden" id="store_id" name="store_id" value="{{store.store_id}}">
+          <input type="hidden" id="product_id" name="product_id" value="">
+          
           <div class="form-group">
-            <label for="productName">Product Name *</label>
-            <input type="text" id="productName" name="productName" required>
+            <label for="productName">Product Name</label>
+            <input type="text" id="productName" name="productName" required placeholder="e.g., Premium Coffee">
           </div>
-          <div class="form-group">
-            <label for="productCategory">Category *</label>
-            <select id="productCategory" name="product_type" required>
-              <option value="">Select Category</option>
-              <option value="food">Food</option>
-              <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
-              <option value="dessert">Dessert</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="productCategory">Category</label>
+              <select id="productCategory" name="product_type" required>
+                <option value="">Select Category</option>
+                <option value="Meal">Meal</option>
+                <option value="Side">Side</option>
+                <option value="Beverage">Beverage</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="productPrice">Price (₱)</label>
+              <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required placeholder="0.00">
+            </div>
           </div>
+
           <div class="form-group">
-            <label for="productStock">Stock Quantity</label>
-            <input type="number" id="productStock" name="productStock" min="0" value="0">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="productDescription">Description</label>
-          <textarea id="productDescription" name="productDescription" rows="3" placeholder="Enter product description..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="productImage">Product Image</label>
-          <div class="file-upload-container">
-            <input type="file" id="productImage" name="productImage" accept="image/*">
-            <div class="file-upload-display">
-              <div id="imagePreview" class="image-preview">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>Click to upload product image</span>
+            <label for="productImage">Product Image</label>
+            <div class="file-upload-container">
+              <input type="file" id="productImage" name="productImage" accept="image/*">
+              <div class="file-upload-display">
+                <div id="imagePreview" class="image-preview">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>Click to upload product image</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="isActive" name="isActive" checked>
-            <span class="checkmark"></span>
-            Product is active
-          </label>
-        </div>
-
+        
         <div class="form-actions">
           <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
           <button type="submit" class="submit-btn" id="submitBtn">Save Product</button>
@@ -367,8 +601,16 @@
       // Open add product modal
       addProductBtn.addEventListener('click', () => {
         document.getElementById('modalTitle').textContent = 'Add New Product';
+        document.getElementById('submitBtn').textContent = 'Save Product';
         productForm.reset();
-        productModal.style.display = 'flex';
+        document.getElementById('product_id').value = '';
+        productForm.action = '/api/owner/products/add';
+        
+        // Reset image preview
+        const imagePreview = document.getElementById('imagePreview');
+        imagePreview.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Click to upload product image</span>';
+        
+        productModal.style.display = 'block';
       });
 
       // Close modals
@@ -403,24 +645,41 @@
         e.preventDefault();
 
         const formData = new FormData(productForm);
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Saving...';
+        submitBtn.disabled = true;
 
         try {
-          const response = await fetch('/api/owner/products/add', {
+          const isEdit = document.getElementById('product_id').value !== '';
+          const url = isEdit ? productForm.action : '/api/owner/products/add';
+          
+          const response = await fetch(url, {
             method: 'POST',
+            headers: {
+              'Accept': 'application/json'
+            },
             body: formData
           });
 
           const result = await response.json();
 
           if (response.ok) {
-            alert('✅ Product added successfully!');
+            alert(isEdit ? '✅ Product updated successfully!' : '✅ Product added successfully!');
+            productModal.style.display = 'none';
             window.location.reload();
           } else {
-            alert(`❌ Failed to add product: ${result.message || 'Unknown error'}`);
+            alert(`❌ Failed to ${isEdit ? 'update' : 'add'} product: ${result.message || 'Unknown error'}`);
           }
         } catch (error) {
           console.error('Error adding product:', error);
           alert('❌ Something went wrong.');
+        } finally {
+          // Reset button state
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
         }
       });
 
@@ -432,18 +691,30 @@
         const form = e.target.closest('form');
         const action = form.getAttribute('action');
 
-        if (confirm('Are you sure you want to delete this product?')) {
+        if (confirm('⚠️ Are you sure you want to delete this product?\\n\\nNote: Products with transaction history cannot be deleted.')) {
           try {
-            const response = await fetch(action, { method: 'POST' });
+            const response = await fetch(action, { 
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json'
+              }
+            });
+            const result = await response.json();
+            
             if (response.ok) {
               alert('🗑️ Product deleted successfully');
               window.location.reload();
             } else {
-              alert('❌ Failed to delete product');
+              // Show detailed error message
+              if (response.status === 400) {
+                alert(`⚠️ Cannot Delete Product\\n\\n${result.message}`);
+              } else {
+                alert(`❌ Failed to delete product: ${result.message || 'Unknown error'}`);
+              }
             }
           } catch (err) {
             console.error(err);
-            alert('❌ Something went wrong.');
+            alert('❌ Something went wrong while deleting the product.');
           }
         }
       }
@@ -451,12 +722,48 @@
 
 
       // Handle edit link clicks
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', async (e) => {
         if (e.target.classList.contains('edit-link')) {
           e.preventDefault();
-          document.getElementById('modalTitle').textContent = 'Edit Product';
-          // Populate form with existing data
-          productModal.style.display = 'flex';
+          const productId = e.target.getAttribute('data-id');
+          
+          try {
+            // Fetch product data
+            const response = await fetch(`/api/owner/products/get/${productId}`);
+            const product = await response.json();
+            
+            if (response.ok && product) {
+              // Set modal to edit mode
+              document.getElementById('modalTitle').textContent = 'Edit Product';
+              document.getElementById('submitBtn').textContent = 'Update Product';
+              
+              // Populate form fields
+              document.getElementById('product_id').value = product.id;
+              document.getElementById('productName').value = product.product_name || '';
+              document.getElementById('productCategory').value = product.product_type || '';
+              document.getElementById('productPrice').value = product.price || '';
+              
+              // Show current image if exists
+              const imagePreview = document.getElementById('imagePreview');
+              if (product.product_image) {
+                imagePreview.innerHTML = `<img src="${product.product_image}" alt="Current Image" style="max-width: 100%; max-height: 200px; border-radius: 4px;">`;
+              } else {
+                imagePreview.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Click to upload product image</span>';
+              }
+              
+              // Change form action for edit
+              productForm.action = `/api/owner/products/edit/${productId}`;
+              
+              // Show modal
+              productModal.style.display = 'block';
+            } else {
+              console.error('Failed to load product:', response.status, product);
+              alert(`Failed to load product data: ${product?.error || 'Unknown error'}`);
+            }
+          } catch (error) {
+            console.error('Error loading product:', error);
+            alert('Failed to load product data');
+          }
         }
       });
 
