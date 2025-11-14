@@ -314,12 +314,26 @@ app.post("/api/promotions", async (req, res) => {
       return res.status(400).json({ error: 'Points required must be at least 1' });
     }
 
+    // Calculate active state based on current date vs start/end dates
+    const now = new Date();
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
+    
+    // Set time to start of day for start date and end of day for end date
+    startDateTime.setHours(0, 0, 0, 0);
+    endDateTime.setHours(23, 59, 59, 999);
+    
+    const isCurrentlyActive = now >= startDateTime && now <= endDateTime;
+
     console.log('About to insert reward:', {
       store_id: storeId,
       reward_name: name,
       description: finalDescription,
       points_required: pointsRequired,
       promotion_type: discountType,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: isCurrentlyActive,
       selected_product: selectedProduct || null,
       buy_quantity: buyQuantity || null,
       get_quantity: getQuantity || null,
@@ -336,7 +350,9 @@ app.post("/api/promotions", async (req, res) => {
           reward_name: name,
           description: finalDescription,
           points_required: pointsRequired,
-          is_active: true
+          start_date: startDate,
+          end_date: endDate,
+          is_active: isCurrentlyActive
         }
       ])
       .select()
@@ -419,7 +435,33 @@ app.get("/api/promotions", async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch promotions: ' + error.message });
     }
 
-    res.json({ promotions: rewards || [] });
+    // Process promotions to update their active status based on start/end dates
+    const now = new Date();
+    const processedRewards = (rewards || []).map(reward => {
+      if (reward.start_date && reward.end_date) {
+        const startDate = new Date(reward.start_date);
+        const endDate = new Date(reward.end_date);
+        
+        // Set time boundaries
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        
+        // Calculate if should be active
+        const shouldBeActive = now >= startDate && now <= endDate;
+        
+        // Update the reward object with calculated active status
+        return {
+          ...reward,
+          is_active: shouldBeActive,
+          status: shouldBeActive ? 'active' : (now < startDate ? 'scheduled' : 'expired')
+        };
+      }
+      
+      // Fallback for rewards without dates
+      return reward;
+    });
+
+    res.json({ promotions: processedRewards });
 
   } catch (error) {
     console.error('Detailed error in GET /api/promotions:', error);
@@ -579,13 +621,27 @@ app.put("/api/promotions/:id", async (req, res) => {
       return res.status(400).json({ error: 'Points required must be at least 1' });
     }
     
+    // Calculate active state based on current date vs start/end dates
+    const now = new Date();
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
+    
+    // Set time to start of day for start date and end of day for end date
+    startDateTime.setHours(0, 0, 0, 0);
+    endDateTime.setHours(23, 59, 59, 999);
+    
+    const isCurrentlyActive = now >= startDateTime && now <= endDateTime;
+    
     // Update the promotion
     const { data: updatedPromotion, error } = await supabase
       .from('rewards')
       .update({
         reward_name: name,
         description: finalDescription,
-        points_required: pointsRequired
+        points_required: pointsRequired,
+        start_date: startDate,
+        end_date: endDate,
+        is_active: isCurrentlyActive
       })
       .eq('reward_id', promotionId)
       .eq('store_id', storeId)
@@ -787,6 +843,65 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 
 // mount owner products routes
 app.use('/owner/products', ownerProductsRoutes);
+
+// Function to update promotion active states based on expiration
+async function updatePromotionActiveStates() {
+  try {
+    console.log('🔄 Updating promotion active states...');
+    
+    // Query all promotions with start/end dates
+    const { data: promotions, error } = await supabase
+      .from('rewards')
+      .select('reward_id, start_date, end_date, is_active')
+      .not('start_date', 'is', null)
+      .not('end_date', 'is', null);
+    
+    if (error) {
+      console.error('❌ Error fetching promotions for status update:', error);
+      return;
+    }
+    
+    if (promotions && promotions.length > 0) {
+      const now = new Date();
+      let updatedCount = 0;
+      
+      for (const promo of promotions) {
+        const startDate = new Date(promo.start_date);
+        const endDate = new Date(promo.end_date);
+        
+        // Set time boundaries
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        
+        const shouldBeActive = now >= startDate && now <= endDate;
+        
+        // Update if status has changed
+        if (promo.is_active !== shouldBeActive) {
+          const { error: updateError } = await supabase
+            .from('rewards')
+            .update({ is_active: shouldBeActive })
+            .eq('reward_id', promo.reward_id);
+          
+          if (!updateError) {
+            updatedCount++;
+            console.log(`📅 Updated promotion ${promo.reward_id}: ${promo.is_active} → ${shouldBeActive}`);
+          } else {
+            console.error(`❌ Failed to update promotion ${promo.reward_id}:`, updateError);
+          }
+        }
+      }
+      
+      console.log(`✅ Promotion active states updated: ${updatedCount}/${promotions.length} changed`);
+    } else {
+      console.log('ℹ️ No promotions with dates found for status update');
+    }
+  } catch (error) {
+    console.error('❌ Error updating promotion active states:', error);
+  }
+}
+
+// Run promotion status update every hour
+setInterval(updatePromotionActiveStates, 60 * 60 * 1000);
 
 // Mount owner API routes needed by frontend
 app.get('/api/owner/stores', ownerTransactions.getOwnerStores);

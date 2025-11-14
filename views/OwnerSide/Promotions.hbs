@@ -414,6 +414,9 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border: 1px solid #e5e7eb;
       transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
     }
 
     .promotion-card:hover {
@@ -467,6 +470,7 @@
 
     .promotion-details {
       margin-bottom: 16px;
+      flex-grow: 1;
     }
 
     .detail-item {
@@ -485,16 +489,21 @@
       display: flex;
       gap: 8px;
       justify-content: flex-end;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 16px;
     }
 
     .edit-btn, .delete-btn {
-      padding: 6px 12px;
+      padding: 8px 16px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 600;
       border: none;
       cursor: pointer;
       transition: all 0.2s;
+      min-width: 60px;
+      text-align: center;
     }
 
     .edit-btn {
@@ -796,12 +805,21 @@
         document.getElementById('promotionName').value = promotion.reward_name || '';
         document.getElementById('points').value = promotion.points_required || '';
         
-        // Set dates if available (you may need to add these fields to the database)
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('startDate').value = today;
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
+        // Set dates from database if available
+        if (promotion.start_date) {
+          document.getElementById('startDate').value = promotion.start_date;
+        } else {
+          const today = new Date().toISOString().split('T')[0];
+          document.getElementById('startDate').value = today;
+        }
+        
+        if (promotion.end_date) {
+          document.getElementById('endDate').value = promotion.end_date;
+        } else {
+          const nextMonth = new Date();
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
+        }
         
         // Determine promotion type from description and populate accordingly
         const description = promotion.description || '';
@@ -1185,30 +1203,65 @@
         return;
       }
       
-      grid.innerHTML = promotions.map(promo => `
-        <div class=\"promotion-card\">
-          <div class=\"promotion-header\">
-            <h3>${promo.reward_name}</h3>
-            <span class=\"status-badge status-${promo.is_active ? 'active' : 'inactive'}\">${promo.is_active ? 'active' : 'inactive'}</span>
-          </div>
-          <p class=\"promotion-description\">${promo.description}</p>
-          <div class=\"promotion-details\">
-            <div class=\"detail-item\">
-              <strong>Points Required:</strong> ${promo.points_required}
+      grid.innerHTML = promotions.map(promo => {
+        // Determine promotion status based on actual start/end dates
+        const now = new Date();
+        const createdDate = new Date(promo.created_at);
+        
+        let statusClass = 'inactive';
+        let statusText = 'Inactive';
+        
+        // Use start/end dates if available
+        if (promo.start_date && promo.end_date) {
+          const startDate = new Date(promo.start_date);
+          const endDate = new Date(promo.end_date);
+          
+          if (now < startDate) {
+            statusClass = 'scheduled';
+            statusText = 'Scheduled';
+          } else if (now > endDate) {
+            statusClass = 'expired';
+            statusText = 'Expired';
+          } else {
+            statusClass = 'active';
+            statusText = 'Active';
+          }
+        } else {
+          // Fallback to is_active field
+          if (promo.is_active) {
+            statusClass = 'active';
+            statusText = 'Active';
+          }
+        }
+        
+        return `
+          <div class=\"promotion-card\">
+            <div class=\"promotion-header\">
+              <h3>${promo.reward_name}</h3>
+              <span class=\"status-badge status-${statusClass}\">${statusText}</span>
             </div>
-            <div class=\"detail-item\">
-              <strong>Created:</strong> ${new Date(promo.created_at).toLocaleDateString()}
+            <p class=\"promotion-description\">${promo.description}</p>
+            <div class=\"promotion-details\">
+              <div class=\"detail-item\">
+                <strong>Points Required:</strong> ${promo.points_required}
+              </div>
+              ${promo.start_date ? `<div class=\"detail-item\">
+                <strong>Start Date:</strong> ${new Date(promo.start_date).toLocaleDateString()}
+              </div>` : ''}
+              ${promo.end_date ? `<div class=\"detail-item\">
+                <strong>End Date:</strong> ${new Date(promo.end_date).toLocaleDateString()}
+              </div>` : ''}
+              <div class=\"detail-item\">
+                <strong>Status:</strong> ${statusText}
+              </div>
             </div>
-            <div class=\"detail-item\">
-              <strong>Status:</strong> ${promo.is_active ? 'Active' : 'Inactive'}
+            <div class=\"promotion-actions\">
+              <button onclick=\"editPromotion(${promo.reward_id})\" class=\"edit-btn\">Edit</button>
+              <button onclick=\"deletePromotion(${promo.reward_id})\" class=\"delete-btn\">Delete</button>
             </div>
           </div>
-          <div class=\"promotion-actions\">
-            <button onclick=\"editPromotion(${promo.reward_id})\" class=\"edit-btn\">Edit</button>
-            <button onclick=\"deletePromotion(${promo.reward_id})\" class=\"delete-btn\">Delete</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // Set default dates and load promotions on page load
