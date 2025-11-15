@@ -825,22 +825,6 @@ app.get("/api/products", async (req, res) => {
 //   return res.redirect(302, "/owner/profile");
 // });
 
-// body parser & session middleware must be registered earlier
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: false,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours default
-  }
-}));
-
-// static middleware
-app.use(express.static(path.join(process.cwd(), 'public')));
-
 // mount owner products routes
 app.use('/owner/products', ownerProductsRoutes);
 app.use('/api/owner/products', ownerProductsRoutes);
@@ -912,6 +896,8 @@ app.get('/api/owner/transactions/:id', ownerTransactions.getOwnerTransactionById
 // Sales-report endpoints used by frontend
 app.get('/api/owner/sales-report/stores/dropdown', ownerSales.getStoresDropdown);
 app.get('/api/owner/sales-report', ownerSales.getSalesReport);
+app.get('/api/owner/sales-report/csv', ownerSales.exportSalesCsv);
+app.get('/api/owner/sales-report/pdf', ownerSales.exportSalesPdf);
 
 app.listen(port, () => {
   console.log(`🚀 Server started on port ${port}`);

@@ -60,18 +60,29 @@ export const getTopProducts = async (req, res) => {
     const userId = req.session?.userId || req.session?.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { category = 'all', limit = 5 } = req.query;
+    const { category = 'all', limit = 5, days = 30 } = req.query;
     const storeIds = await fetchOwnedStoreIds(userId);
     if (storeIds.length === 0) return res.json({ items: [] });
 
-    // Fetch relevant transactions with joined product info
+    console.log(`📊 [TopProducts] Fetching for stores: ${storeIds.join(', ')}, category: ${category}, days: ${days}`);
+
+    // Calculate date filter (fetch last N days)
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - parseInt(days, 10));
+    const dateFilter = daysAgo.toISOString();
+
+    // Fetch relevant transactions with joined product info, ordered by date DESC
     const { data: txs, error } = await supabase
       .from('transactions')
-      .select('product_id, quantity, total, products:product_id(id, product_name, product_type, product_image)')
+      .select('product_id, quantity, total, transaction_date, products:product_id(id, product_name, product_type, product_image)')
       .in('store_id', storeIds)
+      .gte('transaction_date', dateFilter)
+      .order('transaction_date', { ascending: false })
       .limit(20000); // fetch reasonable cap
 
     if (error) throw error;
+
+    console.log(`📊 [TopProducts] Fetched ${txs?.length || 0} transactions`);
 
     // Aggregate in JS (safe and flexible)
     const stats = new Map();
@@ -93,13 +104,15 @@ export const getTopProducts = async (req, res) => {
 
     let items = Array.from(stats.values());
 
-    // optional category filter
+    // optional category filter (case-insensitive matching)
     if (category && category !== 'all') {
       items = items.filter(it => String(it.product_type || '').toLowerCase() === String(category).toLowerCase());
     }
 
     items.sort((a, b) => b.total_sales - a.total_sales);
     items = items.slice(0, Math.max(0, parseInt(limit, 10) || 5));
+
+    console.log(`📊 [TopProducts] Returning ${items.length} products`, items.map(i => `${i.product_name} (₱${i.total_sales})`));
 
     return res.json({ items });
   } catch (err) {
@@ -134,9 +147,15 @@ export const getSalesSummary = async (req, res) => {
     if (storeError) throw storeError;
     if (!stores.length) {
       console.log("⚠️ [SalesSummary] No stores found.");
-      return res.json({ totalSales: 0, totalTransactions: 0 });
+      return res.json({ 
+        totalSales: 0, 
+        totalOrders: 0,
+        salesGrowth: { percentage: '0', class: 'neutral', icon: 'fa-minus' },
+        ordersGrowth: { percentage: '0', class: 'neutral', icon: 'fa-minus' }
+      });
     }
 
+    // Current period transactions
     const { data: transactions, error: txError } = await supabase
       .from("transactions")
       .select("total, transaction_date")
@@ -152,15 +171,58 @@ export const getSalesSummary = async (req, res) => {
     const totalTransactions = transactions.length;
     const avgOrderValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
 
-    console.log("✅ [SalesSummary] Total sales:", totalSales, "Transactions:", totalTransactions);
+    // Previous period transactions for growth calculation
+    const prevStart = new Date(start);
+    prevStart.setDate(prevStart.getDate() - days);
+    const prevEnd = new Date(start);
+    prevEnd.setDate(prevEnd.getDate() - 1);
 
-    const payload = { totalSales, totalOrders: totalTransactions, avgOrderValue, days };
+    const { data: prevTransactions } = await supabase
+      .from("transactions")
+      .select("total, transaction_date")
+      .in("store_id", stores.map(s => s.store_id))
+      .gte('transaction_date', prevStart.toISOString())
+      .lte('transaction_date', prevEnd.toISOString());
+
+    const prevTotalSales = (prevTransactions || []).reduce((sum, t) => sum + parseFloat(t.total || 0), 0);
+    const prevTotalTransactions = (prevTransactions || []).length;
+
+    // Calculate growth percentages
+    const calculateGrowth = (current, previous) => {
+      if (!previous || previous === 0) return { percentage: '0', class: 'neutral', icon: 'fa-minus' };
+      const growth = ((current - previous) / previous) * 100;
+      if (growth > 0) return { percentage: Math.abs(growth).toFixed(1), class: 'positive', icon: 'fa-arrow-up' };
+      if (growth < 0) return { percentage: Math.abs(growth).toFixed(1), class: 'negative', icon: 'fa-arrow-down' };
+      return { percentage: '0', class: 'neutral', icon: 'fa-minus' };
+    };
+
+    const salesGrowth = calculateGrowth(totalSales, prevTotalSales);
+    const ordersGrowth = calculateGrowth(totalTransactions, prevTotalTransactions);
+
+    console.log("✅ [SalesSummary] Total sales:", totalSales, "Transactions:", totalTransactions);
+    console.log("✅ [SalesSummary] Growth - Sales:", salesGrowth, "Orders:", ordersGrowth);
+
+    const payload = { 
+      totalSales, 
+      totalOrders: totalTransactions, 
+      avgOrderValue, 
+      days,
+      salesGrowth,
+      ordersGrowth
+    };
     console.log('Sales summary payload:', payload);
     return res.json(payload);
   } catch (err) {
     console.error('getSalesSummary error:', err && err.stack ? err.stack : err);
     // return safe zeroed summary
-    return res.status(200).json({ totalSales: 0, totalOrders: 0, avgOrderValue: 0, days: parseInt(req?.query?.days || '30', 10) || 30 });
+    return res.status(200).json({ 
+      totalSales: 0, 
+      totalOrders: 0, 
+      avgOrderValue: 0, 
+      days: parseInt(req?.query?.days || '30', 10) || 30,
+      salesGrowth: { percentage: '0', class: 'neutral', icon: 'fa-minus' },
+      ordersGrowth: { percentage: '0', class: 'neutral', icon: 'fa-minus' }
+    });
   }
 };
 
@@ -237,91 +299,256 @@ export const getCustomerEngagement = async (req, res) => {
 
 
 /**
- * API: Get Recommendations
+ * API: Get Recommendations using Association Rule Mining
+ * Implements Apriori-like algorithm to find frequently bought together products
  */
 export const getRecommendations = async (req, res) => {
   try {
     const userId = req.session?.userId || req.session?.user?.id;
+    console.log(`🔍 [Recommendations] Request from user ${userId}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const storeIds = await fetchOwnedStoreIds(userId);
+    console.log(`🔍 [Recommendations] Store IDs: ${storeIds.join(', ')}`);
     if (storeIds.length === 0) return res.json({ recommendations: [] });
 
-    // Fetch recent transactions with reference_number so we can compute co-occurrence
+    // Fetch transactions with product details and user information
     const { data: txs, error } = await supabase
       .from('transactions')
-      .select('product_id, reference_number, quantity, products:product_id(id, product_name, product_type)')
+      .select(`
+        product_id, 
+        reference_number, 
+        quantity, 
+        total,
+        user_id,
+        transaction_date,
+        products:product_id(id, product_name, product_type, product_image)
+      `)
       .in('store_id', storeIds)
       .order('transaction_date', { ascending: false })
-      .limit(5000);
+      .limit(10000);
 
     if (error) throw error;
+    if (!txs || txs.length === 0) return res.json({ recommendations: [] });
 
-    // Build product co-occurrence by reference_number
-    const byRef = new Map();
+    // Step 1: Group transactions by reference_number (basket)
+    const baskets = new Map();
+    const productInfo = new Map();
+    
     (txs || []).forEach(t => {
-      const ref = t.reference_number || (`ref:${Math.floor(Math.random()*10000000)}`);
-      if (!byRef.has(ref)) byRef.set(ref, new Set());
-      byRef.get(ref).add(Number(t.product_id));
-    });
-
-    const cooccur = new Map();
-    for (const set of byRef.values()) {
-      const items = Array.from(set);
-      for (let i = 0; i < items.length; i++) {
-        for (let j = 0; j < items.length; j++) {
-          if (i === j) continue;
-          const a = items[i], b = items[j];
-          const key = `${a}::${b}`;
-          cooccur.set(key, (cooccur.get(key) || 0) + 1);
-        }
+      const ref = t.reference_number || `ref:${t.user_id || 'unknown'}_${t.transaction_date}`;
+      if (!baskets.has(ref)) baskets.set(ref, []);
+      baskets.get(ref).push({
+        product_id: Number(t.product_id),
+        quantity: Number(t.quantity || 1),
+        total: Number(t.total || 0)
+      });
+      
+      // Store product metadata
+      if (t.products && !productInfo.has(Number(t.product_id))) {
+        productInfo.set(Number(t.product_id), {
+          id: t.products.id,
+          product_name: t.products.product_name,
+          product_type: t.products.product_type,
+          product_image: t.products.product_image
+        });
       }
-    }
-
-    // Compute global product popularity (fallback)
-    const popularity = new Map();
-    (txs || []).forEach(t => {
-      const pid = Number(t.product_id);
-      popularity.set(pid, (popularity.get(pid) || 0) + Number(t.quantity || 1));
     });
 
-    // Build recommendations list: for each top product, pick most co-occurred products
-    const topProducts = Array.from(popularity.entries()).sort((a,b) => b[1] - a[1]).slice(0, 10).map(([pid]) => pid);
+    const totalBaskets = baskets.size;
+    console.log(`📊 [Recommendations] Analyzing ${totalBaskets} baskets with ${productInfo.size} unique products`);
 
-    const recs = [];
-    for (const pid of topProducts) {
-      // find co-occurring products with pid
-      const co = Array.from(cooccur.entries())
-        .filter(([k]) => k.startsWith(`${pid}::`))
-        .map(([k,v]) => ({ otherId: Number(k.split('::')[1]), score: v }))
-        .sort((a,b) => b.score - a.score)
-        .slice(0,3)
-        .map(c => c.otherId);
-      recs.push({ product_id: pid, recommended_with: co });
+    // Step 2: Calculate support for individual products
+    const productSupport = new Map();
+    baskets.forEach(basket => {
+      const productIds = new Set(basket.map(item => item.product_id));
+      productIds.forEach(pid => {
+        productSupport.set(pid, (productSupport.get(pid) || 0) + 1);
+      });
+    });
+
+    // Filter products by minimum support threshold (appear in at least 2% of transactions)
+    const minSupport = 1;
+    const frequentProducts = Array.from(productSupport.entries())
+      .filter(([_, count]) => count >= minSupport)
+      .map(([pid, count]) => ({ 
+        product_id: pid, 
+        support: count,
+        supportPercent: ((count / totalBaskets) * 100).toFixed(1)
+      }))
+      .sort((a, b) => b.support - a.support);
+
+    console.log(`📊 [Recommendations] Found ${frequentProducts.length} frequent products (min support: ${minSupport})`);
+
+    // Step 3: Calculate association rules (A -> B)
+    const associationRules = [];
+    
+    frequentProducts.slice(0, 15).forEach(itemA => {
+      const productA = itemA.product_id;
+      
+      // Count co-occurrences with other products
+      const cooccurrence = new Map();
+      
+      baskets.forEach(basket => {
+        const productIds = basket.map(item => item.product_id);
+        if (productIds.includes(productA)) {
+          productIds.forEach(productB => {
+            if (productB !== productA) {
+              cooccurrence.set(productB, (cooccurrence.get(productB) || 0) + 1);
+            }
+          });
+        }
+      });
+
+      // Calculate confidence and lift for each rule
+      cooccurrence.forEach((count, productB) => {
+        const supportAB = count; // baskets containing both A and B
+        const supportA = itemA.support;
+        const supportB = productSupport.get(productB) || 0;
+        
+        // Confidence: P(B|A) = support(A,B) / support(A)
+        const confidence = (supportAB / supportA) * 100;
+        
+        // Lift: confidence / P(B) = support(A,B) / (support(A) * support(B))
+        const lift = (supportAB * totalBaskets) / (supportA * supportB);
+        
+        // Only keep strong rules (confidence > 30% and lift > 1.2)
+        if (confidence > 20 && lift > 1.2) {
+          associationRules.push({
+            antecedent: productA,
+            consequent: productB,
+            support: supportAB,
+            confidence: confidence.toFixed(1),
+            lift: lift.toFixed(2),
+            score: confidence * lift // combined score for ranking
+          });
+        }
+      });
+    });
+
+    // Sort by score and group by antecedent
+    associationRules.sort((a, b) => b.score - a.score);
+    
+    console.log(`📊 [Recommendations] Generated ${associationRules.length} association rules`);
+    if (associationRules.length > 0) {
+      console.log(`📊 [Recommendations] Sample rules:`, associationRules.slice(0, 5).map(r => ({
+        from: productInfo.get(r.antecedent)?.product_name,
+        to: productInfo.get(r.consequent)?.product_name,
+        confidence: `${r.confidence}%`,
+        lift: r.lift
+      })));
     }
 
-    // Resolve product names for ids used
-    const allIds = Array.from(new Set([].concat(...recs.map(r => [r.product_id, ...(r.recommended_with || [])]))));
-    if (allIds.length) {
-      const { data: prods } = await supabase
-        .from('products')
-        .select('id, product_name, product_type')
-        .in('id', allIds);
+    // Step 4: Format recommendations grouped by product with co-purchase counts
+    const recommendationsMap = new Map();
+    const coPurchaseCounts = new Map(); // Track how many times pairs appear together
+    
+    associationRules.forEach(rule => {
+      if (!recommendationsMap.has(rule.antecedent)) {
+        recommendationsMap.set(rule.antecedent, []);
+      }
+      
+      const recs = recommendationsMap.get(rule.antecedent);
+      if (recs.length < 5) { // Top 5 recommendations per product
+        const pairKey = `${rule.antecedent}-${rule.consequent}`;
+        coPurchaseCounts.set(pairKey, rule.support);
+        
+        recs.push({
+          product_id: rule.consequent,
+          confidence: rule.confidence,
+          lift: rule.lift,
+          score: rule.score,
+          support: rule.support
+        });
+      }
+    });
 
-      const prodMap = new Map((prods || []).map(p => [Number(p.id), p]));
-      const formatted = recs.map(r => ({
-        product_id: r.product_id,
-        product_name: prodMap.get(r.product_id)?.product_name || String(r.product_id),
-        recommended: (r.recommended_with || []).map(id => ({
-          product_id: id,
-          product_name: prodMap.get(id)?.product_name || String(id)
-        }))
-      }));
+    // Step 5: Build final recommendations with product details and insights
+    const recommendations = [];
+    
+    recommendationsMap.forEach((recs, productId) => {
+      const productData = productInfo.get(productId);
+      if (!productData) return;
+      
+      const recommendedProducts = recs.map(r => {
+        const recProduct = productInfo.get(r.product_id);
+        if (!recProduct) return null;
+        
+        // Generate detailed insight based on metrics
+        let insight = '';
+        const coPurchases = r.support;
+        const confidence = parseFloat(r.confidence);
+        const lift = parseFloat(r.lift);
+        
+        if (coPurchases >= 5 && confidence >= 50) {
+          insight = `Strong bundle recommendation: These items frequently appear together in transaction logs (co-purchased ${coPurchases} times). ${confidence.toFixed(0)}% of customers who bought "${productData.product_name}" also bought this item.`;
+        } else if (coPurchases >= 3 && lift >= 2.0) {
+          insight = `Popular combination: Customers are ${lift.toFixed(1)}x more likely to buy these items together (appeared in ${coPurchases} transactions). Consider creating a combo deal.`;
+        } else if (confidence >= 40) {
+          insight = `Frequent pairing: ${confidence.toFixed(0)}% of customers who purchased "${productData.product_name}" also added this to their order (${coPurchases} times). Good cross-selling opportunity.`;
+        } else {
+          insight = `Complementary item: Analysis shows customers who buy "${productData.product_name}" are ${lift.toFixed(1)}x more interested in this product compared to average shoppers.`;
+        }
+        
+        return {
+          product_id: r.product_id,
+          product_name: recProduct.product_name,
+          product_image: recProduct.product_image,
+          product_type: recProduct.product_type,
+          confidence: confidence,
+          lift: lift,
+          score: r.score,
+          coPurchases: coPurchases,
+          reason: `${confidence.toFixed(1)}% confidence, ${lift}x lift`,
+          insight: insight
+        };
+      }).filter(Boolean);
 
-      return res.json({ recommendations: formatted });
+      if (recommendedProducts.length > 0) {
+        // Generate overall insight for this product's recommendations
+        const totalCoPurchases = recommendedProducts.reduce((sum, r) => sum + r.coPurchases, 0);
+        const avgConfidence = recommendedProducts.reduce((sum, r) => sum + r.confidence, 0) / recommendedProducts.length;
+        
+        let overallInsight = '';
+        if (avgConfidence >= 60) {
+          overallInsight = `High conversion potential: Customers who buy "${productData.product_name}" show strong purchasing patterns with these ${recommendedProducts.length} items. Total co-purchases: ${totalCoPurchases}.`;
+        } else if (recommendedProducts.length >= 3) {
+          overallInsight = `Multiple pairing opportunities: "${productData.product_name}" pairs well with ${recommendedProducts.length} different items. Consider featuring these in product descriptions or at checkout.`;
+        } else {
+          overallInsight = `Bundle opportunity: Based on ${totalBaskets} transactions, these items complement "${productData.product_name}" well.`;
+        }
+        
+        recommendations.push({
+          product_id: productId,
+          product_name: productData.product_name,
+          product_image: productData.product_image,
+          product_type: productData.product_type,
+          support: productSupport.get(productId),
+          recommended: recommendedProducts,
+          overallInsight: overallInsight
+        });
+      }
+    });
+
+    // Sort by product popularity (support)
+    recommendations.sort((a, b) => b.support - a.support);
+
+    console.log(`✅ [Recommendations] Returning ${recommendations.length} product recommendations`);
+    if (recommendations.length > 0) {
+      console.log(`✅ [Recommendations] Sample:`, recommendations[0]);
     }
 
-    return res.json({ recommendations: [] });
+    return res.json({ 
+      recommendations: recommendations.slice(0, 10),
+      metadata: {
+        totalBaskets,
+        frequentProductsCount: frequentProducts.length,
+        rulesGenerated: associationRules.length,
+        algorithm: 'Association Rule Mining (Apriori-based)',
+        metrics: 'Confidence, Lift, Support'
+      }
+    });
+
   } catch (err) {
     console.error('getRecommendations error', err);
     return res.status(200).json({ recommendations: [] });

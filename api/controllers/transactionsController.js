@@ -26,9 +26,10 @@ export const createTransaction = async (req, res) => {
     const storeName = storeRow?.store_name || '';
     const ref = generateReferenceNumber(new Date().toISOString(), storeName);
 
-    let totalPoints = 0;
+    let totalAmount = 0;
     const payloads = [];
 
+    // First pass: validate and calculate total
     for (const item of products) {
       const parsedQuantity = Number(item.quantity) || 0;
       const parsedPrice = Number(item.price) || 0;
@@ -40,9 +41,20 @@ export const createTransaction = async (req, res) => {
         return res.status(400).json({ error: 'quantity must be greater than 0' });
       }
 
-      const points =
-        transaction_type === 'Purchase' ? calculatePoints(parsedQuantity * parsedPrice) : 0;
-      totalPoints += points;
+      totalAmount += parsedQuantity * parsedPrice;
+    }
+
+    // Calculate points based on total transaction amount
+    const totalPoints = transaction_type === 'Purchase' ? calculatePoints(totalAmount) : 0;
+
+    // Second pass: create payloads with distributed points
+    for (const item of products) {
+      const parsedQuantity = Number(item.quantity) || 0;
+      const parsedPrice = Number(item.price) || 0;
+      const itemTotal = parsedQuantity * parsedPrice;
+      
+      // Distribute points proportionally to item value
+      const itemPoints = totalAmount > 0 ? (itemTotal / totalAmount) * totalPoints : 0;
 
       payloads.push({
         store_id,
@@ -52,7 +64,7 @@ export const createTransaction = async (req, res) => {
         price: parsedPrice,
         transaction_type,
         reference_number: ref,
-        points,
+        points: Number(itemPoints.toFixed(2)),
       });
     }
 
@@ -62,9 +74,9 @@ export const createTransaction = async (req, res) => {
       .insert(payloads)
       .select(`
         *,
-        products (product_name),
-        users (username),
-        stores (store_name)
+        products!fk_transactions_product (product_name),
+        users!fk_transactions_user (username),
+        stores!fk_transactions_store (store_name)
       `);
 
     if (error) throw error;
@@ -134,9 +146,9 @@ export const getTransactions = async (req, res) => {
         total,
         points,
         transaction_type,
-        users:user_id (username),
-        stores:store_id (store_name),
-        products:product_id (product_name, price)
+        users!fk_transactions_user (username),
+        stores!fk_transactions_store (store_name),
+        products!fk_transactions_product (product_name, price)
       `)
       .order('transaction_date', { ascending: false });
 
@@ -213,9 +225,9 @@ export const getTransactionById = async (req, res) => {
       total,
       points,
       transaction_type,
-      users:users (username),
-      stores:stores (store_name),
-      products:products (product_name)
+      users!fk_transactions_user (username),
+      stores!fk_transactions_store (store_name),
+      products!fk_transactions_product (product_name)
     `)
     .eq('reference_number', referenceNumber)
     .order('transaction_date', { ascending: false });
@@ -262,9 +274,9 @@ export const updateTransaction = async (req, res) => {
       .eq('id', id)
       .select(`
         *,
-        products (product_name),
-        users (username),
-        stores (store_name)
+        products!fk_transactions_product (product_name),
+        users!fk_transactions_user (username),
+        stores!fk_transactions_store (store_name)
       `)
       .single();
 

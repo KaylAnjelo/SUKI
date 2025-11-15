@@ -126,8 +126,8 @@ if (window._ownerDashboardInit) {
         image_url: (it.image_url && typeof it.image_url === 'string' && (it.image_url.startsWith('http') || it.image_url.startsWith('/'))) ? it.image_url : ''
       }));
 
-      // Only allow specific categories: Meal, Side, Beverage
-      const allowedCategories = ['Meal', 'Side', 'Beverage'];
+      // Only allow specific categories: Meals, Sides, Beverages (plural to match DB)
+      const allowedCategories = ['Meals', 'Sides', 'Beverages'];
       const categories = Array.from(new Set(items.map(i => i.product_type).filter(cat => allowedCategories.includes(cat)))).sort();
       const dropdown = ensureCategoryDropdown(category || 'all');
       
@@ -143,7 +143,7 @@ if (window._ownerDashboardInit) {
         if (![...dropdown.options].some(o => o.value === cat)) {
           const o = document.createElement('option');
           o.value = cat;
-          o.textContent = cat === 'Meal' ? 'Meals' : cat === 'Side' ? 'Sides' : 'Beverages';
+          o.textContent = cat;
           dropdown.appendChild(o);
         }
       });
@@ -254,13 +254,25 @@ if (window._ownerDashboardInit) {
 
   function setRecommendationsLoading(show) {
     const container = document.getElementById('recommendationsContainer');
+    const refreshBtn = document.getElementById('refreshRecommendations');
+    
     if (!container) return;
-    // if data already loaded, don't overwrite with loading indicator
-    if (show && !_recommendationsCache) {
+    
+    if (show) {
       _recommendationsLoading = true;
-      container.innerHTML = '<div class="loading">Loading recommendations…</div>';
+      container.innerHTML = '<div class="loading"><i class="fas fa-brain fa-spin"></i><div>Analyzing purchase patterns with association rules...</div></div>';
+      // Disable and show spinning icon on refresh button
+      if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+      }
     } else {
       _recommendationsLoading = false;
+      // Re-enable refresh button
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+      }
       // only call renderRecommendations if it's defined
       if (typeof renderRecommendations === 'function') {
         renderRecommendations(_recommendationsCache && _recommendationsCache.length ? _recommendationsCache : []);
@@ -319,8 +331,8 @@ if (window._ownerDashboardInit) {
     try {
       const payload = await tryFetchJson(url);
       console.debug('Parsed summary payload:', payload);
-      if (typeof renderTotalSales === 'function') renderTotalSales(payload.totalSales ?? payload.total_amount ?? 0);
-      if (typeof renderTotalOrders === 'function') renderTotalOrders(payload.totalOrders ?? payload.total_orders ?? 0);
+      if (typeof renderTotalSales === 'function') renderTotalSales(payload.totalSales ?? payload.total_amount ?? 0, payload.salesGrowth);
+      if (typeof renderTotalOrders === 'function') renderTotalOrders(payload.totalOrders ?? payload.total_orders ?? 0, payload.ordersGrowth);
       return payload;
     } catch (err) {
       console.warn('Summary fetch failed', err);
@@ -355,15 +367,29 @@ if (window._ownerDashboardInit) {
 // ------------------------
 // Renderers (safe)
 // ------------------------
-function renderTotalSales(value) {
+function renderTotalSales(value, growth) {
   const el = document.getElementById('totalSales');
   if (!el) return;
   el.textContent = Number(value || 0).toLocaleString(undefined, { style:'currency', currency:'PHP' });
+  
+  // Update growth indicator
+  const changeEl = document.getElementById('salesChange');
+  if (changeEl && growth) {
+    changeEl.className = `metric-change ${growth.class}`;
+    changeEl.innerHTML = `<i class="fas ${growth.icon}"></i> ${growth.percentage}%`;
+  }
 }
-function renderTotalOrders(value) {
+function renderTotalOrders(value, growth) {
   const el = document.getElementById('totalOrders');
   if (!el) return;
   el.textContent = String(value || 0);
+  
+  // Update growth indicator
+  const changeEl = document.getElementById('ordersChange');
+  if (changeEl && growth) {
+    changeEl.className = `metric-change ${growth.class}`;
+    changeEl.innerHTML = `<i class="fas ${growth.icon}"></i> ${growth.percentage}%`;
+  }
 }
 
 function renderEngagementChart(payload) {
@@ -450,22 +476,59 @@ function renderRecommendations(recs = []) {
   const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
 
   if (!Array.isArray(recs) || recs.length === 0) {
-    container.innerHTML = '<div class="muted">No recommendations available</div>';
+    container.innerHTML = '<div class="no-recommendations"><i class="fas fa-lightbulb"></i><p>No recommendations available yet. More data is needed to generate insights.</p></div>';
     return;
   }
 
   container.innerHTML = recs.map(r => {
     const title = escapeHtml(r.product_name || `#${r.product_id || ''}`);
-    const img = r.image_url ? escapeHtml(r.image_url) : placeholder;
+    const img = (r.image_url || r.product_image) ? escapeHtml(r.image_url || r.product_image) : placeholder;
     const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
+    
+    // Display overall insight if available
+    const overallInsight = r.overallInsight 
+      ? `<div class="overall-insight"><i class="fas fa-lightbulb"></i> ${escapeHtml(r.overallInsight)}</div>` 
+      : '';
+    
     const recList = recommended.length
       ? `<ul class="rec-list">${recommended.map(x => {
-          const ix = x.image_url ? escapeHtml(x.image_url) : placeholder;
-          return `<li class="rec-item"><img src="${ix}" alt="${escapeHtml(x.product_name||`#${x.product_id||''}`)}" onerror="this.onerror=null;this.src='${placeholder}';" /><div class="rec-meta"><div class="rec-name">${escapeHtml(x.product_name || `#${x.product_id || ''}`)}</div><div class="rec-score">(${x.score ?? 0})</div></div></li>`;
+          const ix = (x.image_url || x.product_image) ? escapeHtml(x.image_url || x.product_image) : placeholder;
+          const confidence = x.confidence ? `${x.confidence.toFixed(1)}%` : '';
+          const lift = x.lift ? `${x.lift}x` : '';
+          const coPurchases = x.coPurchases ? `${x.coPurchases} times` : '';
+          const metrics = (confidence || lift) ? `<div class="rec-metrics">
+            <span class="metric-badge confidence" title="Confidence: How often they're bought together">${confidence}</span>
+            <span class="metric-badge lift" title="Lift: How much more likely compared to random">${lift}</span>
+            ${coPurchases ? `<span class="metric-badge copurchase" title="Co-purchase count">${coPurchases}</span>` : ''}
+          </div>` : '';
+          
+          // Display detailed insight for each recommendation
+          const insight = x.insight 
+            ? `<div class="rec-insight"><i class="fas fa-info-circle"></i> ${escapeHtml(x.insight)}</div>` 
+            : '';
+          
+          return `<li class="rec-item">
+            <img src="${ix}" alt="${escapeHtml(x.product_name||`#${x.product_id||''}`)}" onerror="this.onerror=null;this.src='${placeholder}';" />
+            <div class="rec-meta">
+              <div class="rec-name">${escapeHtml(x.product_name || `#${x.product_id || ''}`)}</div>
+              ${metrics}
+              ${insight}
+            </div>
+          </li>`;
         }).join('')}</ul>`
-      : '<div class="muted">No related items</div>';
+      : '<div class="muted">No related items found</div>';
 
-    return `<div class="recommendation-card"><div class="rec-head"><img class="rec-head-img" src="${img}" onerror="this.onerror=null;this.src='${placeholder}';" /><div class="rec-head-title">${title}</div></div><div class="rec-body">${recList}</div></div>`;
+    return `<div class="recommendation-card">
+      <div class="rec-head">
+        <img class="rec-head-img" src="${img}" onerror="this.onerror=null;this.src='${placeholder}';" />
+        <div class="rec-head-title">${title}</div>
+      </div>
+      <div class="rec-body">
+        <div class="rec-subtitle">Frequently bought together:</div>
+        ${overallInsight}
+        ${recList}
+      </div>
+    </div>`;
   }).join('');
 }
 

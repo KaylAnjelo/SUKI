@@ -9,6 +9,10 @@
 let TXN_DATA = [];
 let FILTERED_DATA = [];
 let OWNER_STORES = [];
+let SORT_STATE = {
+  column: 'transaction_date',
+  direction: 'desc'
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Element references (guarded)
@@ -26,6 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Wire simple helpers
   initTypeFilter();
   initApplyFilters();
+  initSorting();
 
   await loadOwnerStores();
   await loadOwnerTransactions();
@@ -52,6 +57,55 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
       applyFiltersAndRender();
     });
+  }
+
+  function initSorting() {
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    sortableHeaders.forEach(th => {
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      th.addEventListener('click', () => {
+        const column = th.getAttribute('data-column');
+        if (!column) return;
+        
+        // Toggle direction if same column, otherwise default to desc
+        if (SORT_STATE.column === column) {
+          SORT_STATE.direction = SORT_STATE.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          SORT_STATE.column = column;
+          SORT_STATE.direction = 'desc';
+        }
+        
+        // Update header indicators
+        updateSortIndicators();
+        
+        // Re-render with sorting
+        renderTransactions(FILTERED_DATA);
+      });
+    });
+    
+    // Set initial sort indicator
+    updateSortIndicators();
+  }
+
+  function updateSortIndicators() {
+    // Remove all sort indicators
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      const existingIcon = th.querySelector('.sort-icon');
+      if (existingIcon) existingIcon.remove();
+    });
+    
+    // Add indicator to active column
+    const activeHeader = document.querySelector(`th[data-column="${SORT_STATE.column}"]`);
+    if (activeHeader) {
+      activeHeader.classList.add(SORT_STATE.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+      const icon = document.createElement('i');
+      icon.className = `fas fa-sort-${SORT_STATE.direction === 'asc' ? 'up' : 'down'} sort-icon`;
+      icon.style.marginLeft = '6px';
+      icon.style.fontSize = '0.85em';
+      activeHeader.appendChild(icon);
+    }
   }
 
   async function applyFiltersAndRender() {
@@ -115,7 +169,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    rows.forEach(g => {
+    // Sort the rows based on current sort state
+    const sortedRows = [...rows].sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (SORT_STATE.column) {
+        case 'reference_number':
+          aVal = (a.reference_number || '').toLowerCase();
+          bVal = (b.reference_number || '').toLowerCase();
+          break;
+        case 'store_name':
+          aVal = (a.store_name || (a.items && a.items[0]?.store_name) || '').toLowerCase();
+          bVal = (b.store_name || (b.items && b.items[0]?.store_name) || '').toLowerCase();
+          break;
+        case 'amount':
+          aVal = Number(a.total_amount || 0);
+          bVal = Number(b.total_amount || 0);
+          break;
+        case 'points':
+          aVal = Number(a.total_points || 0);
+          bVal = Number(b.total_points || 0);
+          break;
+        case 'transaction_date':
+          aVal = a.transaction_date ? new Date(a.transaction_date).getTime() : 0;
+          bVal = b.transaction_date ? new Date(b.transaction_date).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aVal < bVal) return SORT_STATE.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return SORT_STATE.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    sortedRows.forEach(g => {
       const items = Array.isArray(g.items) ? g.items : [];
       const itemsJson = escapeAttr(JSON.stringify(items));
       const ref = g.reference_number || 'N/A';

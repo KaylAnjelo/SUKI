@@ -19,7 +19,10 @@ export const login = async (req, res) => {
   const password = req.body.password?.trim();
   const rememberMe = req.body.remember === 'on'; // Checkbox sends 'on' when checked
 
+  console.log(`🔐 [Login Attempt] Username: "${username}", Password length: ${password?.length}`);
+
   if (!username || !password) {
+    console.log("❌ [Login Failed] Missing username or password");
     return res.render("index", { error: "Please enter both username and password" });
   }
 
@@ -32,24 +35,30 @@ export const login = async (req, res) => {
       .maybeSingle();
 
     if (error) {
-      console.error("Database error:", error);
+      console.error("❌ [Login Failed] Database error:", error);
       return res.render("index", { error: "Error checking credentials" });
     }
 
     if (!user) {
+      console.log(`❌ [Login Failed] User not found: "${username}"`);
       return res.render("index", { error: "Invalid username or password" });
     }
 
     console.log("🔎 User from DB:", { 
       user_id: user.user_id, 
       username: user.username, 
-      role: user.role 
+      role: user.role,
+      has_password: !!user.password,
+      password_format: user.password?.substring(0, 4)
     });
 
     // Use bcrypt to compare the password
+    console.log(`🔐 Comparing password for user: ${username}`);
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log(`🔐 Password validation result: ${validPassword}`);
 
     if (!validPassword) {
+      console.log(`❌ [Login Failed] Invalid password for user: "${username}"`);
       return res.render("index", { error: "Invalid username or password" });
     }
 

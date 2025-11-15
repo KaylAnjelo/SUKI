@@ -4,7 +4,8 @@ import {
   getSalesSummary,
   getCustomerEngagement,
   getTopProducts,
-  getOrderRate
+  getOrderRate,
+  getRecommendations
 } from '../controllers/ownerDashboardController.js';
 import recController from '../controllers/recommendationController.js';
 import kmeansRec from '../controllers/recommendationKMeansController.js';
@@ -19,8 +20,10 @@ router.get('/customer-engagement', getCustomerEngagement);
 router.get('/top-products', getTopProducts);
 router.get('/order-rate', getOrderRate);
 
-// recommendations: fetch stored results
-router.get('/recommendations', recController.getStoredRecommendations.bind(recController));
+// recommendations: use Association Rule Mining (real-time)
+router.get('/recommendations', getRecommendations);
+// OLD recommendations (stored in DB) - keeping for backward compatibility
+router.get('/recommendations-old', recController.getStoredRecommendations.bind(recController));
 // trigger recompute (GET or POST) - requires authenticated owner
 router.post('/recompute-recommendations', recController.computeAndStoreRecommendations.bind(recController));
 router.get('/recompute-recommendations', recController.computeAndStoreRecommendations.bind(recController));
