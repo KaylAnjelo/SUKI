@@ -52,9 +52,9 @@
           <div class="user-profile">
             <div class="profile-pic" id="headerProfilePic">
               {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="headerStorePhoto">
+                <img src="{{store.store_image}}" alt="Store Photo" id="headerStorePhoto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
               {{else}}
-                <i class="fas fa-user"></i>
+                <i class="fas fa-store" style="color: #9ca3af;"></i>
               {{/if}}
             </div>
             <div class="profile-info">
@@ -76,7 +76,7 @@
               {{#if store.store_image}}
                 <img src="{{store.store_image}}" alt="Store Photo" id="storePhotoImg">
               {{else}}
-                <span>Store Profile Pic</span>
+                <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
               {{/if}}
             </div>
           </div>
@@ -160,7 +160,7 @@
           <div class="photo-upload-container">
             <input type="file" id="editStorePhoto" name="storePhoto" accept="image/*" class="photo-input">
             <div class="photo-preview" id="photoPreview">
-              <span class="photo-placeholder">Click to select photo</span>
+              <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
             </div>
             <button type="button" class="btn-remove-photo" id="removePhotoBtn" style="display: none;">Remove Photo</button>
           </div>
@@ -227,7 +227,7 @@
                 photoPreview.innerHTML = `<img src="${data.store.store_image}" alt="Current Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
                 document.getElementById('removePhotoBtn').style.display = 'block';
               } else {
-                photoPreview.innerHTML = '<span class="photo-placeholder">Click to select photo</span>';
+                photoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
                 document.getElementById('removePhotoBtn').style.display = 'none';
               }
               
@@ -285,6 +285,12 @@
             reader.onload = (e) => {
               photoPreview.innerHTML = `<img src="${e.target.result}" alt="Selected Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
               removePhotoBtn.style.display = 'block';
+              
+              // Remove the hidden field since we're uploading a new photo
+              const removeInput = document.getElementById('removePhotoInput');
+              if (removeInput) {
+                removeInput.remove();
+              }
             };
             reader.readAsDataURL(file);
           }
@@ -293,10 +299,24 @@
       
       // Handle remove photo button
       if (removePhotoBtn) {
-        removePhotoBtn.addEventListener('click', () => {
+        removePhotoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
           photoInput.value = '';
-          photoPreview.innerHTML = '<span class="photo-placeholder">Click to select photo</span>';
+          photoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
           removePhotoBtn.style.display = 'none';
+          
+          // Add a hidden field to indicate photo removal
+          let removeInput = document.getElementById('removePhotoInput');
+          if (!removeInput) {
+            removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.id = 'removePhotoInput';
+            removeInput.name = 'removePhoto';
+            removeInput.value = 'true';
+            editForm.appendChild(removeInput);
+          } else {
+            removeInput.value = 'true';
+          }
         });
       }
       
@@ -306,6 +326,12 @@
           e.preventDefault();
           
           const formData = new FormData(editForm);
+          
+          // Explicitly add removePhoto if the hidden input exists
+          const removeInput = document.getElementById('removePhotoInput');
+          if (removeInput && removeInput.value === 'true') {
+            formData.set('removePhoto', 'true');
+          }
           
           // Show loading state
           const saveBtn = document.querySelector('.btn-save');
@@ -339,6 +365,13 @@
                 
                 // Update header photo
                 headerProfilePic.innerHTML = `<img src="${result.storeImage}" alt="Store Photo" id="headerStorePhoto">`;
+              } else if (result.photoRemoved || formData.get('removePhoto') === 'true') {
+                // Photo was removed - show gray store icon
+                const storeProfilePic = document.getElementById('storeProfilePic');
+                const headerProfilePic = document.getElementById('headerProfilePic');
+                
+                storeProfilePic.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
+                headerProfilePic.innerHTML = '<i class="fas fa-store" style="font-size: 20px; color: #9ca3af;"></i>';
               }
               
               // Close modal

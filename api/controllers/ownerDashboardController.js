@@ -16,6 +16,9 @@ export const getOwnerDashboard = async (req, res) => {
 
     if (storeError) throw storeError;
 
+    // Get the first store for header display
+    const store = stores && stores.length > 0 ? stores[0] : null;
+
     // Fetch all transactions linked to these stores
     const { data: transactions, error: txError } = await supabase
       .from('transactions')
@@ -31,6 +34,7 @@ export const getOwnerDashboard = async (req, res) => {
     res.render('OwnerSide/ownerDashboard', {
       title: 'Owner Dashboard',
       user,
+      store,
       stores,
       totalSales,
     });

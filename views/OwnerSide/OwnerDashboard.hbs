@@ -52,7 +52,11 @@
           </div>
           <div class="user-profile">
             <div class="profile-pic">
-              <i class="fas fa-user"></i>
+              {{#if store.store_image}}
+                <img src="{{store.store_image}}" alt="Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              {{else}}
+                <i class="fas fa-store" style="color: #9ca3af;"></i>
+              {{/if}}
             </div>
             <div class="profile-info">
               <span class="user-name">{{user.username}}</span>
@@ -91,7 +95,7 @@
             </div>
           </div>
 
-          <div class="top-right-product-stats">
+          <div class="top-right-product-stats metric-card">
             <div class="card-header">
               <h3>Top Products</h3>
               <div class="dropdown-container">
@@ -144,7 +148,7 @@
             </div>
             <div class="card-content">
               <div class="engagement-chart-container">
-                <canvas id="engagementChart" width="600" height="300"></canvas>
+                <canvas id="engagementChart" width="700" height="300"></canvas>
               </div>
               <div class="engagement-stats" id="engagementStats">
                 <!-- Engagement statistics will be shown here -->

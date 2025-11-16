@@ -50,14 +50,21 @@ export const getOwnerProfileData = async (req, res) => {
 export const updateOwnerProfile = async (req, res) => {
   try {
     const userId = req.session?.user?.id;
-    const { storeName, ownerName, contactNumber, email, location } = req.body;
+    const { storeName, ownerName, contactNumber, email, location, removePhoto } = req.body;
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     let storeImage = null;
+    let shouldUpdateImage = false;
 
+    // ✅ Handle photo removal
+    if (removePhoto === 'true') {
+      storeImage = null;
+      shouldUpdateImage = true;
+      console.log("🗑️ Removing store photo");
+    }
     // ✅ Handle image upload if file is included
-    if (req.file) {
+    else if (req.file) {
       try {
         const file = req.file;
         const filePath = `stores/${Date.now()}_${file.originalname}`;
@@ -76,6 +83,7 @@ export const updateOwnerProfile = async (req, res) => {
         if (urlError) throw urlError;
 
         storeImage = publicURL.publicUrl;
+        shouldUpdateImage = true;
         console.log("✅ Uploaded store image URL:", storeImage);
       } catch (imageError) {
         console.error("⚠️ Image upload error:", imageError);
@@ -104,7 +112,7 @@ export const updateOwnerProfile = async (req, res) => {
       owner_contact: contactNumber,
       location,
     };
-    if (storeImage) storeUpdateData.store_image = storeImage;
+    if (shouldUpdateImage) storeUpdateData.store_image = storeImage;
 
     // ✅ Update store info
     const { error: storeError } = await supabase
@@ -120,7 +128,8 @@ export const updateOwnerProfile = async (req, res) => {
     res.json({
       success: true,
       message: "Profile updated successfully",
-      storeImage,
+      storeImage: shouldUpdateImage ? storeImage : undefined,
+      photoRemoved: removePhoto === 'true'
     });
   } catch (error) {
     console.error("❌ Error in updateOwnerProfile:", error);

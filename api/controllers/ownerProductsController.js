@@ -54,7 +54,7 @@ export async function getOwnerProducts(req, res) {
 
     const { data: stores, error: storesErr } = await supabase
       .from('stores')
-      .select('store_id, store_name')
+      .select('store_id, store_name, store_image')
       .eq('owner_id', ownerId);
     if (storesErr) {
       console.error('getOwnerProducts: storesErr', storesErr);

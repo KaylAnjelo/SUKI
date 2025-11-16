@@ -51,6 +51,18 @@
           <div id="notificationsDropdown" style="display: none;">
             <ul id="notificationsList"></ul>
           </div>
+          <div class="user-profile">
+            <div class="profile-pic">
+              {{#if store.store_image}}
+                <img src="{{store.store_image}}" alt="Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              {{else}}
+                <i class="fas fa-store" style="color: #9ca3af;"></i>
+              {{/if}}
+            </div>
+            <div class="profile-info">
+              <span class="user-name">{{user.username}}</span>
+            </div>
+          </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout">Log out</button>
           </form>

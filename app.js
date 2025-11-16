@@ -156,8 +156,15 @@ app.get("/owner/redemptions", async (req, res) => {
       return res.redirect('/login');
     }
 
+    const { data: store } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
     res.render('OwnerSide/Redemptions', {
-      user: req.session.user
+      user: req.session.user,
+      store
     });
   } catch (error) {
     console.error('Error in /owner/redemptions route:', error);
@@ -173,8 +180,15 @@ app.get("/owner/sales-report", async (req, res) => {
       return res.redirect('/login');
     }
 
+    const { data: store } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
     res.render('OwnerSide/SalesReport', {
-      user: req.session.user
+      user: req.session.user,
+      store
     });
   } catch (error) {
     console.error('Error in /owner/sales-report route:', error);
@@ -190,8 +204,15 @@ app.get("/owner/transactions", async (req, res) => {
       return res.redirect('/login');
     }
 
+    const { data: store } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
     res.render('OwnerSide/OwnerTransactions', {
-      user: req.session.user
+      user: req.session.user,
+      store
     });
   } catch (error) {
     console.error('Error in /owner/transactions route:', error);
@@ -207,8 +228,15 @@ app.get("/owner/promotions", async (req, res) => {
       return res.redirect('/login');
     }
 
+    const { data: store } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('owner_id', userId)
+      .single();
+
     res.render('OwnerSide/Promotions', {
-      user: req.session.user
+      user: req.session.user,
+      store
     });
   } catch (error) {
     console.error('Error in /owner/promotions route:', error);
