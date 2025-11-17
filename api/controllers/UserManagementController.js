@@ -218,11 +218,10 @@ export const addStore = async (req, res) => {
 
     // Hash the store_code to use as initial password
     const hashedPassword = await bcrypt.hash(newStore.store_code, 10);
-    const username = storeName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
     // Create user account with store_code as password
     const { data: newUser, error: userError } = await supabase.from('users').insert([{
-      username: username,
+      username: ownerEmail,
       user_email: ownerEmail,
       contact_number: contactInfo,
       password: hashedPassword,
@@ -303,6 +302,142 @@ export const deleteStore = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting store:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server Error',
+      message: error.message 
+    });
+  }
+};
+
+// Get all owners (users with role='owner')
+export const getOwners = async (req, res) => {
+  try {
+    const { data: owners, error } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, user_email')
+      .eq('role', 'owner')
+      .order('first_name', { ascending: true });
+
+    if (error) throw error;
+
+    console.log("✅ Fetched owners:", owners.length);
+    res.json(owners);
+  } catch (error) {
+    console.error("❌ Error fetching owners:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server Error',
+      message: error.message 
+    });
+  }
+};
+
+// Add store to existing owner
+export const addStoreToExistingOwner = async (req, res) => {
+  try {
+    const { ownerId, storeName, location } = req.body;
+
+    // Validate required fields
+    if (!ownerId || !storeName) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'Owner ID and store name are required'
+      });
+    }
+
+    // Verify owner exists
+    const { data: owner, error: ownerError } = await supabase
+      .from('users')
+      .select('user_id, first_name, last_name, contact_number')
+      .eq('user_id', ownerId)
+      .eq('role', 'owner')
+      .single();
+
+    if (ownerError || !owner) {
+      return res.status(404).json({
+        success: false,
+        error: 'Owner not found',
+        message: 'The selected owner does not exist'
+      });
+    }
+
+    // Handle store image upload if provided
+    let storeImage = null;
+    if (req.file) {
+      try {
+        const file = req.file;
+        const filePath = `stores/${Date.now()}_${file.originalname}`;
+
+        console.log('📁 Uploading store image:', file.originalname);
+
+        const { error: uploadError } = await supabase.storage
+          .from('store_image')
+          .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+        if (uploadError) {
+          console.error('❌ Storage upload error:', uploadError);
+          throw uploadError;
+        }
+
+        const { data: publicURL } = supabase.storage
+          .from('store_image')
+          .getPublicUrl(filePath);
+
+        storeImage = publicURL.publicUrl;
+        console.log('✅ Image uploaded:', storeImage);
+      } catch (imageError) {
+        console.error('❌ Image processing error:', imageError);
+        storeImage = null;
+      }
+    }
+
+    // Get the next store_id
+    const { data: maxStore, error: maxError } = await supabase
+      .from('stores')
+      .select('store_id')
+      .order('store_id', { ascending: false })
+      .limit(1)
+      .single();
+
+    const nextStoreId = maxStore ? maxStore.store_id + 1 : 1;
+
+    // Create the store
+    const { data: newStore, error: storeError } = await supabase
+      .from('stores')
+      .insert([{
+        store_id: nextStoreId,
+        owner_id: ownerId,
+        store_name: storeName,
+        location: location || 'Unknown',
+        owner_name: `${owner.first_name} ${owner.last_name}`,
+        owner_contact: owner.contact_number,
+        store_image: storeImage,
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (storeError) throw storeError;
+
+    console.log("✅ Store added to existing owner successfully");
+    
+    res.json({ 
+      success: true, 
+      message: 'Store added to existing owner successfully',
+      store: {
+        store_id: newStore.store_id,
+        store_name: newStore.store_name,
+        store_code: newStore.store_code,
+        owner_name: newStore.owner_name,
+        owner_contact: newStore.owner_contact,
+        location: newStore.location,
+        owner_id: newStore.owner_id
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error adding store to owner:", error.message);
     res.status(500).json({ 
       success: false, 
       error: 'Server Error',

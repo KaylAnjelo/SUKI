@@ -22,6 +22,7 @@ router.get('/stores', UserManagementController.getStores);
 router.get('/Store', UserManagementController.getStores);
 router.get('/test-connection', UserManagementController.testConnection);
 router.post('/stores/add', upload.single('storeImage'), UserManagementController.addStore);
+router.post('/stores/add-to-owner', upload.single('storeImage'), UserManagementController.addStoreToExistingOwner);
 router.post('/stores/delete/:id', UserManagementController.deleteStore);
 
 

@@ -7,11 +7,19 @@ if (window._ownerDashboardInit) {
   // Safe fetch helper (single canonical API path per endpoint)
   async function tryFetchJson(url) {
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      console.log('🌐 Fetching:', url);
+      const res = await fetch(url, { cache: "no-store", credentials: 'same-origin' });
       const text = await res.text();
-      if (!res.ok) throw new Error(`${res.status}: ${text}`);
-      return JSON.parse(text);
+      console.log('📥 Response status:', res.status, 'for', url);
+      if (!res.ok) {
+        console.error('❌ Request failed:', res.status, text);
+        throw new Error(`${res.status}: ${text}`);
+      }
+      const data = JSON.parse(text);
+      console.log('✅ Data received:', data);
+      return data;
     } catch (err) {
+      console.error('❌ Fetch error for', url, ':', err);
       throw err;
     }
   }
@@ -29,7 +37,10 @@ if (window._ownerDashboardInit) {
 
   // Engagement
   async function loadEngagementData(period = "30d") {
-    const url = `/api/owner/dashboard/customer-engagement?period=${encodeURIComponent(period)}`;
+    const storeId = getSelectedStoreId();
+    console.log('📊 loadEngagementData - storeId:', storeId);
+    const storeParam = (storeId && storeId !== '') ? `&store_id=${encodeURIComponent(storeId)}` : '';
+    const url = `/api/owner/dashboard/customer-engagement?period=${encodeURIComponent(period)}${storeParam}`;
     try {
       const payload = await tryFetchJson(url);
       console.log("📦 Engagement API response:", payload);
@@ -88,7 +99,10 @@ if (window._ownerDashboardInit) {
 
   // update loader to capture categories and populate dropdown
   async function loadProductData(category = 'all', limit = 5) {
-    const qs = `?category=${encodeURIComponent(category)}&limit=${encodeURIComponent(limit)}`;
+    const storeId = getSelectedStoreId();
+    console.log('📊 loadProductData - storeId:', storeId);
+    const storeParam = (storeId && storeId !== '') ? `&store_id=${encodeURIComponent(storeId)}` : '';
+    const qs = `?category=${encodeURIComponent(category)}&limit=${encodeURIComponent(limit)}${storeParam}`;
     const url = `/api/owner/dashboard/top-products${qs}`;
     try {
       const res = await fetch(url, { cache: 'no-store' });
@@ -302,16 +316,22 @@ if (window._ownerDashboardInit) {
     }
 
     setRecommendationsLoading(true);
-    const url = `/api/owner/dashboard/recommendations`;
+    const storeId = getSelectedStoreId();
+    console.log('📊 loadRecommendations - storeId:', storeId);
+    const storeParam = (storeId && storeId !== '') ? `?store_id=${encodeURIComponent(storeId)}` : '';
+    const url = `/api/owner/dashboard/recommendations${storeParam}`;
+    console.log('📊 loadRecommendations - URL:', url);
     try {
-      const res = await fetch(url, { cache: 'no-store' });
+      const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
       const text = await res.text();
       if (!res.ok) {
         console.error('Recommendations API', res.status, text.slice(0,200));
         throw new Error(`${res.status}: ${text}`);
       }
       const payload = JSON.parse(text);
+      console.log('📊 loadRecommendations - Payload:', payload);
       const recs = Array.isArray(payload) ? payload : (Array.isArray(payload.recommendations) ? payload.recommendations : (Array.isArray(payload.items) ? payload.items : []));
+      console.log('📊 loadRecommendations - Recommendations count:', recs.length);
       _recommendationsCache = recs;
       setRecommendationsLoading(false);
       if (typeof renderRecommendations === 'function') renderRecommendations(recs);
@@ -327,7 +347,10 @@ if (window._ownerDashboardInit) {
 
   // Dashboard summary
   async function loadDashboardSummary() {
-    const url = `/api/owner/dashboard/sales-summary`;
+    const storeId = getSelectedStoreId();
+    console.log('📊 loadDashboardSummary - storeId:', storeId);
+    const storeParam = (storeId && storeId !== '') ? `?store_id=${encodeURIComponent(storeId)}` : '';
+    const url = `/api/owner/dashboard/sales-summary${storeParam}`;
     try {
       const payload = await tryFetchJson(url);
       console.debug('Parsed summary payload:', payload);
@@ -342,13 +365,98 @@ if (window._ownerDashboardInit) {
     }
   }
 
+  // Store selector functionality
+  let currentStoreId = null;
+
+  function getSelectedStoreId() {
+    const selector = document.getElementById('storeSelector');
+    const value = selector ? selector.value : currentStoreId;
+    // Return null if empty string to avoid sending empty store_id parameter
+    return value && value !== '' ? value : null;
+  }
+
+  function reloadDashboardData() {
+    const storeId = getSelectedStoreId();
+    console.log('🔄 Reloading dashboard data for store:', storeId);
+    
+    // Clear cache when switching stores
+    _recommendationsCache = null;
+    
+    // Reload all data with store filter
+    const currentPeriod = document.getElementById('engagementPeriodFilter')?.value || '30d';
+    const currentCategory = document.getElementById('categoryFilter')?.value || 'all';
+    
+    loadEngagementData(currentPeriod).catch(() => {});
+    loadProductData(currentCategory, 5).catch(() => {});
+    loadRecommendations(true).catch(() => {});
+    loadDashboardSummary().catch(() => {});
+    
+    // Update store image in header
+    updateStoreImage(storeId);
+  }
+
+  async function updateStoreImage(storeId) {
+    const imgContainer = document.getElementById('storeImageHeader');
+    const iconContainer = document.getElementById('storeIconHeader');
+    
+    // If no store selected (All Stores), show default icon
+    if (!storeId) {
+      if (imgContainer) imgContainer.style.display = 'none';
+      if (iconContainer) iconContainer.style.display = 'flex';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/owner/stores/${storeId}`);
+      if (response.ok) {
+        const store = await response.json();
+        
+        if (store.store_image) {
+          if (imgContainer) {
+            imgContainer.src = store.store_image;
+            imgContainer.style.display = 'block';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'none';
+          }
+        } else {
+          if (imgContainer) {
+            imgContainer.style.display = 'none';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'flex';
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating store image:', err);
+    }
+  }
+
+  // Modified loaders to accept and use storeId parameter - removed duplicate
+
   // DOM init (single listener)
   document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ DOM fully loaded, initializing dashboard...");
     // export aliases for any inline callers
     window.loadTopProducts = loadProductData;
     window.loadRecommendations = loadRecommendations;
-    // start loaders
+    window.reloadDashboardData = reloadDashboardData;
+    
+    // Store selector listener - Initialize currentStoreId FIRST
+    const storeSelector = document.getElementById("storeSelector");
+    if (storeSelector) {
+      currentStoreId = storeSelector.value;
+      console.log("🏪 Initial store ID:", currentStoreId);
+      storeSelector.addEventListener("change", (e) => {
+        currentStoreId = e.target.value;
+        console.log("🔄 Store changed to:", currentStoreId);
+        reloadDashboardData();
+      });
+    }
+    
+    // start loaders - AFTER currentStoreId is set
+    console.log("📊 Loading dashboard data for store:", currentStoreId);
     loadEngagementData().catch(() => {});
     loadProductData().catch(() => {});
     loadRecommendations().catch(() => {});
@@ -532,36 +640,4 @@ function renderRecommendations(recs = []) {
   }).join('');
 }
 
-// Integrate enrichment into loadRecommendations
-async function loadRecommendations(force = false) {
-  if (!force && Array.isArray(_recommendationsCache) && _recommendationsCache.length) {
-    console.debug('Recommendations: using cached data, skipping network fetch');
-    if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
-    return _recommendationsCache;
-  }
-
-  setRecommendationsLoading(true);
-  const url = `/api/owner/dashboard/recommendations`;
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    const text = await res.text();
-    if (!res.ok) {
-      console.error('Recommendations API', res.status, text.slice(0,200));
-      throw new Error(`${res.status}: ${text}`);
-    }
-    const payload = JSON.parse(text);
-    const raw = Array.isArray(payload) ? payload : (Array.isArray(payload.recommendations) ? payload.recommendations : (Array.isArray(payload.items) ? payload.items : []));
-    // enrich raw rows into grouped objects with product metadata
-    const enriched = await enrichRecommendations(raw);
-    _recommendationsCache = enriched;
-    setRecommendationsLoading(false);
-    if (typeof renderRecommendations === 'function') renderRecommendations(enriched);
-    return enriched;
-  } catch (err) {
-    console.error('Error loading recommendations:', err);
-    _recommendationsCache = _recommendationsCache || [];
-    setRecommendationsLoading(false);
-    if (typeof renderRecommendations === 'function') renderRecommendations(_recommendationsCache);
-    return _recommendationsCache;
-  }
-}
+// Duplicate loadRecommendations function removed - using main one above with store filtering

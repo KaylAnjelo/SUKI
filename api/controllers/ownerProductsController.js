@@ -62,15 +62,37 @@ export async function getOwnerProducts(req, res) {
     }
     console.log('getOwnerProducts: stores found=', (stores || []).length);
 
+    // Get selected store from query param or use first store
+    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    let store = null;
+    
+    if (selectedStoreId && stores) {
+      store = stores.find(s => s.store_id === selectedStoreId);
+    }
+    
+    // Fallback to first store if no valid selection
+    if (!store && stores && stores.length > 0) {
+      store = stores[0];
+    }
+
+    // Mark selected store in stores array
+    const storesWithSelection = (stores || []).map(s => ({
+      ...s,
+      is_selected: s.store_id === store?.store_id
+    }));
+
     const storeIds = (stores || []).map(s => s.store_id);
     if (!storeIds.length) {
-      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null });
+      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [] });
     }
+
+    // Filter by selected store or all stores
+    const targetStoreIds = selectedStoreId ? [selectedStoreId] : storeIds;
 
     const { data: productsData, error: prodErr } = await supabase
       .from('products')
       .select('id, product_name, price, store_id, product_type, product_image')
-      .in('store_id', storeIds)
+      .in('store_id', targetStoreIds)
       .order('id', { ascending: true });
     if (prodErr) {
       console.error('getOwnerProducts: prodErr', prodErr);
@@ -86,11 +108,10 @@ export async function getOwnerProducts(req, res) {
       product_image: p.product_image || null
     }));
 
-    const store = (stores || [])[0] || null;
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store });
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store, stores: storesWithSelection });
   } catch (err) {
     console.error('getOwnerProducts error', err);
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, error: 'Failed to load products' });
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], error: 'Failed to load products' });
   }
 };
 

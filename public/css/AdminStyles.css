@@ -2391,3 +2391,179 @@ body.modal-open {
   cursor: pointer;
   margin-bottom: 8px;
 }
+
+/* Add Store to Existing Owner Modal - Match main modal styling */
+#addStoreToOwnerModal .modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+#addStoreToOwnerModal .modal-body {
+  display: flex;
+  gap: 24px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+
+#addStoreToOwnerModal .uploader {
+  flex: 0 0 auto;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#addStoreToOwnerModal .preview-area {
+  width: 240px;
+  height: 240px;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+#addStoreToOwnerModal .preview-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#addStoreToOwnerModal .preview-area i {
+  color: #c7c7c7;
+  font-size: 48px;
+}
+
+#addStoreToOwnerModal .right-form {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-content: start;
+}
+
+#addStoreToOwnerModal .full {
+  grid-column: 1 / -1;
+}
+
+#addStoreToOwnerModal .form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+#addStoreToOwnerModal label {
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+#addStoreToOwnerModal input,
+#addStoreToOwnerModal select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+#addStoreToOwnerModal input:focus,
+#addStoreToOwnerModal select:focus {
+  outline: none;
+  border-color: #7c0f0f;
+}
+
+#addStoreToOwnerModal .file-input { 
+  display: none; 
+}
+
+#addStoreToOwnerModal .upload-btn {
+  background: #7c0f0f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#addStoreToOwnerModal .upload-btn:hover {
+  background: #5a0000;
+}
+
+#addStoreToOwnerModal .file-name {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  word-break: break-word;
+}
+
+#addStoreToOwnerModal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#addStoreToOwnerModal .cancel-btn,
+#addStoreToOwnerModal .submit-btn,
+#addStoreToOwnerModal .clear-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#addStoreToOwnerModal .clear-btn {
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+#addStoreToOwnerModal .clear-btn:hover {
+  background: #f3f4f6;
+}
+
+#addStoreToOwnerModal .submit-btn {
+  background: #7c0f0f;
+  color: white;
+  border: none;
+}
+
+#addStoreToOwnerModal .submit-btn:hover {
+  background: #5a0000;
+}
+
+@media (max-width: 768px) {
+  #addStoreToOwnerModal .modal-body {
+    flex-direction: column;
+  }
+
+  #addStoreToOwnerModal .uploader {
+    width: 100%;
+  }
+
+  #addStoreToOwnerModal .preview-area {
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+  }
+
+  #addStoreToOwnerModal .right-form {
+    grid-template-columns: 1fr;
+  }
+}

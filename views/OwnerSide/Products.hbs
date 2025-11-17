@@ -443,13 +443,21 @@
           <div class="user-profile">
             <div class="profile-pic">
               {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
               {{else}}
-                <i class="fas fa-store" style="color: #9ca3af;"></i>
+                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
               {{/if}}
             </div>
             <div class="profile-info">
-              <span class="user-name">{{user.username}}</span>
+              <select id="storeSelector" class="store-dropdown">
+                {{#if stores}}
+                  {{#each stores}}
+                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No stores available</option>
+                {{/if}}
+              </select>
             </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -601,6 +609,48 @@
       const closeDeleteModal = document.getElementById('closeDeleteModal');
       const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
       const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      const storeSelector = document.getElementById('storeSelector');
+
+      // Store selector functionality
+      if (storeSelector) {
+        storeSelector.addEventListener('change', (e) => {
+          const storeId = e.target.value;
+          // Reload page with selected store
+          window.location.href = `/owner/products?store_id=${storeId}`;
+        });
+      }
+
+      async function updateStoreImage(storeId) {
+        if (!storeId) return;
+        
+        try {
+          const response = await fetch(`/api/owner/stores/${storeId}`);
+          if (response.ok) {
+            const store = await response.json();
+            const imgContainer = document.getElementById('storeImageHeader');
+            const iconContainer = document.getElementById('storeIconHeader');
+            
+            if (store.store_image) {
+              if (imgContainer) {
+                imgContainer.src = store.store_image;
+                imgContainer.style.display = 'block';
+              }
+              if (iconContainer) {
+                iconContainer.style.display = 'none';
+              }
+            } else {
+              if (imgContainer) {
+                imgContainer.style.display = 'none';
+              }
+              if (iconContainer) {
+                iconContainer.style.display = 'flex';
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error updating store image:', err);
+        }
+      }
 
       // Open add product modal
       addProductBtn.addEventListener('click', () => {

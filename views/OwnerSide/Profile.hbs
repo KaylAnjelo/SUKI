@@ -82,16 +82,13 @@
           </div>
           <div class="profile-fields">
             <div class="profile-field">
-              <label>Store Name</label>
-              <input type="text" id="storeName" value="{{#if store.store_name}}{{store.store_name}}{{else}}No Store{{/if}}" readonly>
-            </div>
-            <div class="profile-field">
               <label>Owner Name</label>
               <input type="text" id="ownerName" value="{{#if store}}{{store.owner_name}}{{else}}{{#if user}}{{user.first_name}} {{user.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
             </div>
           </div>
           <div class="profile-actions">
             <button class="edit-profile-btn">Edit Profile</button>
+            <button class="change-password-btn">Change Password</button>
           </div>
         </div>
 
@@ -100,10 +97,6 @@
           <!-- Information Section -->
           <div class="information-card">
             <h3>Information</h3>
-            <div class="info-item">
-              <i class="fas fa-map-marker-alt"></i>
-              <span id="location">{{#if store.location}}{{store.location}}{{else}}No Location{{/if}}</span>
-            </div>
             <div class="info-item">
               <i class="fas fa-envelope"></i>
               <span id="email">{{#if user.user_email}}{{user.user_email}}{{else}}No Email{{/if}}</span>
@@ -192,6 +185,35 @@
       </form>
     </div>
   </div>
+
+  <!-- Change Password Modal -->
+  <div id="changePasswordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="color: #ffffff;">Change Password</h2>
+        <span class="close-password">&times;</span>
+      </div>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" name="currentPassword" required>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" name="newPassword" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel-password">Cancel</button>
+          <button type="submit" class="btn-save">Change Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Profile page loaded');
@@ -392,6 +414,95 @@
             alert('Failed to update profile');
           } finally {
             // Reset button state
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          }
+        });
+      }
+
+      // Change Password Modal
+      const passwordModal = document.getElementById('changePasswordModal');
+      const changePasswordBtn = document.querySelector('.change-password-btn');
+      const closePasswordBtn = document.querySelector('.close-password');
+      const cancelPasswordBtn = document.querySelector('.btn-cancel-password');
+      const changePasswordForm = document.getElementById('changePasswordForm');
+      
+      // Open password modal
+      if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', () => {
+          passwordModal.style.display = 'block';
+        });
+      }
+      
+      // Close password modal
+      if (closePasswordBtn) {
+        closePasswordBtn.addEventListener('click', () => {
+          passwordModal.style.display = 'none';
+          changePasswordForm.reset();
+        });
+      }
+      
+      if (cancelPasswordBtn) {
+        cancelPasswordBtn.addEventListener('click', () => {
+          passwordModal.style.display = 'none';
+          changePasswordForm.reset();
+        });
+      }
+      
+      // Close when clicking outside
+      window.addEventListener('click', (event) => {
+        if (event.target === passwordModal) {
+          passwordModal.style.display = 'none';
+          changePasswordForm.reset();
+        }
+      });
+      
+      // Handle password change form submission
+      if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const currentPassword = document.getElementById('currentPassword').value;
+          const newPassword = document.getElementById('newPassword').value;
+          const confirmPassword = document.getElementById('confirmPassword').value;
+          
+          // Validate passwords match
+          if (newPassword !== confirmPassword) {
+            alert('New passwords do not match!');
+            return;
+          }
+          
+          // Show loading state
+          const saveBtn = changePasswordForm.querySelector('.btn-save');
+          const originalText = saveBtn.textContent;
+          saveBtn.textContent = 'Changing...';
+          saveBtn.disabled = true;
+          
+          try {
+            const response = await fetch('/owner/change-password', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                currentPassword,
+                newPassword
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              alert('Password changed successfully!');
+              passwordModal.style.display = 'none';
+              changePasswordForm.reset();
+            } else {
+              alert('Failed to change password: ' + (result.error || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Error changing password:', error);
+            alert('Failed to change password');
+          } finally {
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
           }

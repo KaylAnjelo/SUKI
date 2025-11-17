@@ -1,0 +1,375 @@
+{
+	"info": {
+		"_postman_id": "suki-recommendation-testing",
+		"name": "SUKI Recommendation Testing",
+		"description": "Test collection for recommendation system with products from stores 4 and 5",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Transaction 1 - User 6 (Store 4 - Spanish Latte + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 6, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 2 - User 7 (Store 4 - Spanish Latte + Spaghetti)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 7, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 9, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 3 - User 8 (Store 4 - Americano + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 8, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 4 - User 9 (Store 4 - Americano + Spaghetti)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 9, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}, {\"product_id\": 9, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 5 - User 10 (Store 4 - Spanish Latte x2 + Americano)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 10, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 2, \"price\": 150.00}, {\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 6 - User 11 (Store 5 - Aruskaldo + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 11, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 11, \"quantity\": 1, \"price\": 40.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 7 - User 12 (Store 5 - Pares Bagnet + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 12, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 8 - User 13 (Store 5 - Pares Laman + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 13, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 13, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 9 - User 14 (Store 5 - Pares Mami + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 14, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 14, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 10 - User 15 (Store 5 - Pares Bagnet + Pares Laman + Softdrinks x2)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 15, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 13, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 2, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 11 - User 16 (Store 4 - Spanish Latte + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 16, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 12 - User 17 (Store 4 - Spanish Latte + Carbonara + Americano)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 17, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}, {\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 13 - User 18 (Store 4 - Americano + Spaghetti)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 18, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}, {\"product_id\": 9, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 14 - User 19 (Store 4 - Spanish Latte + Spaghetti)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 19, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 9, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 15 - User 20 (Store 4 - Spanish Latte + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 20, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 16 - User 21 (Store 5 - Pares Bagnet + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 21, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 17 - User 22 (Store 5 - Pares Laman + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 22, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 13, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 18 - User 23 (Store 5 - Pares Mami + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 23, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 14, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 19 - User 24 (Store 5 - Aruskaldo + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 24, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 11, \"quantity\": 1, \"price\": 40.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 20 - User 25 (Store 5 - Pares Bagnet + Pares Laman + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 25, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 13, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 21 - User 26 (Store 4 - Americano + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 26, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 22 - User 27 (Store 4 - Spanish Latte + Spaghetti + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 27, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 1, \"price\": 150.00}, {\"product_id\": 9, \"quantity\": 1, \"price\": 120.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 23 - User 28 (Store 5 - All Pares + Softdrinks x2)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 28, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 11, \"quantity\": 1, \"price\": 40.00}, {\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 13, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 2, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 24 - User 29 (Store 4 - Spanish Latte x2 + Americano + Carbonara)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 4, \"user_id\": 29, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 7, \"quantity\": 2, \"price\": 150.00}, {\"product_id\": 10, \"quantity\": 1, \"price\": 100.00}, {\"product_id\": 8, \"quantity\": 1, \"price\": 120.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Transaction 25 - User 30 (Store 5 - Pares Bagnet + Pares Mami + Softdrinks)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"store_id\": 5, \"user_id\": 30, \"transaction_type\": \"Purchase\", \"products\": [{\"product_id\": 12, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 14, \"quantity\": 1, \"price\": 60.00}, {\"product_id\": 15, \"quantity\": 1, \"price\": 20.00}]}",
+					"options": {"raw": {"language": "json"}}
+				},
+				"url": {"raw": "http://localhost:5000/transactions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["transactions"]}
+			}
+		},
+		{
+			"name": "Get Dashboard Recommendations (Association Rules)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {"raw": "http://localhost:5000/api/owner/dashboard/recommendations", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "owner", "dashboard", "recommendations"]}
+			}
+		},
+		{
+			"name": "Get Dashboard Recommendations - Store 4",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {"raw": "http://localhost:5000/api/owner/dashboard/recommendations?store_id=4", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "owner", "dashboard", "recommendations"], "query": [{"key": "store_id", "value": "4"}]}
+			}
+		},
+		{
+			"name": "Get Dashboard Recommendations - Store 5",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {"raw": "http://localhost:5000/api/owner/dashboard/recommendations?store_id=5", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "owner", "dashboard", "recommendations"], "query": [{"key": "store_id", "value": "5"}]}
+			}
+		},
+		{
+			"name": "Recompute K-Means Recommendations",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {"raw": "http://localhost:5000/api/owner/dashboard/recompute-kmeans?period=30d&k=3&minCount=2", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "owner", "dashboard", "recompute-kmeans"], "query": [{"key": "period", "value": "30d"}, {"key": "k", "value": "3"}, {"key": "minCount", "value": "2"}]}
+			}
+		},
+		{
+			"name": "Get Stored K-Means Recommendations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {"raw": "http://localhost:5000/api/owner/dashboard/recommendations-old", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "owner", "dashboard", "recommendations-old"]}
+			}
+		}
+	]
+}

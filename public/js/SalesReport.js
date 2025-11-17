@@ -19,6 +19,60 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let page = 1;
+  let currentStoreId = null;
+
+  // Initialize current store from selector
+  const storeSelector = document.getElementById('storeSelector');
+  if (storeSelector) {
+    currentStoreId = storeSelector.value;
+    // Listen for store changes
+    storeSelector.addEventListener('change', (e) => {
+      currentStoreId = e.target.value;
+      // Update store filter dropdown to match
+      if (storeSel) storeSel.value = currentStoreId;
+      page = 1; // Reset to first page
+      loadReport();
+      updateStoreImage(currentStoreId);
+    });
+  }
+
+  async function updateStoreImage(storeId) {
+    const imgContainer = document.getElementById('storeImageHeader');
+    const iconContainer = document.getElementById('storeIconHeader');
+    
+    // If no store selected (All Stores), show default icon
+    if (!storeId || storeId === '') {
+      if (imgContainer) imgContainer.style.display = 'none';
+      if (iconContainer) iconContainer.style.display = 'flex';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/owner/stores/${storeId}`);
+      if (response.ok) {
+        const store = await response.json();
+        
+        if (store.store_image) {
+          if (imgContainer) {
+            imgContainer.src = store.store_image;
+            imgContainer.style.display = 'block';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'none';
+          }
+        } else {
+          if (imgContainer) {
+            imgContainer.style.display = 'none';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'flex';
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating store image:', err);
+    }
+  }
 
   async function safeJson(res) {
     const text = await res.text();
@@ -45,7 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function buildQuery({ page = 1, limit = 10 } = {}) {
     const q = new URLSearchParams();
-    if (storeSel && storeSel.value) q.set('storeId', storeSel.value);
+    // Use header store selector value if available, otherwise use filter dropdown
+    const storeId = currentStoreId || (storeSel && storeSel.value);
+    // Only add storeId parameter if it's not empty (All Stores)
+    if (storeId && storeId !== '') q.set('storeId', storeId);
     if (dateFrom && dateFrom.value) q.set('dateFrom', dateFrom.value);
     if (dateTo && dateTo.value) q.set('dateTo', dateTo.value);
     if (sortBy && sortBy.value) q.set('sortBy', sortBy.value);

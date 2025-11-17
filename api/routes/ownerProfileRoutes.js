@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOwnerProfileData, updateOwnerProfile  } from '../controllers/ownerProfileController.js';
+import { getOwnerProfileData, updateOwnerProfile, changeOwnerPassword } from '../controllers/ownerProfileController.js';
 import upload from '../../middleware/multerConfig.js';
 const router = express.Router();
 

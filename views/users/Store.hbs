@@ -87,10 +87,13 @@
         </div>
       </div>
 
-      <!-- Add Store Button -->
-      <div style="text-align: right; margin-top: 20px;">
+      <!-- Add Store Buttons -->
+      <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
         <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
-          <i class="fas fa-plus"></i> Add Store
+          <i class="fas fa-plus"></i> Add New Store
+        </button>
+        <button class="download-btn" style="background-color: #0f7c7c; color: white;" onclick="showAddStoreToExistingOwnerForm()">
+          <i class="fas fa-user-plus"></i> Add Store to Existing Owner
         </button>
       </div>
 
@@ -177,6 +180,56 @@
           </div>
         </form>
       </div>
+
+      <!-- Add Store to Existing Owner Modal -->
+      <div id="addStoreToOwnerModal" class="modal">
+        <div class="modal-content modal-animate">
+          <div class="modal-header">
+            <h2>Add Store to Existing Owner</h2>
+            <span class="close" onclick="closeOwnerModal()">&times;</span>
+          </div>
+          <form id="addStoreToOwnerForm" action="/users/stores/add-to-owner" method="POST" enctype="multipart/form-data">
+            <div class="modal-body">
+              <div class="uploader">
+                <div class="preview-area" id="imagePreviewOwner">
+                  <i class="fas fa-image" style="font-size:48px;color:#c7c7c7;"></i>
+                </div>
+                <div>
+                  <input class="file-input" type="file" id="storeImageOwner" name="storeImage" accept="image/*" onchange="onImageSelectedOwner(event)">
+                  <button type="button" class="upload-btn" onclick="document.getElementById('storeImageOwner').click()">
+                    <i class="fas fa-upload"></i> Upload Logo
+                  </button>
+                  <div class="file-name" id="fileNameOwner">No file chosen</div>
+                </div>
+              </div>
+
+              <div class="right-form">
+                <div class="form-row full">
+                  <label for="ownerSelect">Select Owner</label>
+                  <select id="ownerSelect" name="ownerId" required>
+                    <option value="">-- Select an Owner --</option>
+                  </select>
+                </div>
+
+                <div class="form-row full">
+                  <label for="storeNameOwner">Store Name</label>
+                  <input type="text" id="storeNameOwner" name="storeName" required>
+                </div>
+
+                <div class="form-row full">
+                  <label for="locationOwner">Store Location</label>
+                  <input type="text" id="locationOwner" name="location" required>
+                </div>
+
+                <div class="form-actions full">
+                  <button type="button" class="clear-btn" onclick="clearOwnerForm()">Clear</button>
+                  <button type="submit" class="submit-btn">Add Store</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </main>
   </div>
   <script>
@@ -234,6 +287,59 @@
       img.onload = () => URL.revokeObjectURL(img.src);
       preview.innerHTML = '';
       preview.appendChild(img);
+    }
+
+    function onImageSelectedOwner(event) {
+      const file = event.target.files && event.target.files[0];
+      const preview = document.getElementById('imagePreviewOwner');
+      const fileName = document.getElementById('fileNameOwner');
+      if (!file) {
+        preview.innerHTML = '<i class="fas fa-image" style="font-size:48px;color:#c7c7c7;"></i>';
+        fileName.textContent = 'No file chosen';
+        return;
+      }
+      fileName.textContent = file.name;
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.innerHTML = '';
+      preview.appendChild(img);
+    }
+
+    async function showAddStoreToExistingOwnerForm() {
+      // Load existing owners
+      try {
+        const response = await fetch('/api/owners');
+        const owners = await response.json();
+        
+        const select = document.getElementById('ownerSelect');
+        select.innerHTML = '<option value="">-- Select an Owner --</option>';
+        
+        owners.forEach(owner => {
+          const option = document.createElement('option');
+          option.value = owner.user_id;
+          option.textContent = `${owner.first_name} ${owner.last_name} (${owner.username})`;
+          select.appendChild(option);
+        });
+        
+        document.getElementById('addStoreToOwnerModal').style.display = 'block';
+        document.body.classList.add('modal-open');
+      } catch (error) {
+        console.error('Error loading owners:', error);
+        alert('Failed to load owners. Please try again.');
+      }
+    }
+
+    function closeOwnerModal() {
+      document.getElementById('addStoreToOwnerModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
+      clearOwnerForm();
+    }
+
+    function clearOwnerForm() {
+      document.getElementById('addStoreToOwnerForm').reset();
+      document.getElementById('imagePreviewOwner').innerHTML = '<i class="fas fa-image" style="font-size:48px;color:#c7c7c7;"></i>';
+      document.getElementById('fileNameOwner').textContent = 'No file chosen';
     }
   </script>
 </body>

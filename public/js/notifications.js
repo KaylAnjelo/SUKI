@@ -5,6 +5,11 @@ document.addEventListener("DOMContentLoaded", function() {
   const notifDropdown = document.getElementById('notificationsDropdown');
   const notifList = document.getElementById('notificationsList');
 
+  // Exit early if notification elements don't exist on this page
+  if (!notifBtn || !notifDropdown || !notifList) {
+    return;
+  }
+
   notifBtn.addEventListener('click', async function() {
     notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
 

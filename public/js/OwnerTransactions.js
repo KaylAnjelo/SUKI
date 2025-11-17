@@ -13,6 +13,7 @@ let SORT_STATE = {
   column: 'transaction_date',
   direction: 'desc'
 };
+let currentStoreId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Element references (guarded)
@@ -20,6 +21,59 @@ document.addEventListener("DOMContentLoaded", async () => {
   const typeSelect = document.getElementById('typeFilterTrans');
   const applyBtn = document.querySelector('.apply-filters-btn');
   const tbody = document.getElementById('transactionsBody');
+  const storeSelector = document.getElementById('storeSelector');
+
+  // Initialize current store from header selector
+  if (storeSelector) {
+    currentStoreId = storeSelector.value;
+    // Listen for store changes in header
+    storeSelector.addEventListener('change', async (e) => {
+      currentStoreId = e.target.value;
+      // Sync with filter dropdown
+      if (storeSelect) storeSelect.value = currentStoreId;
+      // Reload transactions
+      await loadOwnerTransactions();
+      updateStoreImage(currentStoreId);
+    });
+  }
+
+  async function updateStoreImage(storeId) {
+    const imgContainer = document.getElementById('storeImageHeader');
+    const iconContainer = document.getElementById('storeIconHeader');
+    
+    // If no store selected (All Stores), show default icon
+    if (!storeId || storeId === '') {
+      if (imgContainer) imgContainer.style.display = 'none';
+      if (iconContainer) iconContainer.style.display = 'flex';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/owner/stores/${storeId}`);
+      if (response.ok) {
+        const store = await response.json();
+        
+        if (store.store_image) {
+          if (imgContainer) {
+            imgContainer.src = store.store_image;
+            imgContainer.style.display = 'block';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'none';
+          }
+        } else {
+          if (imgContainer) {
+            imgContainer.style.display = 'none';
+          }
+          if (iconContainer) {
+            iconContainer.style.display = 'flex';
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating store image:', err);
+    }
+  }
 
   // If main elements missing, stop to avoid runtime errors
   if (!tbody) {
@@ -35,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadOwnerStores();
   await loadOwnerTransactions();
 
-  // helper: reload on store/type change if desired
+  // helper: reload on filter change
   if (storeSelect) storeSelect.addEventListener('change', applyFiltersAndRender);
   if (typeSelect) typeSelect.addEventListener('change', applyFiltersAndRender);
 
@@ -146,7 +200,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadOwnerTransactions() {
     try {
-      const res = await fetch('/api/owner/transactions');
+      // Use header store selector if available
+      const storeId = currentStoreId || (storeSelect ? storeSelect.value : '');
+      // Only use store-specific URL if storeId is not empty
+      const url = (storeId && storeId !== '') ? `/api/owner/transactions/${storeId}` : '/api/owner/transactions';
+      
+      const res = await fetch(url);
       if (!res.ok) {
         const text = await res.text();
         console.error('Server returned non-OK for transactions:', res.status, text);

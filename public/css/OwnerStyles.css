@@ -442,6 +442,47 @@ h1 {
   cursor: pointer;
 }
 
+/* Store selector dropdown in header */
+.user-profile .store-dropdown {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  outline: none;
+  max-width: 200px;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+.user-profile .store-dropdown:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.user-profile .store-dropdown:focus {
+  outline: none;
+  border-color: #7c0f0f;
+  box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
+}
+
+.user-profile .store-dropdown option {
+  background: white;
+  color: #111827;
+  font-weight: normal;
+  padding: 8px 12px;
+}
+
 .donut-chart-container {
   position: relative;
   height: 150px;
@@ -1264,10 +1305,13 @@ h1 {
 }
 
 .profile-actions {
-  align-self: flex-end;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
 }
 
-.edit-profile-btn {
+.edit-profile-btn,
+.change-password-btn {
   background: #f5f5f5;
   color: #333;
   border: 1px solid #d1d5db;
@@ -1279,7 +1323,8 @@ h1 {
   transition: all 0.2s ease;
 }
 
-.edit-profile-btn:hover {
+.edit-profile-btn:hover,
+.change-password-btn:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
 }

@@ -1,4 +1,5 @@
 import supabase from "../../config/db.js";
+import bcrypt from "bcrypt";
 
 export const getOwnerProfileData = async (req, res) => {
   try {
@@ -133,6 +134,71 @@ export const updateOwnerProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error in updateOwnerProfile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * POST - Change owner password
+ */
+export const changeOwnerPassword = async (req, res) => {
+  try {
+    const userId = req.session?.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters long" });
+    }
+
+    // Fetch user's current password hash
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("password")
+      .eq("user_id", userId)
+      .single();
+
+    if (userError || !user) {
+      console.error("❌ Failed to fetch user:", userError);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ password: hashedPassword })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("❌ Failed to update password:", updateError);
+      return res.status(500).json({ error: "Failed to update password" });
+    }
+
+    console.log("✅ Password changed successfully for user:", userId);
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
+
+  } catch (error) {
+    console.error("❌ Error in changeOwnerPassword:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

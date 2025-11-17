@@ -16,8 +16,24 @@ export const getOwnerDashboard = async (req, res) => {
 
     if (storeError) throw storeError;
 
-    // Get the first store for header display
-    const store = stores && stores.length > 0 ? stores[0] : null;
+    // Get selected store from query param or use first store
+    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    let store = null;
+    
+    if (selectedStoreId && stores) {
+      store = stores.find(s => s.store_id === selectedStoreId);
+    }
+    
+    // Fallback to first store if no valid selection
+    if (!store && stores && stores.length > 0) {
+      store = stores[0];
+    }
+
+    // Mark selected store in stores array
+    const storesWithSelection = stores.map(s => ({
+      ...s,
+      is_selected: s.store_id === store?.store_id
+    }));
 
     // Fetch all transactions linked to these stores
     const { data: transactions, error: txError } = await supabase
@@ -30,12 +46,15 @@ export const getOwnerDashboard = async (req, res) => {
     // Compute total sales
     const totalSales = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
+    // Store the selected store ID in session for API calls
+    req.session.selectedStoreId = store?.store_id;
+
     // Render your HBS file
     res.render('OwnerSide/ownerDashboard', {
       title: 'Owner Dashboard',
       user,
       store,
-      stores,
+      stores: storesWithSelection,
       totalSales,
     });
 
@@ -62,11 +81,19 @@ async function fetchOwnedStoreIds(userId) {
 export const getTopProducts = async (req, res) => {
   try {
     const userId = req.session?.userId || req.session?.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return res.status(401).json({ items: [] });
 
-    const { category = 'all', limit = 5, days = 30 } = req.query;
-    const storeIds = await fetchOwnedStoreIds(userId);
-    if (storeIds.length === 0) return res.json({ items: [] });
+    const { category = 'all', limit = 5, days = 30, store_id } = req.query;
+    
+    // Use filtered store ID if provided, otherwise get all stores
+    let storeIds;
+    if (store_id) {
+      storeIds = [parseInt(store_id)];
+    } else {
+      storeIds = await fetchOwnedStoreIds(userId);
+    }
+    
+    if (storeIds.length === 0) return res.status(200).json({ items: [] });
 
     console.log(`📊 [TopProducts] Fetching for stores: ${storeIds.join(', ')}, category: ${category}, days: ${days}`);
 
@@ -127,14 +154,16 @@ export const getTopProducts = async (req, res) => {
 
 export const getSalesSummary = async (req, res) => {
   try {
-    console.log('GET /sales-summary query:', req.query, 'user:', req.session?.user ?? req.session?.userId);
-    const { user } = req.session;
-    console.log("📊 [SalesSummary] Session user:", user);
+    const userId = req.session?.userId || req.session?.user?.id;
+    console.log('GET /sales-summary query:', req.query, 'userId:', userId);
+    console.log("📊 [SalesSummary] Session:", req.session);
 
-    if (!user) return res.status(401).json({ error: "Unauthorized" });
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     // Optional time window in days (defaults to 30)
     const days = Math.max(1, parseInt(req.query.days ?? '30', 10) || 30);
+    const { store_id } = req.query;
+    
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - (days - 1));
@@ -144,7 +173,7 @@ export const getSalesSummary = async (req, res) => {
     const { data: stores, error: storeError } = await supabase
       .from("stores")
       .select("store_id")
-      .eq("owner_id", user.id);
+      .eq("owner_id", userId);
 
     console.log("📊 [SalesSummary] Stores:", stores);
 
@@ -159,11 +188,14 @@ export const getSalesSummary = async (req, res) => {
       });
     }
 
+    // Filter by specific store if provided
+    const storeIds = store_id ? [parseInt(store_id)] : stores.map(s => s.store_id);
+
     // Current period transactions
     const { data: transactions, error: txError } = await supabase
       .from("transactions")
       .select("total, transaction_date")
-      .in("store_id", stores.map(s => s.store_id))
+      .in("store_id", storeIds)
       .gte('transaction_date', start.toISOString())
       .lte('transaction_date', end.toISOString());
 
@@ -184,7 +216,7 @@ export const getSalesSummary = async (req, res) => {
     const { data: prevTransactions } = await supabase
       .from("transactions")
       .select("total, transaction_date")
-      .in("store_id", stores.map(s => s.store_id))
+      .in("store_id", storeIds)
       .gte('transaction_date', prevStart.toISOString())
       .lte('transaction_date', prevEnd.toISOString());
 
@@ -237,9 +269,10 @@ export const getSalesSummary = async (req, res) => {
 export const getCustomerEngagement = async (req, res) => {
   try {
     const userId = req.session?.userId || req.session?.user?.id;
+    console.log('📊 [CustomerEngagement] userId:', userId, 'query:', req.query);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { period = '30d' } = req.query;
+    const { period = '30d', store_id } = req.query;
     // simple 30-day default, adjust as needed
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
     const end = new Date();
@@ -255,8 +288,16 @@ export const getCustomerEngagement = async (req, res) => {
       .eq('owner_id', userId);
 
     if (storeErr) throw storeErr;
-    const storeIds = (stores || []).map(s => s.store_id);
-    if (!storeIds.length) return res.json({ labels: [], datasets: [{ data: [] }], summary: { totalCustomers:0, totalVisits:0, totalPoints:0 } });
+    
+    // Filter by specific store if provided
+    let storeIds;
+    if (store_id) {
+      storeIds = [parseInt(store_id)];
+    } else {
+      storeIds = (stores || []).map(s => s.store_id);
+    }
+    
+    if (!storeIds.length) return res.status(200).json({ labels:[], datasets:[], summary:{} });
 
     const { data: txs, error: txErr } = await supabase
       .from('transactions')
@@ -309,12 +350,22 @@ export const getCustomerEngagement = async (req, res) => {
 export const getRecommendations = async (req, res) => {
   try {
     const userId = req.session?.userId || req.session?.user?.id;
-    console.log(`🔍 [Recommendations] Request from user ${userId}`);
+    console.log(`🔍 [Recommendations] Request from user ${userId}, query:`, req.query);
+    console.log('🔍 [Recommendations] Session:', req.session);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const storeIds = await fetchOwnedStoreIds(userId);
+    const { store_id } = req.query;
+    
+    // Use filtered store ID if provided, otherwise get all stores
+    let storeIds;
+    if (store_id) {
+      storeIds = [parseInt(store_id)];
+    } else {
+      storeIds = await fetchOwnedStoreIds(userId);
+    }
+    
     console.log(`🔍 [Recommendations] Store IDs: ${storeIds.join(', ')}`);
-    if (storeIds.length === 0) return res.json({ recommendations: [] });
+    if (storeIds.length === 0) return res.status(200).json({ recommendations: [] });
 
     // Fetch transactions with product details and user information
     const { data: txs, error } = await supabase
@@ -326,7 +377,8 @@ export const getRecommendations = async (req, res) => {
         total,
         user_id,
         transaction_date,
-        products:product_id(id, product_name, product_type, product_image)
+        store_id,
+        products:product_id(id, product_name, product_type, product_image, store_id)
       `)
       .in('store_id', storeIds)
       .order('transaction_date', { ascending: false })
@@ -348,19 +400,28 @@ export const getRecommendations = async (req, res) => {
         total: Number(t.total || 0)
       });
       
-      // Store product metadata
+      // Store product metadata including store_id for filtering
       if (t.products && !productInfo.has(Number(t.product_id))) {
+        const prodStoreId = t.products.store_id || t.store_id;
         productInfo.set(Number(t.product_id), {
           id: t.products.id,
           product_name: t.products.product_name,
           product_type: t.products.product_type,
-          product_image: t.products.product_image
+          product_image: t.products.product_image,
+          store_id: prodStoreId
         });
       }
     });
 
     const totalBaskets = baskets.size;
     console.log(`📊 [Recommendations] Analyzing ${totalBaskets} baskets with ${productInfo.size} unique products`);
+    
+    // Debug: Log product store_ids when filtering by specific store
+    if (store_id) {
+      console.log(`🔍 [Recommendations] Filtering by store_id: ${store_id} (type: ${typeof store_id})`);
+      const productStores = Array.from(productInfo.values()).map(p => ({ name: p.product_name, store_id: p.store_id, type: typeof p.store_id }));
+      console.log(`🔍 [Recommendations] Product store_ids:`, productStores.slice(0, 5));
+    }
 
     // Step 2: Calculate support for individual products
     const productSupport = new Map();
@@ -416,8 +477,16 @@ export const getRecommendations = async (req, res) => {
         // Lift: confidence / P(B) = support(A,B) / (support(A) * support(B))
         const lift = (supportAB * totalBaskets) / (supportA * supportB);
         
-        // Only keep strong rules (confidence > 30% and lift > 1.2)
-        if (confidence > 20 && lift > 1.2) {
+        // Balanced thresholds for reliable recommendations:
+        // - Confidence >= 25%: At least 1 in 4 customers who buy A also buy B (meaningful pattern)
+        // - Lift >= 1.3: Products are 30% more likely to be bought together than random chance
+        // - Support >= 2: Pattern appears at least twice (reduces noise from one-time occurrences)
+        const minConfidence = 25;
+        const minLift = 1.3;
+        const minSupport = 2;
+        
+        // Keep rules that meet all thresholds
+        if (confidence >= minConfidence && lift >= minLift && supportAB >= minSupport) {
           associationRules.push({
             antecedent: productA,
             consequent: productB,
@@ -433,13 +502,20 @@ export const getRecommendations = async (req, res) => {
     // Sort by score and group by antecedent
     associationRules.sort((a, b) => b.score - a.score);
     
-    console.log(`📊 [Recommendations] Generated ${associationRules.length} association rules`);
+    console.log(`📊 [Recommendations] Generated ${associationRules.length} association rules (confidence ≥25%, lift ≥1.3, support ≥2)`);
     if (associationRules.length > 0) {
       console.log(`📊 [Recommendations] Sample rules:`, associationRules.slice(0, 5).map(r => ({
         from: productInfo.get(r.antecedent)?.product_name,
         to: productInfo.get(r.consequent)?.product_name,
         confidence: `${r.confidence}%`,
-        lift: r.lift
+        lift: r.lift,
+        support: r.support
+      })));
+    } else {
+      console.log(`⚠️ [Recommendations] No rules met thresholds. Frequent products:`, frequentProducts.slice(0, 5).map(p => ({
+        name: productInfo.get(p.product_id)?.product_name,
+        support: p.support,
+        percent: p.supportPercent + '%'
       })));
     }
 
@@ -473,6 +549,11 @@ export const getRecommendations = async (req, res) => {
     recommendationsMap.forEach((recs, productId) => {
       const productData = productInfo.get(productId);
       if (!productData) return;
+      
+      // Note: We don't filter by product.store_id here because:
+      // 1. We already filtered transactions by store_id, so all data is from the correct store
+      // 2. Products are linked to stores via transactions, not directly
+      // 3. The association rules are based on transaction patterns from the selected store(s)
       
       const recommendedProducts = recs.map(r => {
         const recProduct = productInfo.get(r.product_id);
@@ -537,6 +618,58 @@ export const getRecommendations = async (req, res) => {
     // Sort by product popularity (support)
     recommendations.sort((a, b) => b.support - a.support);
 
+    // Fallback: If not enough recommendations from association rules, suggest popular products
+    if (recommendations.length < 3 && frequentProducts.length > 0) {
+      console.log(`📊 [Recommendations] Insufficient association rules (${recommendations.length}), adding popular product suggestions`);
+      
+      const usedProductIds = new Set(recommendations.map(r => r.product_id));
+      const popularProducts = frequentProducts
+        .filter(p => !usedProductIds.has(p.product_id))
+        .slice(0, Math.min(5, frequentProducts.length))
+        .map(p => {
+          const productData = productInfo.get(p.product_id);
+          if (!productData) return null;
+          
+          // For popular products without strong associations, recommend other popular items
+          const otherPopular = frequentProducts
+            .filter(other => other.product_id !== p.product_id && !usedProductIds.has(other.product_id))
+            .slice(0, 3)
+            .map(other => {
+              const otherProduct = productInfo.get(other.product_id);
+              return otherProduct ? {
+                product_id: other.product_id,
+                product_name: otherProduct.product_name,
+                product_image: otherProduct.product_image,
+                product_type: otherProduct.product_type,
+                confidence: 0,
+                lift: 0,
+                score: other.support,
+                coPurchases: 0,
+                reason: `Popular item (${other.supportPercent}% purchase rate)`,
+                insight: `This is one of the most frequently purchased items in your store. Consider featuring it alongside "${productData.product_name}".`
+              } : null;
+            })
+            .filter(Boolean);
+          
+          if (otherPopular.length > 0) {
+            return {
+              product_id: p.product_id,
+              product_name: productData.product_name,
+              product_image: productData.product_image,
+              product_type: productData.product_type,
+              support: p.support,
+              recommended: otherPopular,
+              overallInsight: `"${productData.product_name}" is popular in your store (${p.supportPercent}% of orders). These other bestsellers might appeal to the same customers.`
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+      
+      recommendations.push(...popularProducts);
+      recommendations.sort((a, b) => b.support - a.support);
+    }
+
     console.log(`✅ [Recommendations] Returning ${recommendations.length} product recommendations`);
     if (recommendations.length > 0) {
       console.log(`✅ [Recommendations] Sample:`, recommendations[0]);
@@ -548,7 +681,7 @@ export const getRecommendations = async (req, res) => {
         totalBaskets,
         frequentProductsCount: frequentProducts.length,
         rulesGenerated: associationRules.length,
-        algorithm: 'Association Rule Mining (Apriori-based)',
+        algorithm: recommendations.length > associationRules.length ? 'Hybrid: Association Rules + Popular Products' : 'Association Rule Mining (Apriori-based)',
         metrics: 'Confidence, Lift, Support'
       }
     });

@@ -182,15 +182,35 @@ app.get("/owner/sales-report", async (req, res) => {
       return res.redirect('/login');
     }
 
-    const { data: store } = await supabase
+    // Fetch all stores owned by the user
+    const { data: stores } = await supabase
       .from('stores')
       .select('*')
-      .eq('owner_id', userId)
-      .single();
+      .eq('owner_id', userId);
+
+    // Get selected store from query param or use first store
+    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    let store = null;
+    
+    if (selectedStoreId && stores) {
+      store = stores.find(s => s.store_id === selectedStoreId);
+    }
+    
+    // Fallback to first store if no valid selection
+    if (!store && stores && stores.length > 0) {
+      store = stores[0];
+    }
+
+    // Mark selected store in stores array
+    const storesWithSelection = (stores || []).map(s => ({
+      ...s,
+      is_selected: s.store_id === store?.store_id
+    }));
 
     res.render('OwnerSide/SalesReport', {
       user: req.session.user,
-      store
+      store,
+      stores: storesWithSelection
     });
   } catch (error) {
     console.error('Error in /owner/sales-report route:', error);
@@ -206,15 +226,35 @@ app.get("/owner/transactions", async (req, res) => {
       return res.redirect('/login');
     }
 
-    const { data: store } = await supabase
+    // Fetch all stores owned by the user
+    const { data: stores } = await supabase
       .from('stores')
       .select('*')
-      .eq('owner_id', userId)
-      .single();
+      .eq('owner_id', userId);
+
+    // Get selected store from query param or use first store
+    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    let store = null;
+    
+    if (selectedStoreId && stores) {
+      store = stores.find(s => s.store_id === selectedStoreId);
+    }
+    
+    // Fallback to first store if no valid selection
+    if (!store && stores && stores.length > 0) {
+      store = stores[0];
+    }
+
+    // Mark selected store in stores array
+    const storesWithSelection = (stores || []).map(s => ({
+      ...s,
+      is_selected: s.store_id === store?.store_id
+    }));
 
     res.render('OwnerSide/OwnerTransactions', {
       user: req.session.user,
-      store
+      store,
+      stores: storesWithSelection
     });
   } catch (error) {
     console.error('Error in /owner/transactions route:', error);
@@ -313,31 +353,17 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// app.get("/owner/profile", async (req, res) => {
-//   try {
-//     const userId = req.session.userId;
-
-//     if (!userId) {
-//       return res.redirect('/login');
-//     }
-
-//     res.render('OwnerSide/Profile', {
-//       user: req.session.user
-//     });
-//   } catch (error) {
-//     console.error('Error in /owner/profile route:', error);
-//     res.status(500).send('Internal server error');
-//   }
-// });
-
-// // Backward compatibility: if something links to API path, redirect to view path
-// app.get("/api/owner/profile", (req, res) => {
-//   return res.redirect(302, "/owner/profile");
-// });
-
 // mount owner products routes
 app.use('/owner/products', ownerProductsRoutes);
 app.use('/api/owner/products', ownerProductsRoutes);
+
+// Change password route
+import { changeOwnerPassword } from './api/controllers/ownerProfileController.js';
+app.post('/owner/change-password', changeOwnerPassword);
+
+// API endpoint for getting owners
+import * as UserManagementController from './api/controllers/UserManagementController.js';
+app.get('/api/owners', UserManagementController.getOwners);
 
 // Function to update promotion active states based on expiration
 async function updatePromotionActiveStates() {
@@ -401,7 +427,7 @@ setInterval(updatePromotionActiveStates, 60 * 60 * 1000);
 // Mount owner API routes needed by frontend
 app.get('/api/owner/stores', ownerTransactions.getOwnerStores);
 app.get('/api/owner/transactions', ownerTransactions.getOwnerTransactions);
-app.get('/api/owner/transactions/:id', ownerTransactions.getOwnerTransactionById);
+app.get('/api/owner/transactions/:storeId', ownerTransactions.getOwnerTransactions);
 
 // Sales-report endpoints used by frontend
 app.get('/api/owner/sales-report/stores/dropdown', ownerSales.getStoresDropdown);
@@ -450,5 +476,3 @@ scheduleBiWeeklyRecompute();
 
 export default app;
 
-
-// GAGANA NA

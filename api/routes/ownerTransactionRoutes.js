@@ -13,11 +13,11 @@ const router = express.Router();
 // GET /api/owner/stores
 router.get('/stores', getOwnerStores);
 
-// GET /api/owner/transactions
+// GET /api/owner/transactions (all stores)
 router.get('/transactions', getOwnerTransactions);
 
-// GET /api/owner/transactions/:id
-router.get('/transactions/:id', getOwnerTransactionById);
+// GET /api/owner/transactions/:storeId (filtered by store)
+router.get('/transactions/:storeId', getOwnerTransactions);
 
 // POST /api/owner/transactions
 router.post('/transactions', createOwnerTransaction);
