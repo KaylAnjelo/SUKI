@@ -52,32 +52,103 @@ async function generatePromotionCode(storeId) {
 }
 
 /**
+ * Automatically update promotion status based on current date vs start/end dates
+ * This runs before fetching promotions to ensure status is current
+ */
+async function updatePromotionStatuses(storeId = null) {
+  const now = new Date();
+  
+  // Build query to get all rewards
+  let query = supabase
+    .from('rewards')
+    .select('reward_id, start_date, end_date, is_active');
+  
+  if (storeId) {
+    query = query.eq('store_id', storeId);
+  }
+  
+  const { data: rewards, error } = await query;
+  
+  if (error || !rewards) {
+    console.error('Error fetching rewards for status update:', error);
+    return;
+  }
+  
+  // Update each reward's status based on dates
+  for (const reward of rewards) {
+    let shouldBeActive = false;
+    
+    if (reward.start_date && reward.end_date) {
+      const startDate = new Date(reward.start_date);
+      const endDate = new Date(reward.end_date);
+      
+      // Set time boundaries for accurate comparison
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      // Active if current date is between start and end dates
+      shouldBeActive = now >= startDate && now <= endDate;
+    } else {
+      // If no dates specified, keep current status
+      shouldBeActive = reward.is_active;
+    }
+    
+    // Only update if status needs to change
+    if (reward.is_active !== shouldBeActive) {
+      await supabase
+        .from('rewards')
+        .update({ is_active: shouldBeActive })
+        .eq('reward_id', reward.reward_id);
+      
+      console.log(`Updated reward ${reward.reward_id} status to ${shouldBeActive}`);
+    }
+  }
+}
+
+/**
  * Get store_id for the current user
  * Tries direct store_id first, then checks owner relationship
  */
 async function getStoreIdForUser(userId) {
+  console.log('getStoreIdForUser called with userId:', userId);
+  
   // First try to get store_id directly from user
-  const { data: userData } = await supabase
+  const { data: userData, error: userError } = await supabase
     .from('users')
-    .select('store_id')
+    .select('store_id, user_id, user_email')
     .eq('user_id', userId)
     .single();
   
+  console.log('User query result:', { userData, userError });
+  
   if (userData && userData.store_id) {
+    console.log('Found store_id directly from user:', userData.store_id);
     return userData.store_id;
   }
   
   // If no direct store_id, try to find store where user is owner
-  const { data: storeData } = await supabase
+  // Use maybeSingle() to handle multiple stores gracefully
+  const { data: storeData, error: storeError } = await supabase
     .from('stores')
-    .select('store_id')
+    .select('store_id, owner_id, store_name')
     .eq('owner_id', userId)
-    .single();
+    .maybeSingle();
+  
+  console.log('Store query result:', { storeData, storeError });
   
   if (storeData && storeData.store_id) {
+    console.log('Found store_id from stores table:', storeData.store_id);
     return storeData.store_id;
   }
   
+  // If user has multiple stores, check session for selectedStoreId
+  if (storeError && storeError.code === 'PGRST116') {
+    console.log('User owns multiple stores, checking session...');
+    // This will be handled by the calling function using req.session.selectedStoreId
+    return null;
+  }
+  
+  console.error('No store found for user:', userId);
   return null;
 }
 
@@ -119,7 +190,8 @@ export const createPromotion = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const storeId = await getStoreIdForUser(userId);
+    // Try to get store_id from session first (for multi-store owners), then from database
+    let storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
 
     if (!storeId) {
       console.error('No store found for user:', userId);
@@ -165,11 +237,12 @@ export const createPromotion = async (req, res) => {
     const startDateTime = new Date(startDate);
     const endDateTime = new Date(endDate);
     
-    // Set time to start of day for start date and end of day for end date
+    // Set time boundaries for accurate comparison
     startDateTime.setHours(0, 0, 0, 0);
     endDateTime.setHours(23, 59, 59, 999);
     
-    const isCurrentlyActive = now >= startDateTime && now <= endDateTime;
+    // Auto-activate if current date is within the promotion period
+    const isActive = now >= startDateTime && now <= endDateTime;
 
     // Generate unique promotion code based on store
     const promotionCode = await generatePromotionCode(storeId);
@@ -183,7 +256,7 @@ export const createPromotion = async (req, res) => {
       promotion_code: promotionCode,
       start_date: startDate,
       end_date: endDate,
-      is_active: isCurrentlyActive,
+      is_active: isActive,
       selected_product: selectedProduct || null,
       buy_quantity: buyQuantity || null,
       get_quantity: getQuantity || null,
@@ -203,7 +276,7 @@ export const createPromotion = async (req, res) => {
           promotion_code: promotionCode,
           start_date: startDate,
           end_date: endDate,
-          is_active: isCurrentlyActive
+          is_active: isActive
         }
       ])
       .select()
@@ -248,7 +321,11 @@ export const getPromotions = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const storeId = await getStoreIdForUser(userId);
+    // Try to get store_id from session first (for multi-store owners), then from database
+    let storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
+    
+    // Auto-update promotion statuses before fetching
+    await updatePromotionStatuses(storeId);
 
     if (!storeId) {
       console.error('No store found for user:', userId);
@@ -322,7 +399,8 @@ export const getPromotionById = async (req, res) => {
     
     console.log('Fetching promotion:', promotionId, 'for user:', userId);
     
-    const storeId = await getStoreIdForUser(userId);
+    // Try to get store_id from session first (for multi-store owners), then from database
+    const storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
     
     if (!storeId) {
       console.error('No store found for user:', userId);
@@ -382,7 +460,8 @@ export const updatePromotion = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const storeId = await getStoreIdForUser(userId);
+    // Try to get store_id from session first (for multi-store owners), then from database
+    const storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
     
     if (!storeId) {
       return res.status(400).json({ error: 'Store not found' });
@@ -444,7 +523,8 @@ export const deletePromotion = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const storeId = await getStoreIdForUser(userId);
+    // Try to get store_id from session first (for multi-store owners), then from database
+    const storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
     
     if (!storeId) {
       return res.status(400).json({ error: 'Store not found' });
