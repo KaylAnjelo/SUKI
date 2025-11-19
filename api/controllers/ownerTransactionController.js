@@ -382,3 +382,29 @@ export const getOwnerStores = async (req, res) => {
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 };
+
+export const getStoreById = async (req, res) => {
+  try {
+    const userId = req.session?.userId || req.session?.user?.user_id || req.session?.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    
+    const { data: store, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name, store_image')
+      .eq('store_id', id)
+      .eq('owner_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching store:', error);
+      return res.status(404).json({ error: 'Store not found' });
+    }
+
+    return res.json(store);
+  } catch (err) {
+    console.error('Unexpected error getStoreById:', err);
+    return res.status(500).json({ error: err.message || 'Server error' });
+  }
+};

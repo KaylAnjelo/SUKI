@@ -652,13 +652,22 @@
           <div class="user-profile">
             <div class="profile-pic">
               {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
               {{else}}
-                <i class="fas fa-store" style="color: #9ca3af;"></i>
+                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
               {{/if}}
             </div>
             <div class="profile-info">
-              <span class="user-name">{{user.username}}</span>
+              <select id="storeSelector" class="store-dropdown">
+                {{#if stores}}
+                  <option value="">All Stores</option>
+                  {{#each stores}}
+                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No stores available</option>
+                {{/if}}
+              </select>
             </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -701,7 +710,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="promotionName">Promotion Name</label>
-            <input type="text" id="promotionName" name="name" required placeholder="e.g., Summer Sale">
+            <input type="text" id="promotionName" name="name" required placeholder="e.g., Summer Sale" autocomplete="off">
           </div>
           
           
@@ -718,7 +727,7 @@
             </div>
             <div class="form-group input-with-unit" id="discountValueGroup" style="display: none;">
               <label for="discountValue">Discount Value</label>
-              <input type="number" id="discountValue" name="discountValue" placeholder="e.g., 20" min="1" max="100">
+              <input type="number" id="discountValue" name="discountValue" placeholder="e.g., 20" min="1" max="100" autocomplete="off">
               <span class="input-unit" id="discountUnit">%</span>
             </div>
           </div>
@@ -727,7 +736,7 @@
           <div class="form-row" id="discountPercentageRow" style="display: none;">
             <div class="form-group">
               <label for="discountPercentage">Discount Percentage</label>
-              <input type="number" id="discountPercentage" name="discountPercentage" placeholder="e.g., 15" min="1" max="100">
+              <input type="number" id="discountPercentage" name="discountPercentage" placeholder="e.g., 15" min="1" max="100" autocomplete="off">
               <span style="margin-left: 8px; color: #6b7280;">%</span>
             </div>
           </div>
@@ -753,11 +762,11 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="buyQuantity">Buy Quantity (X)</label>
-                <input type="number" id="buyQuantity" name="buyQuantity" placeholder="e.g., 2" min="1" onchange="updateBuyXGetYDescription()">
+                <input type="number" id="buyQuantity" name="buyQuantity" placeholder="e.g., 2" min="1" onchange="updateBuyXGetYDescription()" autocomplete="off">
               </div>
               <div class="form-group">
                 <label for="getQuantity">Get Quantity (Y)</label>
-                <input type="number" id="getQuantity" name="getQuantity" placeholder="e.g., 1" min="1" onchange="updateBuyXGetYDescription()">
+                <input type="number" id="getQuantity" name="getQuantity" placeholder="e.g., 1" min="1" onchange="updateBuyXGetYDescription()" autocomplete="off">
               </div>
             </div>
             
@@ -780,7 +789,7 @@
           <div class="form-row">
             <div class="form-group" id="pointsGroup">
               <label for="points">Points Required</label>
-              <input type="number" id="points" name="points" placeholder="e.g., 10" min="0">
+              <input type="number" id="points" name="points" placeholder="e.g., 10" min="0" autocomplete="off">
               <small style="color: #6b7280; font-size: 12px;">Set the points customers need to redeem this promotion</small>
             </div>
           </div>
@@ -809,8 +818,89 @@
   </div>
 
   <script>
+    // Add store selector to form dynamically
+    function initializeStoreSelector() {
+      const modalBody = document.querySelector('#promotionForm .modal-body');
+      const promotionNameGroup = modalBody.querySelector('.form-group');
+      
+      // Check if store selector already exists
+      if (document.getElementById('promoStoreSelect')) return;
+      
+      // Create store selector div
+      const storeGroup = document.createElement('div');
+      storeGroup.className = 'form-group';
+      storeGroup.innerHTML = `
+        <label for="promoStoreSelect">Store</label>
+        <select id="promoStoreSelect" name="storeId" required>
+          <option value="">Select store...</option>
+          {{#if stores}}
+            {{#each stores}}
+              <option value="{{this.store_id}}">{{this.store_name}}</option>
+            {{/each}}
+          {{/if}}
+        </select>
+      `;
+      
+      // Insert after promotion name
+      promotionNameGroup.after(storeGroup);
+      
+      // Add event listener to reload products when store changes
+      const promoStoreSelect = document.getElementById('promoStoreSelect');
+      if (promoStoreSelect) {
+        promoStoreSelect.addEventListener('change', function() {
+          const discountType = document.getElementById('discountType').value;
+          // Reload products based on promotion type
+          if (discountType === 'free') {
+            loadProducts();
+          } else if (discountType === 'buy_x_get_y') {
+            loadProductsForBuyXGetY();
+          }
+        });
+      }
+    }
+
+    // Store selector image update
+    async function updateStoreImage(storeId) {
+      const imgContainer = document.getElementById('storeImageHeader');
+      const iconContainer = document.getElementById('storeIconHeader');
+      
+      // If no store selected (All Stores), show default icon
+      if (!storeId || storeId === '') {
+        if (imgContainer) imgContainer.style.display = 'none';
+        if (iconContainer) iconContainer.style.display = 'flex';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/owner/stores/${storeId}`);
+        if (response.ok) {
+          const store = await response.json();
+          
+          if (store.store_image) {
+            if (imgContainer) {
+              imgContainer.src = store.store_image;
+              imgContainer.style.display = 'block';
+            }
+            if (iconContainer) {
+              iconContainer.style.display = 'none';
+            }
+          } else {
+            if (imgContainer) {
+              imgContainer.style.display = 'none';
+            }
+            if (iconContainer) {
+              iconContainer.style.display = 'flex';
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error updating store image:', error);
+      }
+    }
+
     // Modal functions
     function openAddPromotionModal() {
+      initializeStoreSelector(); // Add store selector if not exists
       document.getElementById('modalTitle').textContent = 'Add New Promotion';
       document.getElementById('promotionForm').reset();
       
@@ -843,12 +933,21 @@
         
         const promotion = data.promotion;
         
+        // Initialize store selector
+        initializeStoreSelector();
+        
         // Set modal title
         document.getElementById('modalTitle').textContent = 'Edit Promotion';
         
         // Populate basic fields
         document.getElementById('promotionName').value = promotion.reward_name || '';
         document.getElementById('points').value = promotion.points_required || '';
+        
+        // Set store selection
+        if (promotion.store_id) {
+          const storeSelect = document.getElementById('promoStoreSelect');
+          if (storeSelect) storeSelect.value = promotion.store_id;
+        }
         
         // Set dates from database if available
         if (promotion.start_date) {
@@ -1152,7 +1251,13 @@
     // Load products for free item selection
     async function loadProducts() {
       try {
-        const response = await fetch('/api/products');
+        // Get selected store from modal form
+        const promoStoreSelect = document.getElementById('promoStoreSelect');
+        const storeId = promoStoreSelect ? promoStoreSelect.value : '';
+        
+        // Build URL with store_id parameter if available
+        const url = storeId ? `/api/products?store_id=${storeId}` : '/api/products';
+        const response = await fetch(url);
         const data = await response.json();
         
         const productSelect = document.getElementById('selectedProduct');
@@ -1194,7 +1299,13 @@
     // Load products for Buy X Get Y selection
     async function loadProductsForBuyXGetY() {
       try {
-        const response = await fetch('/api/products');
+        // Get selected store from modal form
+        const promoStoreSelect = document.getElementById('promoStoreSelect');
+        const storeId = promoStoreSelect ? promoStoreSelect.value : '';
+        
+        // Build URL with store_id parameter if available
+        const url = storeId ? `/api/products?store_id=${storeId}` : '/api/products';
+        const response = await fetch(url);
         const data = await response.json();
         
         const buyProductSelect = document.getElementById('buyProduct');
@@ -1310,6 +1421,10 @@
               <h3>${promo.reward_name}</h3>
               <span class=\"status-badge status-${statusClass}\">${statusText}</span>
             </div>
+            ${promo.store_name ? `<div style=\"color: #6b7280; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;\">
+              <i class=\"fas fa-store\" style=\"font-size: 12px;\"></i>
+              <span>${promo.store_name}</span>
+            </div>` : ''}
             <p class=\"promotion-description\">${promo.description}</p>
             <div class=\"promotion-details\">
               ${promo.promotion_code ? `<div class=\"detail-item promotion-code-display\">
@@ -1375,6 +1490,17 @@
       
       // Load existing promotions
       loadPromotions();
+      
+      // Handle store selector change
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', function(e) {
+          const selectedStoreId = e.target.value;
+          updateStoreImage(selectedStoreId);
+          // Always include store_id parameter, even when empty
+          window.location.href = `/owner/promotions?store_id=${selectedStoreId}`;
+        });
+      }
     });
   </script>
 </body>

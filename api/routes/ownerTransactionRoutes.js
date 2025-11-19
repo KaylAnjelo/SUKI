@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getOwnerStores,
+  getStoreById,
   getOwnerTransactions,
   getOwnerTransactionById,
   createOwnerTransaction,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // GET /api/owner/stores
 router.get('/stores', getOwnerStores);
+router.get('/stores/:id', getStoreById);
 
 // GET /api/owner/transactions (all stores)
 router.get('/transactions', getOwnerTransactions);

@@ -171,6 +171,7 @@ export const createPromotion = async (req, res) => {
 
     const {
       name,
+      storeId,
       discountType,
       discountValue,
       discountPercentage,
@@ -186,19 +187,24 @@ export const createPromotion = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!name || !discountType || !startDate || !endDate) {
+    if (!name || !discountType || !startDate || !endDate || !storeId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Try to get store_id from session first (for multi-store owners), then from database
-    let storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
+    // Verify the user owns this store
+    const { data: store } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('store_id', storeId)
+      .eq('owner_id', userId)
+      .single();
 
-    if (!storeId) {
-      console.error('No store found for user:', userId);
-      return res.status(400).json({ error: 'Store not found. Please contact administrator.' });
+    if (!store) {
+      console.error('Store not found or not owned by user:', userId, storeId);
+      return res.status(403).json({ error: 'Access denied to this store' });
     }
     
-    console.log('Found store_id:', storeId);
+    console.log('Verified store_id:', storeId);
 
     // Prepare promotion data based on discount type
     let finalDiscountValue;
@@ -321,24 +327,42 @@ export const getPromotions = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Try to get store_id from session first (for multi-store owners), then from database
-    let storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
+    // Get selectedStoreId from session (null means "All Stores")
+    let storeId = req.session.selectedStoreId;
     
-    // Auto-update promotion statuses before fetching
-    await updatePromotionStatuses(storeId);
+    console.log('Selected store_id:', storeId);
 
-    if (!storeId) {
-      console.error('No store found for user:', userId);
-      return res.status(400).json({ error: 'Store not found. Please contact administrator.' });
+    // If no specific store selected, get all stores for this owner
+    let storeIds = [];
+    if (storeId) {
+      storeIds = [storeId];
+      // Auto-update promotion statuses before fetching
+      await updatePromotionStatuses(storeId);
+    } else {
+      // Get all stores owned by this user
+      const { data: stores } = await supabase
+        .from('stores')
+        .select('store_id')
+        .eq('owner_id', userId);
+      
+      if (!stores || stores.length === 0) {
+        console.error('No stores found for user:', userId);
+        return res.status(400).json({ error: 'Store not found. Please contact administrator.' });
+      }
+      
+      storeIds = stores.map(s => s.store_id);
+      
+      // Update statuses for all stores
+      for (const sid of storeIds) {
+        await updatePromotionStatuses(sid);
+      }
     }
-    
-    console.log('Found store_id:', storeId);
 
-    // Get rewards for the store
+    // Get rewards for the store(s)
     const { data: rewards, error } = await supabase
       .from('rewards')
       .select('*')
-      .eq('store_id', storeId)
+      .in('store_id', storeIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -346,6 +370,18 @@ export const getPromotions = async (req, res) => {
       console.error('Error details:', JSON.stringify(error, null, 2));
       return res.status(500).json({ error: 'Failed to fetch promotions: ' + error.message });
     }
+
+    // Fetch store names separately
+    const { data: stores } = await supabase
+      .from('stores')
+      .select('store_id, store_name')
+      .in('store_id', storeIds);
+
+    // Create a map of store_id to store_name
+    const storeMap = {};
+    (stores || []).forEach(store => {
+      storeMap[store.store_id] = store.store_name;
+    });
 
     // Process promotions to update their active status based on start/end dates
     const now = new Date();
@@ -364,13 +400,17 @@ export const getPromotions = async (req, res) => {
         // Update the reward object with calculated active status
         return {
           ...reward,
+          store_name: storeMap[reward.store_id],
           is_active: shouldBeActive,
           status: shouldBeActive ? 'active' : (now < startDate ? 'scheduled' : 'expired')
         };
       }
       
       // Fallback for rewards without dates
-      return reward;
+      return {
+        ...reward,
+        store_name: storeMap[reward.store_id]
+      };
     });
 
     res.json({ promotions: processedRewards });
@@ -399,22 +439,26 @@ export const getPromotionById = async (req, res) => {
     
     console.log('Fetching promotion:', promotionId, 'for user:', userId);
     
-    // Try to get store_id from session first (for multi-store owners), then from database
-    const storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
+    // Get all stores owned by this user
+    const { data: stores } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('owner_id', userId);
     
-    if (!storeId) {
-      console.error('No store found for user:', userId);
+    if (!stores || stores.length === 0) {
+      console.error('No stores found for user:', userId);
       return res.status(400).json({ error: 'Store not found' });
     }
     
-    console.log('Found store_id:', storeId);
+    const storeIds = stores.map(s => s.store_id);
+    console.log('User owns store IDs:', storeIds);
     
-    // Get the specific promotion
+    // Get the specific promotion (ensure it belongs to one of user's stores)
     const { data: promotion, error } = await supabase
       .from('rewards')
       .select('*')
       .eq('reward_id', promotionId)
-      .eq('store_id', storeId) // Ensure user owns this promotion
+      .in('store_id', storeIds) // Ensure user owns this promotion
       .single();
     
     if (error) {
@@ -460,19 +504,24 @@ export const updatePromotion = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    // Try to get store_id from session first (for multi-store owners), then from database
-    const storeId = req.session.selectedStoreId || await getStoreIdForUser(userId);
+    // Get all stores owned by this user
+    const { data: stores } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('owner_id', userId);
     
-    if (!storeId) {
+    if (!stores || stores.length === 0) {
       return res.status(400).json({ error: 'Store not found' });
     }
     
-    // Verify ownership
+    const storeIds = stores.map(s => s.store_id);
+    
+    // Verify ownership (promotion belongs to one of user's stores)
     const { data: existing } = await supabase
       .from('rewards')
-      .select('reward_id')
+      .select('reward_id, store_id')
       .eq('reward_id', promotionId)
-      .eq('store_id', storeId)
+      .in('store_id', storeIds)
       .single();
     
     if (!existing) {

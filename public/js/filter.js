@@ -7,21 +7,33 @@ const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
 const applyFiltersBtn = document.getElementById('applyFilters');
 
-// Set initial values and constraints
-endDateInput.value = today;
-startDateInput.max = today;
-endDateInput.max = today;
+// Set initial values and constraints only if elements exist
+if (endDateInput) {
+  endDateInput.value = today;
+  endDateInput.max = today;
+}
+if (startDateInput) {
+  startDateInput.max = today;
+}
 
 // Set minimum date for start date (e.g., 1 year ago)
 const oneYearAgo = new Date();
 oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-startDateInput.min = oneYearAgo.toISOString().split('T')[0];
+if (startDateInput) {
+  startDateInput.min = oneYearAgo.toISOString().split('T')[0];
+}
 
 // Add event listeners for date validation
-startDateInput.addEventListener('change', validateDates);
-endDateInput.addEventListener('change', validateDates);
+if (startDateInput) {
+  startDateInput.addEventListener('change', validateDates);
+}
+if (endDateInput) {
+  endDateInput.addEventListener('change', validateDates);
+}
 
 function validateDates() {
+    if (!startDateInput || !endDateInput) return;
+    
     const startDate = new Date(startDateInput.value);
     const endDate = new Date(endDateInput.value);
 

@@ -270,15 +270,56 @@ app.get("/owner/promotions", async (req, res) => {
       return res.redirect('/login');
     }
 
-    const { data: store } = await supabase
+    // Get the store_id from query params
+    const storeIdParam = req.query.store_id;
+    
+    // Fetch all stores owned by this user
+    const { data: stores, error: storesError } = await supabase
       .from('stores')
-      .select('*')
-      .eq('owner_id', userId)
-      .single();
+      .select('store_id, store_name, store_image')
+      .eq('owner_id', userId);
+
+    if (storesError) {
+      console.error('Error fetching stores:', storesError);
+      return res.status(500).send('Error fetching stores');
+    }
+
+    // Determine which store to use
+    let selectedStoreId = null;
+    let selectedStore = null;
+    
+    if (storeIdParam !== undefined) {
+      // Query param is present - use it (could be empty string for "All Stores")
+      if (storeIdParam === '') {
+        // "All Stores" selected - clear session
+        selectedStoreId = null;
+        selectedStore = null;
+        req.session.selectedStoreId = null;
+      } else {
+        // Specific store selected
+        selectedStoreId = parseInt(storeIdParam, 10);
+        selectedStore = stores.find(s => s.store_id === selectedStoreId);
+        req.session.selectedStoreId = selectedStoreId;
+      }
+    } else if (req.session.selectedStoreId) {
+      // No query param, use session
+      selectedStoreId = req.session.selectedStoreId;
+      selectedStore = stores.find(s => s.store_id === selectedStoreId);
+    }
+
+    // Mark selected store
+    const storesWithSelection = stores.map(s => ({
+      store_id: s.store_id,
+      store_name: s.store_name,
+      store_image: s.store_image,
+      is_selected: s.store_id === selectedStoreId
+    }));
 
     res.render('OwnerSide/Promotions', {
       user: req.session.user,
-      store
+      store: selectedStore || {},
+      stores: storesWithSelection,
+      selectedStoreId
     });
   } catch (error) {
     console.error('Error in /owner/promotions route:', error);
@@ -299,43 +340,37 @@ app.get("/api/products", async (req, res) => {
     
     console.log('Fetching products for user:', userId);
     
-    // Get user's store_id - try direct store_id first, then owner relationship
-    let storeId = null;
+    // Get storeId from query parameter first, then fall back to session
+    let storeId = req.query.store_id ? parseInt(req.query.store_id) : req.session.selectedStoreId;
     
-    // First try to get store_id directly from user
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('store_id')
-      .eq('user_id', userId)
-      .single();
+    console.log('Selected store_id (query or session):', storeId);
     
-    if (userData && userData.store_id) {
-      storeId = userData.store_id;
-      console.log('Found user store_id:', storeId);
+    // If no specific store selected, get products from all stores
+    let storeIds = [];
+    if (storeId) {
+      storeIds = [storeId];
     } else {
-      // If no direct store_id, try to find store where user is owner
-      const { data: storeData, error: storeError } = await supabase
+      // Get all stores owned by this user
+      const { data: stores } = await supabase
         .from('stores')
         .select('store_id')
-        .eq('owner_id', userId)
-        .single();
+        .eq('owner_id', userId);
       
-      if (storeData && storeData.store_id) {
-        storeId = storeData.store_id;
-        console.log('Found owner store_id:', storeId);
+      if (!stores || stores.length === 0) {
+        console.error('No stores found for user:', userId);
+        return res.status(404).json({ error: 'Store not found for user' });
       }
+      
+      storeIds = stores.map(s => s.store_id);
     }
     
-    if (!storeId) {
-      console.error('No store found for user:', userId);
-      return res.status(404).json({ error: 'Store not found for user' });
-    }
+    console.log('Fetching products for store IDs:', storeIds);
     
-    // Fetch products for the store
+    // Fetch products for the store(s)
     const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('id, product_name, price, product_type')
-      .eq('store_id', storeId)
+      .select('id, product_name, price, product_type, store_id')
+      .in('store_id', storeIds)
       .order('product_name');
     
     if (productsError) {
@@ -426,6 +461,7 @@ setInterval(updatePromotionActiveStates, 60 * 60 * 1000);
 
 // Mount owner API routes needed by frontend
 app.get('/api/owner/stores', ownerTransactions.getOwnerStores);
+app.get('/api/owner/stores/:id', ownerTransactions.getStoreById);
 app.get('/api/owner/transactions', ownerTransactions.getOwnerTransactions);
 app.get('/api/owner/transactions/:storeId', ownerTransactions.getOwnerTransactions);
 
