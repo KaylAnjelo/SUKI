@@ -504,12 +504,90 @@ function renderEngagementChart(payload) {
   const ctx = document.getElementById("engagementChart");
   if (!ctx) return;
   const labels = payload.labels || [];
-  const data = payload.datasets?.[0]?.data || [];
+  const datasets = payload.datasets || [];
+  
+  // Destroy existing chart instance
   if (window._engagementChartInstance) window._engagementChartInstance.destroy();
+  
+  // Create new chart with both Purchase and Redemptions
   window._engagementChartInstance = new Chart(ctx, {
     type: "line",
-    data: { labels, datasets: [{ label: "Customer Engagement", data, borderColor: "#7C0F0F", backgroundColor: "rgba(124, 15, 15, 0.1)", fill:true, tension:0.3 }] },
-    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+    data: { 
+      labels, 
+      datasets: datasets.map(ds => ({
+        label: ds.label, // Use label from backend (Purchases/Redemptions)
+        data: ds.data || [],
+        borderColor: ds.borderColor || '#7C0F0F',
+        backgroundColor: ds.backgroundColor || 'rgba(124, 15, 15, 0.1)',
+        fill: ds.fill !== undefined ? ds.fill : true,
+        tension: ds.tension || 0.3,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }))
+    },
+    options: { 
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 15,
+            font: {
+              size: 12,
+              weight: '500'
+            }
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: {
+            size: 13,
+            weight: '600'
+          },
+          bodyFont: {
+            size: 12
+          }
+        }
+      },
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          min: 0,
+          max: 1000,
+          ticks: {
+            stepSize: 100,
+            callback: function(value) {
+              return value;
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 11
+            }
+          }
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
+    }
   });
 }
 function renderEngagementStats(summary) {
@@ -517,7 +595,8 @@ function renderEngagementStats(summary) {
   if (!container) return;
   container.innerHTML = `
     <div class="stat-item">👥 Total Customers: <strong>${summary.totalCustomers ?? 0}</strong></div>
-    <div class="stat-item">🛍️ Total Visits: <strong>${summary.totalVisits ?? 0}</strong></div>
+    <div class="stat-item">🛍️ Total Purchases: <strong>${summary.totalVisits ?? 0}</strong></div>
+    <div class="stat-item">🎁 Total Redemptions: <strong>${summary.totalRedemptions ?? 0}</strong></div>
     <div class="stat-item">⭐ Total Points: <strong>${summary.totalPoints ?? 0}</strong></div>
   `;
 }

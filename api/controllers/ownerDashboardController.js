@@ -273,10 +273,22 @@ export const getCustomerEngagement = async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { period = '30d', store_id } = req.query;
-    // simple 30-day default, adjust as needed
-    const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+    
+    // Determine time range based on period
     const end = new Date();
     const start = new Date();
+    let days;
+    
+    if (period === '7d') {
+      days = 7;
+    } else if (period === '90d') {
+      days = 90;
+    } else if (period === '1y') {
+      days = 365;
+    } else {
+      days = 30; // default '30d'
+    }
+    
     start.setDate(end.getDate() - (days - 1));
     start.setHours(0,0,0,0);
     end.setHours(23,59,59,999);
@@ -299,9 +311,10 @@ export const getCustomerEngagement = async (req, res) => {
     
     if (!storeIds.length) return res.status(200).json({ labels:[], datasets:[], summary:{} });
 
+    // Fetch transactions (purchases)
     const { data: txs, error: txErr } = await supabase
       .from('transactions')
-      .select('user_id, transaction_date, points')
+      .select('user_id, transaction_date, points, transaction_type')
       .in('store_id', storeIds)
       .gte('transaction_date', start.toISOString())
       .lte('transaction_date', end.toISOString())
@@ -309,33 +322,229 @@ export const getCustomerEngagement = async (req, res) => {
 
     if (txErr) throw txErr;
 
-    // build daily buckets
-    const labels = [];
-    const map = {};
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const key = d.toISOString().slice(0,10);
-      labels.push(key);
-      map[key] = 0;
+    // Fetch redemptions
+    const { data: redemptions, error: redemptionErr } = await supabase
+      .from('redemptions')
+      .select('customer_id, redemption_date, store_id')
+      .in('store_id', storeIds)
+      .gte('redemption_date', start.toISOString())
+      .lte('redemption_date', end.toISOString())
+      .order('redemption_date', { ascending: true });
+
+    if (redemptionErr) {
+      console.error('❌ Error fetching redemptions:', redemptionErr);
+      // Continue without redemption data if there's an error
     }
 
+    // Build labels and data buckets based on period
+    let labels = [];
+    const purchaseMap = {};
+    const redemptionMap = {};
+    
+    if (period === '1y') {
+      // Group by months for Last Year
+      for (let d = new Date(start); d <= end; ) {
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+        labels.push(monthName);
+        purchaseMap[key] = 0;
+        redemptionMap[key] = 0;
+        d.setMonth(d.getMonth() + 1);
+      }
+      
+      // Count purchases by month
+      (txs || []).forEach(t => {
+        if (!t || !t.transaction_date) return;
+        const date = new Date(t.transaction_date);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (purchaseMap[key] !== undefined) purchaseMap[key] += 1;
+      });
+      
+      // Count redemptions by month
+      (redemptions || []).forEach(r => {
+        if (!r || !r.redemption_date) return;
+        const date = new Date(r.redemption_date);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+      });
+      
+    } else if (period === '90d') {
+      // Group by 3 months (quarters) for Last 90 Days
+      const endDate = new Date(end);
+      for (let i = 2; i >= 0; i--) {
+        const monthStart = new Date(endDate);
+        monthStart.setMonth(endDate.getMonth() - i);
+        monthStart.setDate(1);
+        const monthEnd = new Date(monthStart);
+        monthEnd.setMonth(monthStart.getMonth() + 1);
+        monthEnd.setDate(0);
+        
+        const key = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = monthStart.toLocaleDateString('en-US', { month: 'short' });
+        labels.push(monthName);
+        purchaseMap[key] = 0;
+        redemptionMap[key] = 0;
+      }
+      
+      // Count purchases by month
+      (txs || []).forEach(t => {
+        if (!t || !t.transaction_date) return;
+        const date = new Date(t.transaction_date);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (purchaseMap[key] !== undefined) purchaseMap[key] += 1;
+      });
+      
+      // Count redemptions by month
+      (redemptions || []).forEach(r => {
+        if (!r || !r.redemption_date) return;
+        const date = new Date(r.redemption_date);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+      });
+      
+    } else if (period === '30d') {
+      // Group by 4 weeks for Last 30 Days
+      for (let i = 3; i >= 0; i--) {
+        const weekEnd = new Date(end);
+        weekEnd.setDate(end.getDate() - (i * 7));
+        const weekStart = new Date(weekEnd);
+        weekStart.setDate(weekEnd.getDate() - 6);
+        
+        labels.push(`Week ${4 - i}`);
+        const weekKey = `week-${4 - i}`;
+        purchaseMap[weekKey] = 0;
+        redemptionMap[weekKey] = 0;
+        
+        // Store week ranges for matching
+        purchaseMap[`${weekKey}-start`] = weekStart;
+        purchaseMap[`${weekKey}-end`] = weekEnd;
+      }
+      
+      // Count purchases by week
+      (txs || []).forEach(t => {
+        if (!t || !t.transaction_date) return;
+        const date = new Date(t.transaction_date);
+        for (let i = 1; i <= 4; i++) {
+          const weekKey = `week-${i}`;
+          const weekStart = purchaseMap[`${weekKey}-start`];
+          const weekEnd = purchaseMap[`${weekKey}-end`];
+          if (date >= weekStart && date <= weekEnd) {
+            purchaseMap[weekKey] += 1;
+            break;
+          }
+        }
+      });
+      
+      // Count redemptions by week
+      (redemptions || []).forEach(r => {
+        if (!r || !r.redemption_date) return;
+        const date = new Date(r.redemption_date);
+        for (let i = 1; i <= 4; i++) {
+          const weekKey = `week-${i}`;
+          const weekStart = purchaseMap[`${weekKey}-start`];
+          const weekEnd = purchaseMap[`${weekKey}-end`];
+          if (date >= weekStart && date <= weekEnd) {
+            redemptionMap[weekKey] += 1;
+            break;
+          }
+        }
+      });
+      
+    } else {
+      // Group by days of week for Last 7 Days (default)
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayKeys = [];
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dayKey = d.toISOString().slice(0,10);
+        const dayName = dayNames[d.getDay()];
+        labels.push(dayName);
+        dayKeys.push(dayKey);
+        purchaseMap[dayKey] = 0;
+        redemptionMap[dayKey] = 0;
+      }
+      
+      // Count purchases by day
+      (txs || []).forEach(t => {
+        if (!t || !t.transaction_date) return;
+        const key = new Date(t.transaction_date).toISOString().slice(0,10);
+        if (purchaseMap[key] !== undefined) purchaseMap[key] += 1;
+      });
+      
+      // Count redemptions by day
+      (redemptions || []).forEach(r => {
+        if (!r || !r.redemption_date) return;
+        const key = new Date(r.redemption_date).toISOString().slice(0,10);
+        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+      });
+    }
+
+    // Extract data series
+    let purchaseData, redemptionData;
+    
+    if (period === '1y' || period === '90d') {
+      const keys = Object.keys(purchaseMap).filter(k => !k.includes('-start') && !k.includes('-end'));
+      purchaseData = keys.map(k => purchaseMap[k] || 0);
+      redemptionData = keys.map(k => redemptionMap[k] || 0);
+    } else if (period === '30d') {
+      purchaseData = [1, 2, 3, 4].map(i => purchaseMap[`week-${i}`] || 0);
+      redemptionData = [1, 2, 3, 4].map(i => redemptionMap[`week-${i}`] || 0);
+    } else {
+      const keys = Object.keys(purchaseMap).filter(k => !k.includes('-start') && !k.includes('-end'));
+      purchaseData = keys.map(k => purchaseMap[k] || 0);
+      redemptionData = keys.map(k => redemptionMap[k] || 0);
+    }
+
+    // Calculate summary stats
     const unique = new Set();
     let totalVisits = 0, totalPoints = 0;
     (txs || []).forEach(t => {
-      if (!t || !t.transaction_date) return;
-      const key = new Date(t.transaction_date).toISOString().slice(0,10);
-      if (map[key] !== undefined) map[key] += 1;
       totalVisits += 1;
       if (t.user_id) unique.add(String(t.user_id));
       totalPoints += Number(t.points || 0);
     });
 
-    const dataSeries = labels.map(l => map[l] || 0);
+    const responseData = {
+      labels,
+      datasets: [
+        { 
+          label: 'Purchases', 
+          data: purchaseData,
+          borderColor: '#7C0F0F',
+          backgroundColor: 'rgba(124, 15, 15, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        { 
+          label: 'Redemptions', 
+          data: redemptionData,
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.3,
+          fill: true
+        }
+      ],
+      summary: { 
+        totalCustomers: unique.size, 
+        totalVisits, 
+        totalPoints,
+        totalRedemptions: (redemptions || []).length
+      }
+    };
 
-    return res.json({
-      labels: labels.map(l => (new Date(l + 'T00:00:00')).toLocaleDateString(undefined, { month:'short', day:'2-digit' })),
-      datasets: [{ label: 'Customer Visits', data: dataSeries }],
-      summary: { totalCustomers: unique.size, totalVisits, totalPoints }
+    console.log('📊 [CustomerEngagement] Response:', {
+      period,
+      labelsCount: labels.length,
+      purchaseDataCount: purchaseData.length,
+      redemptionDataCount: redemptionData.length,
+      totalTransactions: (txs || []).length,
+      totalRedemptions: (redemptions || []).length,
+      labels: labels,
+      purchaseData: purchaseData,
+      redemptionData: redemptionData
     });
+
+    return res.json(responseData);
   } catch (err) {
     console.error('getCustomerEngagement error', err);
     return res.status(500).json({ error: 'Failed to fetch engagement' });
