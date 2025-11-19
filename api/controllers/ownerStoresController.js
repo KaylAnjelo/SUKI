@@ -191,9 +191,16 @@ export const updateOwnerStore = async (req, res) => {
     }
 
     let storeImage = existingStore.store_image;
+    let shouldUpdateImage = false;
     
+    // Handle photo removal
+    if (req.body.removePhoto === 'true') {
+      storeImage = null;
+      shouldUpdateImage = true;
+      console.log('🗑️ Removing store photo');
+    }
     // Handle new image upload if provided
-    if (req.file) {
+    else if (req.file) {
       try {
         const file = req.file;
         const filePath = `stores/${Date.now()}_${file.originalname}`;
@@ -221,6 +228,7 @@ export const updateOwnerStore = async (req, res) => {
         }
 
         storeImage = publicURL.publicUrl;
+        shouldUpdateImage = true;
         console.log('🔗 New store image URL generated:', storeImage);
       } catch (imageError) {
         console.error('❌ Store image processing error:', imageError);
@@ -237,8 +245,8 @@ export const updateOwnerStore = async (req, res) => {
       is_active: isActive === 'true' || isActive === true
     };
 
-    // Only update store_image if a new one was uploaded
-    if (req.file) {
+    // Only update store_image if it was modified
+    if (shouldUpdateImage) {
       updateData.store_image = storeImage;
     }
 

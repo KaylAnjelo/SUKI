@@ -5,7 +5,7 @@ export const getOwnerDashboard = async (req, res) => {
     const { user } = req.session;
 
     if (!user) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     // Fetch the stores owned by the logged-in user

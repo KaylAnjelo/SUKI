@@ -12,6 +12,7 @@ import userRouter from './api/routes/users.js';
 import dashboardRoutes from './api/routes/dashboardRoutes.js';
 import ownerDashboardRoutes from './api/routes/ownerDashboardRoutes.js';
 import ownerProfileRoutes from './api/routes/ownerProfileRoutes.js'; 
+import ownerStoresRoutes from './api/routes/ownerStoresRoutes.js';
 import { fileURLToPath } from 'url';
 import cron from 'node-cron';
 import recommendationKMeans from './api/controllers/recommendationKMeansController.js';
@@ -155,7 +156,7 @@ app.get("/owner/redemptions", async (req, res) => {
     const userId = req.session.userId;
     
     if (!userId) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     const { data: store } = await supabase
@@ -179,7 +180,7 @@ app.get("/owner/sales-report", async (req, res) => {
     const userId = req.session.userId;
     
     if (!userId) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     // Fetch all stores owned by the user
@@ -223,7 +224,7 @@ app.get("/owner/transactions", async (req, res) => {
     const userId = req.session.userId;
     
     if (!userId) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     // Fetch all stores owned by the user
@@ -267,7 +268,7 @@ app.get("/owner/promotions", async (req, res) => {
     const userId = req.session.userId;
     
     if (!userId) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     // Get the store_id from query params
@@ -391,6 +392,10 @@ app.get("/api/products", async (req, res) => {
 // mount owner products routes
 app.use('/owner/products', ownerProductsRoutes);
 app.use('/api/owner/products', ownerProductsRoutes);
+
+// mount owner stores routes
+app.use('/owner/stores', ownerStoresRoutes);
+app.use('/api/owner/stores', ownerStoresRoutes);
 
 // Change password route
 import { changeOwnerPassword } from './api/controllers/ownerProfileController.js';

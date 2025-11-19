@@ -49,7 +49,7 @@ export async function getOwnerProducts(req, res) {
 
     if (!ownerId) {
       console.log('getOwnerProducts: no ownerId, redirecting to /login');
-      return res.redirect('/login');
+      return res.redirect('/');
     }
 
     const { data: stores, error: storesErr } = await supabase

@@ -50,15 +50,23 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic" id="headerProfilePic">
+            <div class="profile-pic">
               {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="headerStorePhoto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
               {{else}}
-                <i class="fas fa-store" style="color: #9ca3af;"></i>
+                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
               {{/if}}
             </div>
             <div class="profile-info">
-              <span class="user-name">{{user.username}}</span>
+              <select id="storeSelector" class="store-dropdown">
+                {{#if stores}}
+                  {{#each stores}}
+                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No stores available</option>
+                {{/if}}
+              </select>
             </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -81,31 +89,57 @@
             </div>
           </div>
           <div class="profile-fields">
-            <div class="profile-field">
-              <label>Owner Name</label>
-              <input type="text" id="ownerName" value="{{#if store}}{{store.owner_name}}{{else}}{{#if user}}{{user.first_name}} {{user.last_name}}{{else}}No Name{{/if}}{{/if}}" readonly>
+            <div class="profile-info-row">
+              <span class="profile-label">Full Name</span>
+              <span class="profile-value" id="ownerName">{{#if store}}{{store.owner_name}}{{else}}{{#if user}}{{user.first_name}} {{user.last_name}}{{else}}No Name{{/if}}{{/if}}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-label">Email</span>
+              <span class="profile-value" id="emailDisplay">{{#if user.user_email}}{{user.user_email}}{{else}}No Email{{/if}}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-label">Phone</span>
+              <span class="profile-value" id="phoneDisplay">{{#if user.contact_number}}{{user.contact_number}}{{else if store.owner_contact}}{{store.owner_contact}}{{else}}No Contact{{/if}}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-label">Address</span>
+              <span class="profile-value" id="location">{{#if store}}{{store.location}}{{else}}No Location{{/if}}</span>
             </div>
           </div>
           <div class="profile-actions">
-            <button class="edit-profile-btn">Edit Profile</button>
+            <button class="edit-profile-btn">Edit</button>
             <button class="change-password-btn">Change Password</button>
           </div>
         </div>
 
         <!-- Information and My Vendors Section -->
         <div class="profile-bottom-section">
-          <!-- Information Section -->
+          <!-- Stores Section -->
           <div class="information-card">
-            <h3>Information</h3>
-            <div class="info-item">
-              <i class="fas fa-envelope"></i>
-              <span id="email">{{#if user.user_email}}{{user.user_email}}{{else}}No Email{{/if}}</span>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-phone"></i>
-             <span id="contactNumber">
-              {{#if user.contact_number}}{{user.contact_number}}{{else if store.owner_contact}}{{store.owner_contact}}{{else}}No Contact{{/if}}
-              </span>
+            <h3>Stores</h3>
+            <div class="stores-list" id="storesList">
+              {{#if stores}}
+                {{#each stores}}
+                  <div class="store-item" data-store-id="{{this.store_id}}">
+                    <div class="store-item-image">
+                      {{#if this.store_image}}
+                        <img src="{{this.store_image}}" alt="{{this.store_name}}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                      {{else}}
+                        <i class="fas fa-store" style="font-size: 24px; color: #9ca3af;"></i>
+                      {{/if}}
+                    </div>
+                    <div class="store-item-info">
+                      <p class="store-item-name">{{this.store_name}}</p>
+                      <p class="store-item-location">{{this.location}}</p>
+                    </div>
+                    <button class="btn-edit-store" data-store-id="{{this.store_id}}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                {{/each}}
+              {{else}}
+                <p>No stores available</p>
+              {{/if}}
             </div>
           </div>
 
@@ -119,16 +153,14 @@
                     <th>Name</th>
                     <th>Contact #</th>
                     <th>Email</th>
-                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {{#each vendors}}
                   <tr>
                     <td>{{first_name}} {{last_name}}</td>
-                    <td>{{username}}</td>
                     <td>{{contact_number}}</td>
-                    <td>{{user_email}}</td>
+                    <td>{{user_email}}</td>       
                   </tr>
                   {{/each}}
                 </tbody>
@@ -149,20 +181,6 @@
       </div>
       <form id="editProfileForm" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="editStorePhoto">Store Photo</label>
-          <div class="photo-upload-container">
-            <input type="file" id="editStorePhoto" name="storePhoto" accept="image/*" class="photo-input">
-            <div class="photo-preview" id="photoPreview">
-              <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
-            </div>
-            <button type="button" class="btn-remove-photo" id="removePhotoBtn" style="display: none;">Remove Photo</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="editStoreName">Store Name</label>
-          <input type="text" id="editStoreName" name="storeName" required>
-        </div>
-        <div class="form-group">
           <label for="editOwnerName">Owner Name</label>
           <input type="text" id="editOwnerName" name="ownerName" required>
         </div>
@@ -174,12 +192,43 @@
           <label for="editEmail">Email</label>
           <input type="email" id="editEmail" name="email" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
         </div>
-        <div class="form-group">
-          <label for="editLocation">Location</label>
-          <input type="text" id="editLocation" name="location" required>
-        </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Store Modal -->
+  <div id="editStoreModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="color: #ffffff;">Edit Store</h2>
+        <span class="close-store">&times;</span>
+      </div>
+      <form id="editStoreForm" enctype="multipart/form-data">
+        <input type="hidden" id="editStoreId" name="storeId">
+        <div class="form-group">
+          <label for="editStorePhoto">Store Photo</label>
+          <div class="photo-upload-container">
+            <input type="file" id="editStorePhoto" name="storePhoto" accept="image/*" class="photo-input">
+            <div class="photo-preview" id="storePhotoPreview">
+              <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
+            </div>
+            <button type="button" class="btn-remove-photo" id="removeStorePhotoBtn" style="display: none;">Remove Photo</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editStoreNameInput">Store Name</label>
+          <input type="text" id="editStoreNameInput" name="storeName" required>
+        </div>
+        <div class="form-group">
+          <label for="editStoreLocation">Location</label>
+          <input type="text" id="editStoreLocation" name="location" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel-store">Cancel</button>
           <button type="submit" class="btn-save">Save Changes</button>
         </div>
       </form>
@@ -218,6 +267,16 @@
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Profile page loaded');
       
+      // Store selector functionality
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', (e) => {
+          const storeId = e.target.value;
+          // Reload page with selected store
+          window.location.href = `/owner/profile?store_id=${storeId}`;
+        });
+      }
+      
       // Modal elements
       const modal = document.getElementById('editProfileModal');
       const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -237,21 +296,9 @@
             
             if (response.ok) {
               // Populate form with current data
-              document.getElementById('editStoreName').value = data.store?.store_name || '';
               document.getElementById('editOwnerName').value = data.store?.owner_name || '';
               document.getElementById('editContactNumber').value = data.user?.contact_number || data.store?.owner_contact || '';
               document.getElementById('editEmail').value = data.user?.user_email || '';
-              document.getElementById('editLocation').value = data.store?.location || '';
-              
-              // Set current photo preview
-              const photoPreview = document.getElementById('photoPreview');
-              if (data.store?.store_image) {
-                photoPreview.innerHTML = `<img src="${data.store.store_image}" alt="Current Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
-                document.getElementById('removePhotoBtn').style.display = 'block';
-              } else {
-                photoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
-                document.getElementById('removePhotoBtn').style.display = 'none';
-              }
               
               // Show modal
               modal.style.display = 'block';
@@ -286,62 +333,6 @@
         }
       });
       
-      // Handle photo file selection
-      const photoInput = document.getElementById('editStorePhoto');
-      const photoPreview = document.getElementById('photoPreview');
-      const removePhotoBtn = document.getElementById('removePhotoBtn');
-      
-      // Make photo preview clickable
-      if (photoPreview) {
-        photoPreview.addEventListener('click', () => {
-          photoInput.click();
-        });
-        photoPreview.style.cursor = 'pointer';
-      }
-      
-      if (photoInput) {
-        photoInput.addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              photoPreview.innerHTML = `<img src="${e.target.result}" alt="Selected Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
-              removePhotoBtn.style.display = 'block';
-              
-              // Remove the hidden field since we're uploading a new photo
-              const removeInput = document.getElementById('removePhotoInput');
-              if (removeInput) {
-                removeInput.remove();
-              }
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      }
-      
-      // Handle remove photo button
-      if (removePhotoBtn) {
-        removePhotoBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          photoInput.value = '';
-          photoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
-          removePhotoBtn.style.display = 'none';
-          
-          // Add a hidden field to indicate photo removal
-          let removeInput = document.getElementById('removePhotoInput');
-          if (!removeInput) {
-            removeInput = document.createElement('input');
-            removeInput.type = 'hidden';
-            removeInput.id = 'removePhotoInput';
-            removeInput.name = 'removePhoto';
-            removeInput.value = 'true';
-            editForm.appendChild(removeInput);
-          } else {
-            removeInput.value = 'true';
-          }
-        });
-      }
-      
       // Handle form submission
       if (editForm) {
         editForm.addEventListener('submit', async (e) => {
@@ -370,42 +361,14 @@
             const result = await response.json();
             
             if (response.ok) {
-              // Update the display with new data
-              document.getElementById('storeName').value = formData.get('storeName');
-              document.getElementById('ownerName').value = formData.get('ownerName');
-              document.getElementById('location').textContent = formData.get('location');
-              document.getElementById('email').textContent = formData.get('email');
-              document.getElementById('contactNumber').textContent = formData.get('contactNumber');
-              
-              // Update store photo if a new one was uploaded
-              if (result.storeImage) {
-                const storeProfilePic = document.getElementById('storeProfilePic');
-                const headerProfilePic = document.getElementById('headerProfilePic');
-                
-                // Update main profile photo
-                storeProfilePic.innerHTML = `<img src="${result.storeImage}" alt="Store Photo" id="storePhotoImg">`;
-                
-                // Update header photo
-                headerProfilePic.innerHTML = `<img src="${result.storeImage}" alt="Store Photo" id="headerStorePhoto">`;
-              } else if (result.photoRemoved || formData.get('removePhoto') === 'true') {
-                // Photo was removed - show gray store icon
-                const storeProfilePic = document.getElementById('storeProfilePic');
-                const headerProfilePic = document.getElementById('headerProfilePic');
-                
-                storeProfilePic.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
-                headerProfilePic.innerHTML = '<i class="fas fa-store" style="font-size: 20px; color: #9ca3af;"></i>';
-              }
-              
               // Close modal
               modal.style.display = 'none';
               
               // Show success message
               alert('Profile updated successfully!');
               
-              // Optionally reload the page to reflect all changes
-              setTimeout(() => {
-                window.location.reload();
-              }, 1000);
+              // Reload the page to reflect all changes
+              window.location.reload();
             } else {
               alert('Failed to update profile: ' + (result.error || 'Unknown error'));
             }
@@ -414,6 +377,181 @@
             alert('Failed to update profile');
           } finally {
             // Reset button state
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          }
+        });
+      }
+
+      // Edit Store Modal
+      const storeModal = document.getElementById('editStoreModal');
+      const closeStoreBtn = document.querySelector('.close-store');
+      const cancelStoreBtn = document.querySelector('.btn-cancel-store');
+      const editStoreForm = document.getElementById('editStoreForm');
+      
+      // Open store edit modal when edit button is clicked
+      document.addEventListener('click', async (e) => {
+        if (e.target.closest('.btn-edit-store')) {
+          const storeId = e.target.closest('.btn-edit-store').dataset.storeId;
+          
+          try {
+            // Fetch store data
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentStoreId = urlParams.get('store_id') || storeId;
+            
+            const response = await fetch(`/owner/profile?store_id=${storeId}`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            
+            if (response.ok && data.store) {
+              // Populate form with current data
+              document.getElementById('editStoreId').value = data.store.store_id;
+              document.getElementById('editStoreNameInput').value = data.store.store_name || '';
+              document.getElementById('editStoreLocation').value = data.store.location || '';
+              
+              // Set current photo preview
+              const storePhotoPreview = document.getElementById('storePhotoPreview');
+              if (data.store.store_image) {
+                storePhotoPreview.innerHTML = `<img src="${data.store.store_image}" alt="Current Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                document.getElementById('removeStorePhotoBtn').style.display = 'block';
+              } else {
+                storePhotoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
+                document.getElementById('removeStorePhotoBtn').style.display = 'none';
+              }
+              
+              // Show modal
+              storeModal.style.display = 'block';
+            } else {
+              alert('Failed to load store data');
+            }
+          } catch (error) {
+            console.error('Error loading store data:', error);
+            alert('Failed to load store data');
+          }
+        }
+      });
+      
+      // Close store modal
+      if (closeStoreBtn) {
+        closeStoreBtn.addEventListener('click', () => {
+          storeModal.style.display = 'none';
+        });
+      }
+      
+      if (cancelStoreBtn) {
+        cancelStoreBtn.addEventListener('click', () => {
+          storeModal.style.display = 'none';
+        });
+      }
+      
+      // Close when clicking outside
+      window.addEventListener('click', (event) => {
+        if (event.target === storeModal) {
+          storeModal.style.display = 'none';
+        }
+      });
+      
+      // Handle store photo file selection
+      const storePhotoInput = document.getElementById('editStorePhoto');
+      const storePhotoPreview = document.getElementById('storePhotoPreview');
+      const removeStorePhotoBtn = document.getElementById('removeStorePhotoBtn');
+      
+      // Make photo preview clickable
+      if (storePhotoPreview) {
+        storePhotoPreview.addEventListener('click', () => {
+          storePhotoInput.click();
+        });
+        storePhotoPreview.style.cursor = 'pointer';
+      }
+      
+      if (storePhotoInput) {
+        storePhotoInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              storePhotoPreview.innerHTML = `<img src="${e.target.result}" alt="Selected Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+              removeStorePhotoBtn.style.display = 'block';
+              
+              // Remove the hidden field since we're uploading a new photo
+              const removeInput = document.getElementById('removeStorePhotoInput');
+              if (removeInput) {
+                removeInput.remove();
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+      
+      // Handle remove store photo button
+      if (removeStorePhotoBtn) {
+        removeStorePhotoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          storePhotoInput.value = '';
+          storePhotoPreview.innerHTML = '<i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>';
+          removeStorePhotoBtn.style.display = 'none';
+          
+          // Add a hidden field to indicate photo removal
+          let removeInput = document.getElementById('removeStorePhotoInput');
+          if (!removeInput) {
+            removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.id = 'removeStorePhotoInput';
+            removeInput.name = 'removePhoto';
+            removeInput.value = 'true';
+            editStoreForm.appendChild(removeInput);
+          } else {
+            removeInput.value = 'true';
+          }
+        });
+      }
+      
+      // Handle store form submission
+      if (editStoreForm) {
+        editStoreForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const formData = new FormData(editStoreForm);
+          const storeId = formData.get('storeId');
+          
+          // Explicitly add removePhoto if the hidden input exists
+          const removeInput = document.getElementById('removeStorePhotoInput');
+          if (removeInput && removeInput.value === 'true') {
+            formData.set('removePhoto', 'true');
+          }
+          
+          // Show loading state
+          const saveBtn = editStoreForm.querySelector('.btn-save');
+          const originalText = saveBtn.textContent;
+          saveBtn.textContent = 'Saving...';
+          saveBtn.disabled = true;
+          
+          try {
+            const response = await fetch(`/owner/stores/${storeId}`, {
+              method: 'PUT',
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              // Close modal
+              storeModal.style.display = 'none';
+              
+              // Show success message
+              alert('Store updated successfully!');
+              
+              // Reload the page to reflect all changes
+              window.location.reload();
+            } else {
+              alert('Failed to update store: ' + (result.error || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Error updating store:', error);
+            alert('Failed to update store');
+          } finally {
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
           }
