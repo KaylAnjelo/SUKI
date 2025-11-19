@@ -62,7 +62,7 @@ export async function getOwnerProducts(req, res) {
     }
     console.log('getOwnerProducts: stores found=', (stores || []).length);
 
-    // Get selected store from query param or use first store
+    // Get selected store from query param
     const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
     let store = null;
     
@@ -70,7 +70,8 @@ export async function getOwnerProducts(req, res) {
       store = stores.find(s => s.store_id === selectedStoreId);
     }
     
-    // Fallback to first store if no valid selection
+    // Only use first store as fallback if we still don't have one (for header image display)
+    // But don't auto-select it in the dropdown
     if (!store && stores && stores.length > 0) {
       store = stores[0];
     }
@@ -78,12 +79,15 @@ export async function getOwnerProducts(req, res) {
     // Mark selected store in stores array
     const storesWithSelection = (stores || []).map(s => ({
       ...s,
-      is_selected: s.store_id === store?.store_id
+      is_selected: selectedStoreId && s.store_id === selectedStoreId
     }));
+    
+    console.log('selectedStoreId:', selectedStoreId);
+    console.log('storesWithSelection:', storesWithSelection.map(s => ({ id: s.store_id, name: s.store_name, selected: s.is_selected })));
 
     const storeIds = (stores || []).map(s => s.store_id);
     if (!storeIds.length) {
-      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [] });
+      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null });
     }
 
     // Filter by selected store or all stores
@@ -108,28 +112,35 @@ export async function getOwnerProducts(req, res) {
       product_image: p.product_image || null
     }));
 
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store, stores: storesWithSelection });
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store, stores: storesWithSelection, selectedStoreId });
   } catch (err) {
     console.error('getOwnerProducts error', err);
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], error: 'Failed to load products' });
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, error: 'Failed to load products' });
   }
 };
 
 // 🟨 Add new product
 export const addProduct = async (req, res) => {
   try {
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId || req.session?.user?.id;
 
     if (!userId) return res.redirect("/login");
 
-    // Get owner’s store
-    const { data: store } = await supabase
-      .from("stores")
-      .select("store_id")
-      .eq("owner_id", userId)
-      .maybeSingle();
-
-    if (!store) throw new Error("Store not found for this owner.");
+    // Get owner's store - use selectedStoreId from session for multi-store owners
+    let storeId = req.session.selectedStoreId;
+    
+    if (!storeId) {
+      // Fallback: get first store if no selection
+      const { data: store } = await supabase
+        .from("stores")
+        .select("store_id")
+        .eq("owner_id", userId)
+        .limit(1)
+        .single();
+      
+      if (!store) throw new Error("Store not found for this owner.");
+      storeId = store.store_id;
+    }
 
     const { productName, product_type: productCategory, productPrice } = req.body;
     const file = req.file;
@@ -160,7 +171,7 @@ export const addProduct = async (req, res) => {
       product_name: productName,
       product_type: productCategory,
       price: parseFloat(productPrice),
-      store_id: store.store_id,
+      store_id: storeId,
       product_image: imageUrl
     };
     
@@ -271,26 +282,33 @@ export const addProduct = async (req, res) => {
 // 🟥 Delete product
 export const deleteProduct = async (req, res) => {
   try {
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId || req.session?.user?.id;
     const { id } = req.params;
 
     if (!userId) return res.redirect("/login");
 
-    // Verify the product belongs to the owner's store
-    const { data: store } = await supabase
-      .from("stores")
-      .select("store_id")
-      .eq("owner_id", userId)
-      .maybeSingle();
-
-    if (!store) throw new Error("Store not found for this owner.");
+    // Get owner's store - use selectedStoreId from session for multi-store owners
+    let storeId = req.session.selectedStoreId;
+    
+    if (!storeId) {
+      // Fallback: get first store if no selection
+      const { data: store } = await supabase
+        .from("stores")
+        .select("store_id")
+        .eq("owner_id", userId)
+        .limit(1)
+        .single();
+      
+      if (!store) throw new Error("Store not found for this owner.");
+      storeId = store.store_id;
+    }
 
     // Check if product exists and belongs to owner
     const { data: product } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", store.store_id)
+      .eq("store_id", storeId)
       .single();
 
     if (!product) {
@@ -357,28 +375,35 @@ export const deleteProduct = async (req, res) => {
 // 🟨 Edit product
 export const editProduct = async (req, res) => {
   try {
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId || req.session?.user?.id;
     const { id } = req.params;
     const { productName, product_type: productCategory, productPrice } = req.body;
     const file = req.file;
 
     if (!userId) return res.redirect("/login");
 
-    // Verify the product belongs to the owner's store
-    const { data: store } = await supabase
-      .from("stores")
-      .select("store_id")
-      .eq("owner_id", userId)
-      .maybeSingle();
-
-    if (!store) throw new Error("Store not found for this owner.");
+    // Get owner's store - use selectedStoreId from session for multi-store owners
+    let storeId = req.session.selectedStoreId;
+    
+    if (!storeId) {
+      // Fallback: get first store if no selection
+      const { data: store } = await supabase
+        .from("stores")
+        .select("store_id")
+        .eq("owner_id", userId)
+        .limit(1)
+        .single();
+      
+      if (!store) throw new Error("Store not found for this owner.");
+      storeId = store.store_id;
+    }
 
     // Get current product data
     const { data: currentProduct } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", store.store_id)
+      .eq("store_id", storeId)
       .single();
 
     if (!currentProduct) {
@@ -415,7 +440,7 @@ export const editProduct = async (req, res) => {
         product_image: imageUrl
       })
       .eq("id", id)
-      .eq("store_id", store.store_id);
+      .eq("store_id", storeId);
 
     if (updateError) {
       console.error('Update error details:', updateError);
@@ -452,7 +477,7 @@ export const editProduct = async (req, res) => {
 // 🟦 Get single product by ID
 export const getProductById = async (req, res) => {
   try {
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId || req.session?.user?.id;
     const { id } = req.params;
 
     console.log('getProductById called with:', { userId, id });
@@ -462,15 +487,22 @@ export const getProductById = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get owner's store
-    const { data: store } = await supabase
-      .from("stores")
-      .select("store_id")
-      .eq("owner_id", userId)
-      .maybeSingle();
-
-    if (!store) {
-      return res.status(404).json({ error: 'Store not found' });
+    // Get owner's store - use selectedStoreId from session for multi-store owners
+    let storeId = req.session.selectedStoreId;
+    
+    if (!storeId) {
+      // Fallback: get first store if no selection
+      const { data: store } = await supabase
+        .from("stores")
+        .select("store_id")
+        .eq("owner_id", userId)
+        .limit(1)
+        .single();
+      
+      if (!store) {
+        return res.status(404).json({ error: 'Store not found' });
+      }
+      storeId = store.store_id;
     }
 
     // Get product data
@@ -478,7 +510,7 @@ export const getProductById = async (req, res) => {
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", store.store_id)
+      .eq("store_id", storeId)
       .single();
 
     if (error || !product) {

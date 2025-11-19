@@ -451,6 +451,7 @@
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
                 {{#if stores}}
+                  <option value="" {{#unless selectedStoreId}}selected{{/unless}}>All Stores</option>
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
@@ -546,9 +547,9 @@
               <label for="productCategory">Category</label>
               <select id="productCategory" name="product_type" required>
                 <option value="">Select Category</option>
-                <option value="Meal">Meal</option>
-                <option value="Side">Side</option>
-                <option value="Beverage">Beverage</option>
+                <option value="Meals">Meals</option>
+                <option value="Sides">Sides</option>
+                <option value="Beverages">Beverages</option>
               </select>
             </div>
             <div class="form-group">
@@ -615,8 +616,12 @@
       if (storeSelector) {
         storeSelector.addEventListener('change', (e) => {
           const storeId = e.target.value;
-          // Reload page with selected store
-          window.location.href = `/owner/products?store_id=${storeId}`;
+          // If "All Stores" selected (empty value), reload without store_id parameter
+          if (storeId) {
+            window.location.href = `/owner/products?store_id=${storeId}`;
+          } else {
+            window.location.href = `/owner/products`;
+          }
         });
       }
 

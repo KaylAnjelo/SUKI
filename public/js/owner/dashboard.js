@@ -74,7 +74,7 @@ if (window._ownerDashboardInit) {
         { value: 'all', text: 'All Categories' },
         { value: 'Meal', text: 'Meals' },
         { value: 'Side', text: 'Sides' },
-        { value: 'Beverage', text: 'Beverages' }
+        { value: 'Beverages', text: 'Beverages' }
       ];
       
       options.forEach(({ value, text }) => {
