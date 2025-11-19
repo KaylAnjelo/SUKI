@@ -126,23 +126,26 @@ export const addProduct = async (req, res) => {
 
     if (!userId) return res.redirect("/login");
 
-    // Get owner's store - use selectedStoreId from session for multi-store owners
-    let storeId = req.session.selectedStoreId;
-    
-    if (!storeId) {
-      // Fallback: get first store if no selection
-      const { data: store } = await supabase
-        .from("stores")
-        .select("store_id")
-        .eq("owner_id", userId)
-        .limit(1)
-        .single();
-      
-      if (!store) throw new Error("Store not found for this owner.");
-      storeId = store.store_id;
+    const { productName, product_type: productCategory, productPrice, store_id } = req.body;
+
+    // Validate that store_id is provided and belongs to the owner
+    if (!store_id) {
+      throw new Error("Store selection is required. Please select a specific store.");
     }
 
-    const { productName, product_type: productCategory, productPrice } = req.body;
+    const storeId = parseInt(store_id);
+
+    // Verify the store belongs to this owner
+    const { data: storeCheck, error: storeError } = await supabase
+      .from("stores")
+      .select("store_id")
+      .eq("store_id", storeId)
+      .eq("owner_id", userId)
+      .single();
+
+    if (storeError || !storeCheck) {
+      throw new Error("Store not found or access denied.");
+    }
     const file = req.file;
 
     let imageUrl = null;
@@ -287,31 +290,27 @@ export const deleteProduct = async (req, res) => {
 
     if (!userId) return res.redirect("/login");
 
-    // Get owner's store - use selectedStoreId from session for multi-store owners
-    let storeId = req.session.selectedStoreId;
-    
-    if (!storeId) {
-      // Fallback: get first store if no selection
-      const { data: store } = await supabase
-        .from("stores")
-        .select("store_id")
-        .eq("owner_id", userId)
-        .limit(1)
-        .single();
-      
-      if (!store) throw new Error("Store not found for this owner.");
-      storeId = store.store_id;
+    // Get owner's stores to verify ownership
+    const { data: stores, error: storesError } = await supabase
+      .from("stores")
+      .select("store_id")
+      .eq("owner_id", userId);
+
+    if (storesError || !stores || stores.length === 0) {
+      throw new Error("No stores found for this owner.");
     }
 
-    // Check if product exists and belongs to owner
-    const { data: product } = await supabase
+    const ownerStoreIds = stores.map(s => s.store_id);
+
+    // Check if product exists and belongs to owner's stores
+    const { data: product, error: productError } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", storeId)
+      .in("store_id", ownerStoreIds)
       .single();
 
-    if (!product) {
+    if (productError || !product) {
       throw new Error("Product not found or access denied.");
     }
 
@@ -382,31 +381,27 @@ export const editProduct = async (req, res) => {
 
     if (!userId) return res.redirect("/login");
 
-    // Get owner's store - use selectedStoreId from session for multi-store owners
-    let storeId = req.session.selectedStoreId;
-    
-    if (!storeId) {
-      // Fallback: get first store if no selection
-      const { data: store } = await supabase
-        .from("stores")
-        .select("store_id")
-        .eq("owner_id", userId)
-        .limit(1)
-        .single();
-      
-      if (!store) throw new Error("Store not found for this owner.");
-      storeId = store.store_id;
+    // Get owner's stores to verify ownership
+    const { data: stores, error: storesError } = await supabase
+      .from("stores")
+      .select("store_id")
+      .eq("owner_id", userId);
+
+    if (storesError || !stores || stores.length === 0) {
+      throw new Error("No stores found for this owner.");
     }
 
-    // Get current product data
-    const { data: currentProduct } = await supabase
+    const ownerStoreIds = stores.map(s => s.store_id);
+
+    // Get current product data and verify it belongs to owner's stores
+    const { data: currentProduct, error: productError } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", storeId)
+      .in("store_id", ownerStoreIds)
       .single();
 
-    if (!currentProduct) {
+    if (productError || !currentProduct) {
       throw new Error("Product not found or access denied.");
     }
 
@@ -430,7 +425,7 @@ export const editProduct = async (req, res) => {
       imageUrl = publicUrlData.publicUrl;
     }
 
-    // 🗃️ Update product
+    // 🗃️ Update product (keep original store_id)
     const { error: updateError } = await supabase
       .from("products")
       .update({
@@ -440,7 +435,7 @@ export const editProduct = async (req, res) => {
         product_image: imageUrl
       })
       .eq("id", id)
-      .eq("store_id", storeId);
+      .eq("store_id", currentProduct.store_id);
 
     if (updateError) {
       console.error('Update error details:', updateError);
@@ -487,30 +482,24 @@ export const getProductById = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get owner's store - use selectedStoreId from session for multi-store owners
-    let storeId = req.session.selectedStoreId;
-    
-    if (!storeId) {
-      // Fallback: get first store if no selection
-      const { data: store } = await supabase
-        .from("stores")
-        .select("store_id")
-        .eq("owner_id", userId)
-        .limit(1)
-        .single();
-      
-      if (!store) {
-        return res.status(404).json({ error: 'Store not found' });
-      }
-      storeId = store.store_id;
+    // Get owner's stores to verify ownership
+    const { data: stores, error: storesError } = await supabase
+      .from("stores")
+      .select("store_id")
+      .eq("owner_id", userId);
+
+    if (storesError || !stores || stores.length === 0) {
+      return res.status(404).json({ error: 'No stores found for this owner' });
     }
 
-    // Get product data
+    const ownerStoreIds = stores.map(s => s.store_id);
+
+    // Get product data and verify it belongs to owner's stores
     const { data: product, error } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .eq("store_id", storeId)
+      .in("store_id", ownerStoreIds)
       .single();
 
     if (error || !product) {

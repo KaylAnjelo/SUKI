@@ -659,10 +659,23 @@
 
       // Open add product modal
       addProductBtn.addEventListener('click', () => {
+        // Get selected store from dropdown
+        const selectedStoreId = storeSelector ? storeSelector.value : '';
+        
+        // Validate that a specific store is selected (not "All Stores")
+        if (!selectedStoreId) {
+          alert('⚠️ Please select a specific store from the dropdown before adding a product.');
+          return;
+        }
+        
         document.getElementById('modalTitle').textContent = 'Add New Product';
         document.getElementById('submitBtn').textContent = 'Save Product';
         productForm.reset();
         document.getElementById('product_id').value = '';
+        
+        // Set the store_id from dropdown selection
+        document.getElementById('store_id').value = selectedStoreId;
+        
         productForm.action = '/api/owner/products/add';
         
         // Reset image preview
@@ -801,6 +814,9 @@
               document.getElementById('productName').value = product.product_name || '';
               document.getElementById('productCategory').value = product.product_type || '';
               document.getElementById('productPrice').value = product.price || '';
+              
+              // Set the store_id from the product (should not be changed during edit)
+              document.getElementById('store_id').value = product.store_id || '';
               
               // Show current image if exists
               const imagePreview = document.getElementById('imagePreview');
