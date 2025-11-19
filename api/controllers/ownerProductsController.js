@@ -119,6 +119,8 @@ export async function getOwnerProducts(req, res) {
   }
 };
 
+ 
+
 // 🟨 Add new product
 export const addProduct = async (req, res) => {
   try {
