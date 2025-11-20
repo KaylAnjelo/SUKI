@@ -191,10 +191,10 @@ export const createPromotion = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Verify the user owns this store
+    // Verify the user owns this store and get store_name
     const { data: store } = await supabase
       .from('stores')
-      .select('store_id')
+      .select('store_id, store_name')
       .eq('store_id', storeId)
       .eq('owner_id', userId)
       .single();
@@ -203,8 +203,8 @@ export const createPromotion = async (req, res) => {
       console.error('Store not found or not owned by user:', userId, storeId);
       return res.status(403).json({ error: 'Access denied to this store' });
     }
-    
-    console.log('Verified store_id:', storeId);
+    const store_name = store.store_name;
+    console.log('Verified store_id:', storeId, 'store_name:', store_name);
 
     // Prepare promotion data based on discount type
     let finalDiscountValue;
@@ -294,7 +294,30 @@ export const createPromotion = async (req, res) => {
       return res.status(500).json({ error: 'Failed to create promotion: ' + error.message });
     }
 
+
     console.log('Promotion created with code:', reward.promotion_code);
+
+    // Notify all users with role 'customer'
+    try {
+      const { reward_name, points_required } = reward;
+      const { data: customers, error: customersError } = await supabase
+        .from('users')
+        .select('user_id')
+        .eq('role', 'customer');
+
+      if (!customersError && customers && customers.length > 0) {
+        const notifications = customers.map(user => ({
+          user_id: user.user_id,
+          title: 'New Promotion Available!',
+          message: `A new promotion "${reward_name}" is now available at ${store_name}! Redeem it for ${points_required} points.`,
+          is_read: false,
+          created_at: new Date().toISOString()
+        }));
+        await supabase.from('notifications').insert(notifications);
+      }
+    } catch (notifyError) {
+      console.error('Error sending notifications for new promotion:', notifyError);
+    }
 
     res.status(201).json({ 
       success: true, 
@@ -309,6 +332,8 @@ export const createPromotion = async (req, res) => {
     res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 };
+
+
 
 /**
  * Get all promotions for the owner's store
