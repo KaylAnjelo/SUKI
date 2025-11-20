@@ -11,6 +11,24 @@
   <script src="/js/sidebar.js" defer></script>
   <script src="/js/stores.js" defer></script>
   <style>
+    .store-thumbnail {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: inline-block;
+    }
+    .store-placeholder {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #7c7c7c;
+    }
   </style>
 </head>
 <body>
@@ -43,8 +61,10 @@
           <table class="admin-table">
             <thead>
               <tr>
+                <th></th>
                 <th>Store Name</th>
                 <th>Owner Name</th>
+                <th>Owner Email</th>
                 <th>Contact Info</th>
                 <th>Store Code</th>
                 <th></th>
@@ -54,19 +74,22 @@
               {{#each stores}}
               <tr>
                 <td>
-                  <div style="display: flex; align-items: center; gap: 5px;">
-                    {{#if this.store_image}}
-                      <img src="{{this.store_image}}" alt="Store Image" class="store-thumbnail">
-                    {{else}}
-                      <i class="fas fa-store store-placeholder"></i>
-                    {{/if}}
-                    <span>{{this.store_name}}</span>
-                  </div>
+                  {{#if this.store_image}}
+                    <img src="{{this.store_image}}" alt="Store Image" class="store-thumbnail">
+                  {{else}}
+                    <span class="store-placeholder"><i class="fas fa-store"></i></span>
+                  {{/if}}
+                </td>
+                <td>
+                  {{this.store_name}}
                 </td>
                 <td>
                   {{this.ownerFullName}}
                 </td>
-                <td><a class="link" href="tel:{{this.owner_contact}}">{{this.owner_contact}}</a></td>
+                <td>
+                  {{this.ownerEmail}}
+                </td>
+                <td>{{this.ownerContact}}</td>
                 <td>{{this.store_code}}</td>
                 <td>
                   <form class="delete-store-form" data-store-id="{{this.store_id}}" onsubmit="return deleteStore(event, this);">

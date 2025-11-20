@@ -97,20 +97,38 @@ export const getVendors = async (req, res) => {
 
 export const getStores = async (req, res) => {
   try {
+    // Fetch all stores
     const { data: stores, error } = await supabase
       .from('stores')
-      .select('store_id, owner_id, store_name, is_active, store_code, owner_name , owner_contact, store_image, location')
+      .select('store_id, owner_id, store_name, is_active, store_code, store_image, location')
       .order('store_id', { ascending: true });
 
     if (error) throw error;
 
-    // Add ownerFullName to each store
-    const storesWithFullName = stores.map(store => ({
-      ...store,
-      ownerFullName: store.owner_name
-    }));
+    // Fetch all owners referenced by stores
+    const ownerIds = stores.map(s => s.owner_id).filter(Boolean);
+    let owners = [];
+    if (ownerIds.length > 0) {
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('users')
+        .select('user_id, first_name, last_name, contact_number, user_email')
+        .in('user_id', ownerIds);
+      if (ownerError) throw ownerError;
+      owners = ownerData || [];
+    }
 
-    res.render('users/Store', { stores: storesWithFullName });
+    // Attach owner info to each store
+    const storesWithOwnerInfo = stores.map(store => {
+      const owner = owners.find(o => o.user_id === store.owner_id);
+      return {
+        ...store,
+        ownerFullName: owner ? `${owner.first_name} ${owner.last_name}` : 'N/A',
+        ownerEmail: owner ? owner.user_email : 'N/A',
+        ownerContact: owner ? owner.contact_number : 'N/A'
+      };
+    });
+
+    res.render('users/Store', { stores: storesWithOwnerInfo });
   } catch (error) {
     console.error("Error fetching stores:", error.message);
     res.status(500).send('Server Error');

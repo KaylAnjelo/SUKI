@@ -1,3 +1,21 @@
+/**
+ * Render Transactions Page with Stores Dropdown
+ */
+export const renderTransactionsPage = async (req, res) => {
+  try {
+    // Fetch all stores for the dropdown
+    const { data: stores, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name');
+    if (error) throw error;
+
+    // Render the page and pass stores array
+    res.render('Transactions', { stores });
+  } catch (err) {
+    console.error('Error rendering transactions page:', err);
+    res.status(500).send('Error loading page');
+  }
+};
 // controllers/transactionsController.js
 import supabase from '../../config/db.js';
 import { calculatePoints } from '../utils/points.js';

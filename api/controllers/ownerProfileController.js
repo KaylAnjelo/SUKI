@@ -53,10 +53,10 @@ export const getOwnerProfileData = async (req, res) => {
       return res.status(404).render("errors/404", { message: "User not found" });
     }
 
-    // Fetch all stores owned by the user
+    // Fetch all stores owned by the user, including store_code
     const { data: stores } = await supabase
       .from('stores')
-      .select('store_id, store_name, location, store_image, owner_name, owner_contact')
+      .select('store_id, store_name, location, store_image, owner_name, owner_contact, store_code')
       .eq('owner_id', user.user_id);
 
     // Get selected store from query param or use first store

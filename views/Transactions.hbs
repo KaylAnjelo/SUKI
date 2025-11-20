@@ -60,15 +60,50 @@
       </div>
 
       <!-- Filters -->
-      <div class="filters-container" id="filtersContainer">
-        <div class="filter-group">
-          <label for="typeFilterTrans">Transaction Type:</label>
-          <select id="typeFilterTrans" name="transactionType">
-            <option value="">All</option>
-            <option value="Purchase">Purchase</option>
-            <option value="Redemption">Redemption</option>
-            <option value="Refund">Refund</option>
-          </select>
+      <div class="filters-container" id="filtersContainer" style="background:#fafafa; border-radius:12px; padding:24px 16px; margin-bottom:18px; display:flex; flex-direction:column; align-items:center; gap:16px;">
+        <div style="width:100%; display:flex; justify-content:center; align-items:center; gap:32px; flex-wrap:wrap;">
+          <div style="display:flex; flex-direction:row; align-items:flex-end; gap:32px; width:100%; justify-content:center;">
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+              <label for="typeFilterTrans" style="font-weight:500; font-size:13px;">Transaction Type:</label>
+              <select id="typeFilterTrans" name="transactionType" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+                <option value="">All</option>
+                <option value="Purchase">Purchase</option>
+                <option value="Redemption">Redemption</option>
+                <option value="Refund">Refund</option>
+              </select>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+              <label for="storeFilter" style="font-weight:500; font-size:13px;">Store:</label>
+              <select id="storeFilter" name="storeFilter" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+                <option value="">All</option>
+                {{#each stores}}
+                  <option value="{{this.store_name}}">{{this.store_name}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <label for="dateStart" style="font-weight:500; font-size:13px;">Date Range:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="date" id="dateStart" name="dateStart" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+                <span style="font-weight:500; font-size:13px;">to</span>
+                <input type="date" id="dateEnd" name="dateEnd" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+              <label for="amountSort" style="font-weight:500; font-size:13px;">Amount:</label>
+              <select id="amountSort" name="amountSort" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+              <label style="opacity:0; font-size:13px;">&nbsp;</label>
+              <div style="display:flex; gap:8px;">
+                <button id="applyFiltersBtn" class="apply-filters-btn" style="padding:7px 18px; border-radius:5px; border:none; background:#7D0006; color:white; font-weight:500; cursor:pointer; transition:all 0.3s ease;">Apply</button>
+                <button id="clearFiltersBtn" class="clear-filters-btn" style="padding:7px 18px; border-radius:5px; border:none; background:#7D0006; color:white; font-weight:500; cursor:pointer; transition:all 0.3s ease;">Clear</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -167,5 +202,62 @@
       </div>
     </main>
   </div>
+
+  <script>
+    // In your transactions.js (or the script that populates the modal):
+    // When showing the receipt modal, calculate points from the total amount
+    function showTransactionDetailsModal(transaction) {
+      // ...existing code...
+      // Calculate points from total amount
+      const totalAmount = transaction.amount; // or sum of all subtotals if multiple
+      const points = calculatePointsFromTotal(totalAmount); // Use your points logic here
+      document.getElementById('modalAmount').textContent = totalAmount;
+      document.getElementById('modalPoints').textContent = points;
+      // ...existing code...
+    }
+
+    function calculatePointsFromTotal(amount) {
+      // 10 percent of the total amount
+      return Math.floor(amount * 0.10);
+    }
+
+    // Enhanced filter logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+          let filtered = [...TXN_DATA];
+          // Transaction type
+          const typeVal = document.getElementById('typeFilterTrans').value;
+          if (typeVal) {
+            filtered = filtered.filter(tx => String(tx.transaction_type || '').toLowerCase() === typeVal.toLowerCase());
+          }
+          // Store
+          const storeVal = document.getElementById('storeFilter').value;
+          if (storeVal) {
+            filtered = filtered.filter(tx => String(tx.store || '').toLowerCase() === storeVal.toLowerCase());
+          }
+          // Date range
+          const dateStart = document.getElementById('dateStart').value;
+          const dateEnd = document.getElementById('dateEnd').value;
+          if (dateStart) {
+            filtered = filtered.filter(tx => new Date(tx.transaction_date) >= new Date(dateStart));
+          }
+          if (dateEnd) {
+            filtered = filtered.filter(tx => new Date(tx.transaction_date) <= new Date(dateEnd));
+          }
+          // Amount sort
+          const amountSort = document.getElementById('amountSort').value;
+          filtered = filtered.sort((a, b) => {
+            const va = Number(a.total || 0);
+            const vb = Number(b.total || 0);
+            return amountSort === 'asc' ? va - vb : vb - va;
+          });
+          FILTERED_DATA = filtered;
+          renderTransactions(FILTERED_DATA);
+        });
+      }
+    });
+  </script>
 </body>
 </html>

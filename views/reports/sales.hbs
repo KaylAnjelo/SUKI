@@ -56,36 +56,38 @@
 
       <!-- Filters Container -->
       <div class="filters-container" id="filtersContainer">
-        <div class="filter-group">
-          <label for="startDate">Date Range:</label>
-          <div class="date-range">
-            <input type="date" id="startDate" name="startDate">
-            <span>to</span>
-            <input type="date" id="endDate" name="endDate">
+        <div style="display:flex; align-items:flex-end; gap:32px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;">
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:180px;">
+            <label for="startDate" style="font-weight:500; font-size:13px;">Date Range:</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="date" id="startDate" name="startDate" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+              <span style="font-weight:500;">to</span>
+              <input type="date" id="endDate" name="endDate" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:160px;">
+            <label for="storeFilter" style="font-weight:500; font-size:13px;">Store:</label>
+            <select id="storeFilter" name="store" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+              {{{storeFilterOptions}}}
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:160px;">
+            <label for="sortOrder" style="font-weight:500; font-size:13px;">Sort By:</label>
+            <select id="sortOrder" name="sortOrder" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc;">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-end;">
+            <button id="applyFilters" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Apply</button>
+            <button type="button" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;" onclick="window.filtersApplied=false;">Clear</button>
           </div>
         </div>
-        <div class="filter-group">
-          <label for="storeFilter">Store:</label>
-          <select id="storeFilter" name="store">
-            {{{storeFilterOptions}}}
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label for="sortOrder">Sort By:</label>
-          <select id="sortOrder" name="sortOrder">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
-        </div>
-
-        <button id="applyFilters" class="filter-btn">Apply Filters</button>
-        <button type="button" class="filter-btn" onclick="window.filtersApplied=false;">Clear Filters</button>
       </div>
 
       <!-- Table -->
       <div class="table-container">
-        <table id="salesTable">
+        <table id="salesTable" class="sales-table">
           <thead>
             <tr>
               <th>Date</th>

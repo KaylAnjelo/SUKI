@@ -110,7 +110,7 @@ export async function getOwnerProducts(req, res) {
       throw countErr;
     }
 
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
     const totalPages = Math.ceil((totalCount || 0) / itemsPerPage);
     const currentPage = Math.max(1, parseInt(req.query.page || 1));
     const offset = (currentPage - 1) * itemsPerPage;

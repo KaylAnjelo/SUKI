@@ -162,12 +162,29 @@ app.get("/reports", (req, res) => {
 });
 
 app.get("/transac", (req, res) => {
-  const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
-  const chartData = JSON.stringify([120, 150, 180]);
-  res.render("Transactions", {
-    chartLabels,
-    chartData,
-  });
+  (async () => {
+    try {
+      // Fetch stores from database
+      const { data: stores, error } = await supabase
+        .from('stores')
+        .select('store_id, store_name');
+      if (error) throw error;
+      const chartLabels = JSON.stringify(["Jan", "Feb", "Mar"]);
+      const chartData = JSON.stringify([120, 150, 180]);
+      res.render("Transactions", {
+        chartLabels,
+        chartData,
+        stores
+      });
+    } catch (err) {
+      console.error('Error loading stores for transactions:', err);
+      res.render("Transactions", {
+        chartLabels: JSON.stringify(["Jan", "Feb", "Mar"]),
+        chartData: JSON.stringify([120, 150, 180]),
+        stores: []
+      });
+    }
+  })();
 });
 
 // Owner routes

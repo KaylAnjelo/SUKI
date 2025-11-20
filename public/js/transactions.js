@@ -26,7 +26,9 @@ function renderTransactions(rows) {
     const ref = tx.reference_number || "N/A";
     const storeName = tx.store || "N/A";
     const amount = tx.total?.toFixed(2) || "0.00";
-    const points = tx.points ?? 0;
+    // Points: 10% of total amount, with decimals
+    let points = Number(tx.total || 0) * 0.10;
+    points = points % 1 === 0 ? points.toFixed(0) : points.toFixed(2);
     const type = tx.transaction_type || "";
     const date = new Date(tx.transaction_date).toLocaleString();
 
@@ -116,22 +118,61 @@ function compareByColumn(a, b, column, direction) {
 // Type filter
 function initTypeFilter() {
   const btn = document.querySelector('.apply-filters-btn');
+  const clearBtn = document.querySelector('.clear-filters-btn');
   const sel = document.getElementById('typeFilterTrans');
+  const storeSel = document.getElementById('storeFilter');
+  const dateStart = document.getElementById('dateStart');
+  const dateEnd = document.getElementById('dateEnd');
+  const amountSort = document.getElementById('amountSort');
+
   const apply = () => {
-    const val = (sel?.value || '').trim();
-    if (val) {
-      FILTERED_DATA = TXN_DATA.filter(tx => String(tx.transaction_type || '').toLowerCase() === val.toLowerCase());
+    let filtered = [...TXN_DATA];
+    // Transaction type
+    const typeVal = (sel?.value || '').trim();
+    if (typeVal) {
+      filtered = filtered.filter(tx => String(tx.transaction_type || '').toLowerCase() === typeVal.toLowerCase());
+    }
+    // Store filter
+    const storeVal = (storeSel?.value || '').trim().toLowerCase();
+    if (storeVal) {
+      filtered = filtered.filter(tx => {
+        // Support both store name and store id
+        const storeName = String(tx.store || '').trim().toLowerCase();
+        const storeId = String(tx.store_id || '').trim().toLowerCase();
+        return storeName === storeVal || storeId === storeVal;
+      });
+    }
+    // Date range
+    const startVal = dateStart?.value;
+    const endVal = dateEnd?.value;
+    if (startVal) {
+      filtered = filtered.filter(tx => new Date(tx.transaction_date) >= new Date(startVal));
+    }
+    if (endVal) {
+      filtered = filtered.filter(tx => new Date(tx.transaction_date) <= new Date(endVal));
+    }
+    // Amount sort
+    if (amountSort?.value === 'asc') {
+      filtered = filtered.sort((a, b) => (a.total || 0) - (b.total || 0));
     } else {
-      FILTERED_DATA = [...TXN_DATA];
+      filtered = filtered.sort((a, b) => (b.total || 0) - (a.total || 0));
     }
-    // Re-apply current sort if any
-    if (currentSort.column) {
-      FILTERED_DATA = [...FILTERED_DATA].sort((a, b) => compareByColumn(a, b, currentSort.column, currentSort.direction));
-    }
+    FILTERED_DATA = filtered;
     renderTransactions(FILTERED_DATA);
   };
+
+  const clear = () => {
+    if (sel) sel.value = '';
+    if (storeSel) storeSel.value = '';
+    if (dateStart) dateStart.value = '';
+    if (dateEnd) dateEnd.value = '';
+    if (amountSort) amountSort.value = 'desc';
+    FILTERED_DATA = [...TXN_DATA];
+    renderTransactions(FILTERED_DATA);
+  };
+
   if (btn) btn.addEventListener('click', apply);
-  if (sel) sel.addEventListener('change', apply);
+  if (clearBtn) clearBtn.addEventListener('click', clear);
 }
 
 // Show modal with transaction details
@@ -153,7 +194,9 @@ function showDetails(tx) {
   safeText("modalRef", tx.reference_number || "N/A");
   safeText("modalType", tx.transaction_type || "N/A");
   safeText("modalDate", new Date(tx.transaction_date).toLocaleString());
-  safeText("modalPoints", tx.points ?? 0);
+  // Calculate points as 10% of total amount
+  const points = (Number(tx.total || 0) * 0.10).toFixed(2);
+  safeText("modalPoints", points);
 
   // Dynamic product list
   const productSection = modal.querySelector(".receipt-info");
