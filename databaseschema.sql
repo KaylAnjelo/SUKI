@@ -255,3 +255,14 @@ create table public.users (
   constraint users_username_key unique (username),
   constraint users_store_id_fkey foreign KEY (store_id) references stores (store_id) on update CASCADE on delete set null
 ) TABLESPACE pg_default;
+
+create table public.notifications (
+  id serial not null,
+  user_id integer not null,
+  title character varying(255) not null,
+  message text not null,
+  is_read boolean null default false,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint notifications_pkey primary key (id),
+  constraint notifications_user_id_fkey foreign KEY (user_id) references users (user_id) on delete CASCADE
+) TABLESPACE pg_default;
