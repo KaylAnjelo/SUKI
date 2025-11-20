@@ -215,13 +215,18 @@ if (window._ownerDashboardInit) {
       const name = escapeHtml(it.product_name || it.name || 'Unnamed product');
       const purchases = Number(it.total_quantity || 0);
       const sales = Number(it.total_sales || 0).toLocaleString();
-      const imgSrc = it.image_url ? escapeHtml(it.image_url) : placeholder;
-
+      let thumbHtml;
+      if (it.image_url) {
+        const imgSrc = escapeHtml(it.image_url);
+        thumbHtml = `<img src="${imgSrc}" alt="${name}" onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='<div class=\'product-placeholder\' style=\'background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;\'><i class=\'fas fa-utensils\' style=\'color:#9ca3af;font-size:22px;\'></i></div>';"></img>`;
+      } else {
+        thumbHtml = `<div class='product-placeholder' style='background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;'><i class='fas fa-utensils' style='color:#9ca3af;font-size:22px;'></i></div>`;
+      }
       return `
         <li class="product-card">
           <div class="product-card-inner">
             <div class="product-thumb">
-              <img src="${imgSrc}" alt="${name}" onerror="this.onerror=null;this.src='${placeholder}';" />
+              ${thumbHtml}
             </div>
             <div class="product-body">
               <div class="product-name">${name}</div>
@@ -657,10 +662,7 @@ async function enrichRecommendations(rawRecs) {
 function renderRecommendations(recs = []) {
   const container = document.getElementById('recommendationsContainer');
   if (!container) return;
-  const placeholderSvg = encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><rect width='100%' height='100%' fill='%23f5f5f5' rx='6' /><g fill='%237c0f0f' font-family='sans-serif' font-size='8' text-anchor='middle'><text x='50%' y='45%'>No</text><text x='50%' y='60%'>Img</text></g></svg>`
-  );
-  const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
+  const foodIconPlaceholder = `<div class='product-placeholder' style='background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;'><i class='fas fa-utensils' style='color:#9ca3af;font-size:22px;'></i></div>`;
 
   if (!Array.isArray(recs) || recs.length === 0) {
     container.innerHTML = '<div class="no-recommendations"><i class="fas fa-lightbulb"></i><p>No recommendations available yet. More data is needed to generate insights.</p></div>';
@@ -669,7 +671,7 @@ function renderRecommendations(recs = []) {
 
   container.innerHTML = recs.map(r => {
     const title = escapeHtml(r.product_name || `#${r.product_id || ''}`);
-    const img = (r.image_url || r.product_image) ? escapeHtml(r.image_url || r.product_image) : placeholder;
+    const img = (r.image_url || r.product_image) ? `<img src='${escapeHtml(r.image_url || r.product_image)}' alt='${title}' onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='${foodIconPlaceholder}';" />` : foodIconPlaceholder;
     const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
     
     // Display overall insight if available
@@ -679,7 +681,9 @@ function renderRecommendations(recs = []) {
     
     const recList = recommended.length
       ? `<ul class="rec-list">${recommended.map(x => {
-          const ix = (x.image_url || x.product_image) ? escapeHtml(x.image_url || x.product_image) : placeholder;
+          const ix = (x.image_url || x.product_image)
+            ? `<img src='${escapeHtml(x.image_url || x.product_image)}' alt='${escapeHtml(x.product_name||`#${x.product_id||''}`)}' onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='${foodIconPlaceholder}';" />`
+            : foodIconPlaceholder;
           const confidence = x.confidence ? `${x.confidence.toFixed(1)}%` : '';
           const lift = x.lift ? `${x.lift}x` : '';
           const coPurchases = x.coPurchases ? `${x.coPurchases} times` : '';
@@ -695,7 +699,7 @@ function renderRecommendations(recs = []) {
             : '';
           
           return `<li class="rec-item">
-            <img src="${ix}" alt="${escapeHtml(x.product_name||`#${x.product_id||''}`)}" onerror="this.onerror=null;this.src='${placeholder}';" />
+            ${ix}
             <div class="rec-meta">
               <div class="rec-name">${escapeHtml(x.product_name || `#${x.product_id || ''}`)}</div>
               ${metrics}
@@ -707,7 +711,7 @@ function renderRecommendations(recs = []) {
 
     return `<div class="recommendation-card">
       <div class="rec-head">
-        <img class="rec-head-img" src="${img}" onerror="this.onerror=null;this.src='${placeholder}';" />
+        ${img}
         <div class="rec-head-title">${title}</div>
       </div>
       <div class="rec-body">

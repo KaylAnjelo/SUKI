@@ -53,17 +53,26 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{!-- Owner avatar (primary) --}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
+
+              {{!-- Store badge (bottom-right) --}}
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
                 {{#if stores}}
-                  <option value="">All Stores</option>
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
@@ -81,14 +90,34 @@
 
       <!-- Filters -->
       <div class="filters-container" id="filtersContainer">
-        <div class="filter-group">
-          <label for="typeFilterTrans">Transaction Type:</label>
-          <select id="typeFilterTrans" name="transactionType">
-            <option value="">All</option>
-            <option value="Purchase">Purchase</option>
-            <option value="Redemption">Redemption</option>
-            <option value="Refund">Refund</option>
-          </select>
+        <div class="filter-row" style="display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
+          <div class="filter-group" style="display:flex;flex-direction:column;gap:4px;min-width:140px;">
+            <label for="typeFilterTrans" style="font-weight:500;">Transaction Type:</label>
+            <select id="typeFilterTrans" name="transactionType" style="padding:5px 8px;border-radius:6px;border:1px solid #d1d5db;width:140px;">
+              <option value="">All</option>
+              <option value="Purchase">Purchase</option>
+              <option value="Redemption">Redemption</option>
+              <option value="Refund">Refund</option>
+            </select>
+          </div>
+          <div class="filter-group" style="display:flex;flex-direction:column;gap:4px;min-width:220px;">
+            <label style="font-weight:500;">Date Range:</label>
+            <div class="date-range" style="display:flex;align-items:center;gap:6px;">
+              <input type="date" id="dateFrom" name="dateFrom" style="padding:5px 8px;border-radius:6px;border:1px solid #d1d5db;width:110px;">
+              <span style="font-weight:500;">to</span>
+              <input type="date" id="dateTo" name="dateTo" style="padding:5px 8px;border-radius:6px;border:1px solid #d1d5db;width:110px;">
+            </div>
+          </div>
+          <div class="filter-actions" style="display: flex; gap: 8px; align-items: center; margin-bottom: 0;">
+            <button type="button" id="filterDateBtn" class="filter-btn apply-btn" style="background:#7c0f0f;color:#fff;padding:5px 14px;border:none;border-radius:6px;font-weight:500;cursor:pointer;">
+              <i class="fas fa-filter"></i>
+              Apply
+            </button>
+            <button type="button" id="clearFiltersBtn" class="filter-btn clear-btn" style="background:#fff;color:#7c0f0f;padding:5px 14px;border:1px solid #7c0f0f;border-radius:6px;font-weight:500;cursor:pointer;">
+              <i class="fas fa-times"></i>
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 
@@ -98,12 +127,12 @@
           <table>
            <thead>
               <tr>
-                <th data-column="reference_number" >Reference #</th>
-                <th data-column="store_name" class="sortable">Store Name</th>
-                <th data-column="amount" class="sortable">Amount</th>
-                <th data-column="points" class="sortable">Points</th>
-                <th data-column="transaction_type">Type</th>
-                <th data-column="transaction_date" class="sortable">Date</th>
+                <th>Reference #</th>
+                <th>Store Name</th>
+                <th>Amount</th>
+                <th>Points</th>
+                <th>Type</th>
+                <th>Date</th>
                 <th>Details</th>
               </tr>
             </thead>
@@ -170,5 +199,18 @@
       </div>
     </main>
   </div>
+  <script>
+    // Store selector behavior for owner pages: navigate to current path with selected store_id
+    (function(){
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', function(e) {
+          const selectedStoreId = e.target.value;
+          const path = window.location.pathname;
+          window.location.href = `${path}?store_id=${selectedStoreId}`;
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

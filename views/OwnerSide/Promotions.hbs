@@ -650,17 +650,26 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{!-- Owner avatar (primary) --}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
+
+              {{!-- Store badge (bottom-right) --}}
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
                 {{#if stores}}
-                  <option value="">All Stores</option>
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
@@ -754,7 +763,7 @@
           <!-- Auto-generated Description Field -->
           <div class="form-group" id="descriptionGroup" style="display: none;">
             <label for="description">Description</label>
-            <textarea id="description" name="description" readonly placeholder="Description will be auto-generated"></textarea>
+            <textarea id="description" name="description" placeholder="Description will be auto-generated"></textarea>
           </div>
 
           <!-- Buy X Get Y Fields (shown when buy_x_get_y type is selected) -->
@@ -951,43 +960,61 @@
         
         // Set dates from database if available
         if (promotion.start_date) {
-          document.getElementById('startDate').value = promotion.start_date;
+          const startDate = new Date(promotion.start_date);
+          document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
         } else {
           const today = new Date().toISOString().split('T')[0];
           document.getElementById('startDate').value = today;
         }
         
         if (promotion.end_date) {
-          document.getElementById('endDate').value = promotion.end_date;
+          const endDate = new Date(promotion.end_date);
+          document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
         } else {
           const nextMonth = new Date();
           nextMonth.setMonth(nextMonth.getMonth() + 1);
           document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
         }
         
-        // Determine promotion type from description and populate accordingly
+        // Determine promotion type and populate accordingly
         const description = promotion.description || '';
         let discountType = '';
         
-        if (description.includes('% off your next purchase')) {
+        if (promotion.discount_type === 'percentage' || description.includes('% off')) {
           discountType = 'discount';
-          const match = description.match(/Get (\d+)% off/);
-          if (match) {
-            document.getElementById('discountType').value = 'discount';
-            document.getElementById('discountPercentage').value = match[1];
+          document.getElementById('discountType').value = 'discount';
+          if (promotion.discount_value) {
+            document.getElementById('discountPercentage').value = promotion.discount_value;
+          } else {
+            const match = description.match(/(\d+)%/);
+            if (match) {
+              document.getElementById('discountPercentage').value = match[1];
+            }
           }
-        } else if (description.includes('Get free') && description.includes('with') && description.includes('points')) {
+        } else if (promotion.discount_type === 'fixed' || description.includes('Get free')) {
           discountType = 'free';
           document.getElementById('discountType').value = 'free';
-        } else if (description.includes('Buy') && description.includes('and get')) {
+        } else if (promotion.discount_type === 'buy_x_get_y') {
           discountType = 'buy_x_get_y';
           document.getElementById('discountType').value = 'buy_x_get_y';
+          
+          // Parse buy quantity from description
+          const buyMatch = description.match(/Buy (\d+)/);
+          if (buyMatch && document.getElementById('buyQuantity')) {
+            document.getElementById('buyQuantity').value = buyMatch[1];
+          }
+          
+          // Parse get quantity from description
+          const getMatch = description.match(/get (\d+)/i);
+          if (getMatch && document.getElementById('getQuantity')) {
+            document.getElementById('getQuantity').value = getMatch[1];
+          }
         }
         
         // Set description
         document.getElementById('description').value = description;
         
-        // Trigger form state changes
+        // Trigger form state changes to show/hide appropriate fields
         handleDiscountTypeChange();
         
         // Store the promotion ID for updating
@@ -1079,19 +1106,45 @@
       
       if (discountType === 'discount') {
         discountPercentageRow.style.display = 'block';
+        descriptionGroup.style.display = 'block';
+        // Auto-generate description for discount type
+        updateDiscountDescription();
+        document.getElementById('discountPercentage').addEventListener('input', updateDiscountDescription);
+        document.getElementById('points').addEventListener('input', updateDiscountDescription);
       } else if (discountType === 'free') {
         productSelectionRow.style.display = 'block';
         descriptionGroup.style.display = 'block';
         loadProducts(); // Load products for selection
+        updateFreeItemDescription();
+        document.getElementById('selectedProduct').addEventListener('change', updateFreeItemDescription);
+        document.getElementById('points').addEventListener('input', updateFreeItemDescription);
       } else if (discountType === 'buy_x_get_y') {
         buyXGetYFields.style.display = 'block';
         descriptionGroup.style.display = 'block';
         loadProductsForBuyXGetY(); // Load products for both dropdowns
+        updateBuyXGetYDescription();
+        document.getElementById('buyQuantity').addEventListener('input', updateBuyXGetYDescription);
+        document.getElementById('getQuantity').addEventListener('input', updateBuyXGetYDescription);
+        document.getElementById('buyProduct').addEventListener('change', updateBuyXGetYDescription);
+        document.getElementById('getProduct').addEventListener('change', updateBuyXGetYDescription);
+        document.getElementById('points').addEventListener('input', updateBuyXGetYDescription);
       }
       
       // Points field is always editable
       pointsInput.readOnly = false;
       pointsInput.placeholder = 'e.g., 10';
+    }
+
+    // Auto-generate description for discount type
+    function updateDiscountDescription() {
+      const discountPercentage = document.getElementById('discountPercentage').value;
+      const points = document.getElementById('points').value || '0';
+      const descriptionField = document.getElementById('description');
+      if (discountPercentage && points) {
+        descriptionField.value = `Get ${discountPercentage}% off with ${points} points`;
+      } else {
+        descriptionField.value = '';
+      }
     }
 
     function setupDiscountUnit() {
@@ -1189,6 +1242,8 @@
         alert('Points required cannot be negative');
         return;
       }
+      // Ensure points_required is sent for backend update
+      promotionData.points_required = promotionData.points;
       
       console.log('Promotion data:', promotionData);
       

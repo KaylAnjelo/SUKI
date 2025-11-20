@@ -156,7 +156,7 @@ create table public.stores (
   owner_name text null,
   owner_contact character varying(20) null,
   inactive_since timestamp without time zone null,
-  constraint stores_pkey primary key (store_id),
+  constraint stores_pkey primary key (store_id),users
   constraint stores_store_code_key unique (store_code),
   constraint stores_store_name_key unique (store_name),
   constraint stores_owner_id_fkey foreign KEY (owner_id) references users (user_id) on delete CASCADE
@@ -249,6 +249,7 @@ create table public.users (
   user_email text null,
   role text null default 'customer'::text,
   store_id integer null,
+  profile_image text null,
   constraint users_pkey primary key (user_id),
   constraint users_user_email_key unique (user_email),
   constraint users_username_key unique (username),

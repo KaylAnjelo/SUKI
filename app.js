@@ -21,6 +21,7 @@ import * as ownerSales from './api/controllers/ownerSalesController.js';
 import ownerProductsRoutes from './api/routes/ownerProductsRoutes.js';
 import ownerPromotionsRoutes from './api/routes/ownerPromotionsRoutes.js';
 
+
 // For __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // use path.dirname
@@ -42,6 +43,26 @@ app.use(express.static(publicDirectory));
 // View engine
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Register Handlebars helpers
+import hbs from 'hbs';
+hbs.registerHelper('add', (a, b) => a + b);
+hbs.registerHelper('subtract', (a, b) => a - b);
+hbs.registerHelper('gt', function(a, b, options) {
+  return a > b ? options.fn(this) : options.inverse(this);
+});
+hbs.registerHelper('gte', function(a, b, options) {
+  return a >= b ? options.fn(this) : options.inverse(this);
+});
+hbs.registerHelper('lt', function(a, b, options) {
+  return a < b ? options.fn(this) : options.inverse(this);
+});
+hbs.registerHelper('lte', function(a, b, options) {
+  return a <= b ? options.fn(this) : options.inverse(this);
+});
+hbs.registerHelper('eq', function(a, b, options) {
+  return a === b ? options.fn(this) : options.inverse(this);
+});
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
@@ -159,6 +180,13 @@ app.get("/owner/redemptions", async (req, res) => {
       return res.redirect('/');
     }
 
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', userId)
+      .single();
+
     const { data: store } = await supabase
       .from('stores')
       .select('*')
@@ -166,8 +194,9 @@ app.get("/owner/redemptions", async (req, res) => {
       .single();
 
     res.render('OwnerSide/Redemptions', {
-      user: req.session.user,
-      store
+      user: freshUser || req.session.user,
+      store,
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error in /owner/redemptions route:', error);
@@ -182,6 +211,13 @@ app.get("/owner/sales-report", async (req, res) => {
     if (!userId) {
       return res.redirect('/');
     }
+
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', userId)
+      .single();
 
     // Fetch all stores owned by the user
     const { data: stores } = await supabase
@@ -209,9 +245,10 @@ app.get("/owner/sales-report", async (req, res) => {
     }));
 
     res.render('OwnerSide/SalesReport', {
-      user: req.session.user,
+      user: freshUser || req.session.user,
       store,
-      stores: storesWithSelection
+      stores: storesWithSelection,
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error in /owner/sales-report route:', error);
@@ -226,6 +263,13 @@ app.get("/owner/transactions", async (req, res) => {
     if (!userId) {
       return res.redirect('/');
     }
+
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', userId)
+      .single();
 
     // Fetch all stores owned by the user
     const { data: stores } = await supabase
@@ -253,9 +297,10 @@ app.get("/owner/transactions", async (req, res) => {
     }));
 
     res.render('OwnerSide/OwnerTransactions', {
-      user: req.session.user,
+      user: freshUser || req.session.user,
       store,
-      stores: storesWithSelection
+      stores: storesWithSelection,
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error in /owner/transactions route:', error);
@@ -270,6 +315,13 @@ app.get("/owner/promotions", async (req, res) => {
     if (!userId) {
       return res.redirect('/');
     }
+
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', userId)
+      .single();
 
     // Get the store_id from query params
     const storeIdParam = req.query.store_id;
@@ -317,10 +369,11 @@ app.get("/owner/promotions", async (req, res) => {
     }));
 
     res.render('OwnerSide/Promotions', {
-      user: req.session.user,
+      user: freshUser || req.session.user,
       store: selectedStore || {},
       stores: storesWithSelection,
-      selectedStoreId
+      selectedStoreId,
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error in /owner/promotions route:', error);
@@ -514,6 +567,8 @@ function scheduleBiWeeklyRecompute() {
 
 // call the scheduler after app startup
 scheduleBiWeeklyRecompute();
+
+
 
 export default app;
 

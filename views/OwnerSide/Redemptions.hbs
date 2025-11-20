@@ -26,27 +26,37 @@
           <i class="fas fa-chart-line"></i><span class="label">Dashboard</span>
         </a>
         <a href="/owner/sales-report" class="nav-item">
-          <i class="fas fa-chart-bar"></i><span class="label">Sales Report</span>
-        </a>
-        <a href="/owner/transactions" class="nav-item">
-          <i class="fas fa-exchange-alt"></i><span class="label">Transactions</span>
-        </a>
-        <a href="/owner/products" class="nav-item">
-          <i class="fas fa-box"></i><span class="label">Products</span>
-        </a>
-        <a href="/owner/promotions" class="nav-item">
-          <i class="fas fa-percentage"></i><span class="label">Promotions</span>
-        </a>
-        <a href="/owner/profile/data" class="nav-item">
-          <i class="fas fa-user"></i><span class="label">Profile</span>
-        </a>
-      </nav>
-    </aside>
+          <div class="user-profile">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{!-- Owner avatar (primary) --}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
+              {{else}}
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
+              {{/if}}
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="header">
-        <div class="header-left">
+              {{!-- Store badge (bottom-right) --}}
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
+            </div>
+            <div class="profile-info">
+              <select id="storeSelector" class="store-dropdown">
+                {{#if stores}}
+                  <option value="">All Stores</option>
+                  {{#each stores}}
+                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No stores available</option>
+                {{/if}}
+              </select>
+            </div>
+          </div>
           <h1>Redemptions</h1>
         </div>
         <div class="header-right">
@@ -55,15 +65,34 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{!-- Owner avatar (primary) --}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
+
+              {{!-- Store badge (bottom-right) --}}
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
             </div>
             <div class="profile-info">
-              <span class="user-name">{{user.username}}</span>
+              <select id="storeSelector" class="store-dropdown">
+                {{#if stores}}
+                  <option value="">All Stores</option>
+                  {{#each stores}}
+                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No stores available</option>
+                {{/if}}
+              </select>
             </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -190,5 +219,19 @@
       </div>
     </main>
   </div>
-</body>
+  <script>
+    // Store selector behavior for owner pages: navigate to current path with selected store_id
+    (function(){
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', function(e) {
+          const selectedStoreId = e.target.value;
+          const path = window.location.pathname;
+          // Always include store_id parameter (empty value allowed)
+          window.location.href = `${path}?store_id=${selectedStoreId}`;
+        });
+      }
+    })();
+  </script>
+  </body>
 </html>

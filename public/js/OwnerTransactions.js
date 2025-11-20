@@ -19,7 +19,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Element references (guarded)
   const storeSelect = document.getElementById('storeFilter');
   const typeSelect = document.getElementById('typeFilterTrans');
-  const applyBtn = document.querySelector('.apply-filters-btn');
+  const dateFromInput = document.getElementById('dateFrom');
+  const dateToInput = document.getElementById('dateTo');
+  const applyBtn = document.getElementById('filterDateBtn');
+  const clearBtn = document.getElementById('clearFiltersBtn');
   const tbody = document.getElementById('transactionsBody');
   const storeSelector = document.getElementById('storeSelector');
 
@@ -111,6 +114,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
       applyFiltersAndRender();
     });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Reset all filter fields
+        if (storeSelect) storeSelect.value = '';
+        if (typeSelect) typeSelect.value = '';
+        if (dateFromInput) dateFromInput.value = '';
+        if (dateToInput) dateToInput.value = '';
+        applyFiltersAndRender();
+      });
+    }
   }
 
   function initSorting() {
@@ -166,12 +180,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     // simple client-side filter based on already-loaded TXN_DATA
     const type = typeSelect ? typeSelect.value : '';
     const storeId = storeSelect ? storeSelect.value : '';
+    const dateFrom = dateFromInput ? dateFromInput.value : '';
+    const dateTo = dateToInput ? dateToInput.value : '';
 
     FILTERED_DATA = TXN_DATA.filter(g => {
       // transaction type may be at group level or on first item
       const txnType = g.transaction_type || (Array.isArray(g.items) && g.items[0]?.transaction_type) || '';
       if (type && txnType !== type) return false;
       if (storeId && String(g.store_id) !== String(storeId)) return false;
+      // Date range filter
+      if (dateFrom) {
+        const txnDate = g.transaction_date || (Array.isArray(g.items) && g.items[0]?.transaction_date) || '';
+        if (!txnDate || txnDate < dateFrom) return false;
+      }
+      if (dateTo) {
+        const txnDate = g.transaction_date || (Array.isArray(g.items) && g.items[0]?.transaction_date) || '';
+        if (!txnDate || txnDate > dateTo) return false;
+      }
       return true;
     });
 

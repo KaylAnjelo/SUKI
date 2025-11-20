@@ -50,23 +50,15 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="width:48px;height:48px;">
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
             </div>
-            <div class="profile-info">
-              <select id="storeSelector" class="store-dropdown">
-                {{#if stores}}
-                  {{#each stores}}
-                    <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
-                  {{/each}}
-                {{else}}
-                  <option value="">No stores available</option>
-                {{/if}}
-              </select>
+            <div class="profile-info" style="margin-left:12px;">
+              <span style="font-weight:600;font-size:16px;">{{user.first_name}} {{user.last_name}}</span>
             </div>
           </div>
           <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
@@ -79,9 +71,11 @@
       <div class="profile-content">
         <!-- Profile Details Section -->
         <div class="profile-details-card">
-          <div class="profile-picture-container">
+            <div class="profile-picture-container">
             <div class="store-profile-pic" id="storeProfilePic">
-              {{#if store.store_image}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="storePhotoImg">
+              {{else if store.store_image}}
                 <img src="{{store.store_image}}" alt="Store Photo" id="storePhotoImg">
               {{else}}
                 <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
@@ -91,7 +85,7 @@
           <div class="profile-fields">
             <div class="profile-info-row">
               <span class="profile-label">Full Name</span>
-              <span class="profile-value" id="ownerName">{{#if store}}{{store.owner_name}}{{else}}{{#if user}}{{user.first_name}} {{user.last_name}}{{else}}No Name{{/if}}{{/if}}</span>
+              <span class="profile-value" id="ownerName">{{#if user.first_name}}{{user.first_name}} {{user.last_name}}{{else if store}}{{store.owner_name}}{{else}}No Name{{/if}}</span>
             </div>
             <div class="profile-info-row">
               <span class="profile-label">Email</span>
@@ -184,6 +178,19 @@
           <label for="editOwnerName">Owner Name</label>
           <input type="text" id="editOwnerName" name="ownerName" required>
         </div>
+
+        <!-- Profile photo upload -->
+        <div class="form-group">
+          <label for="editProfilePhoto">Profile Photo</label>
+            <div class="photo-upload-container">
+            <input type="file" id="editProfilePhoto" name="ownerProfilePhoto" accept="image/*" class="photo-input" style="display:none;">
+            <div class="photo-preview" id="profilePhotoPreview">
+              <i class="fas fa-user" style="font-size:48px;color:#9ca3af;"></i>
+            </div>
+            <button type="button" class="btn-remove-photo" id="removeProfilePhotoBtn" style="display:none;margin-top:8px;">Remove Photo</button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="editContactNumber">Contact Number</label>
           <input type="tel" id="editContactNumber" name="contactNumber" required>
@@ -209,24 +216,29 @@
       </div>
       <form id="editStoreForm" enctype="multipart/form-data">
         <input type="hidden" id="editStoreId" name="storeId">
+        
+        <!-- Store photo upload -->
         <div class="form-group">
           <label for="editStorePhoto">Store Photo</label>
           <div class="photo-upload-container">
-            <input type="file" id="editStorePhoto" name="storePhoto" accept="image/*" class="photo-input">
+            <input type="file" id="editStorePhoto" name="storeImage" accept="image/*" class="photo-input" style="display:none;">
             <div class="photo-preview" id="storePhotoPreview">
               <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
             </div>
-            <button type="button" class="btn-remove-photo" id="removeStorePhotoBtn" style="display: none;">Remove Photo</button>
+            <button type="button" class="btn-remove-photo" id="removeStorePhotoBtn" style="display: none; margin-top: 8px;">Remove Photo</button>
           </div>
         </div>
+
         <div class="form-group">
           <label for="editStoreNameInput">Store Name</label>
           <input type="text" id="editStoreNameInput" name="storeName" required>
         </div>
+
         <div class="form-group">
           <label for="editStoreLocation">Location</label>
           <input type="text" id="editStoreLocation" name="location" required>
         </div>
+
         <div class="form-actions">
           <button type="button" class="btn-cancel-store">Cancel</button>
           <button type="submit" class="btn-save">Save Changes</button>
@@ -237,12 +249,84 @@
 
   <!-- Change Password Modal -->
   <div id="changePasswordModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="padding: 32px 24px;">
       <div class="modal-header">
         <h2 style="color: #ffffff;">Change Password</h2>
         <span class="close-password">&times;</span>
       </div>
-      <form id="changePasswordForm">
+      <form id="requestCodeForm" style="margin-bottom: 16px;">
+        <div id="emailStep">
+          <label>Your verification code will be sent to your registered email:</label>
+          <div style="margin-bottom: 12px; font-weight: bold; color: #7D0006;">{{user.user_email}}</div>
+          <button type="button" id="sendCodeBtn" class="btn-save" style="margin-bottom: 8px;">Send Code</button>
+        </div>
+        <div id="codeStep" style="display:none;">
+          <label for="emailCode">Enter the code sent to your email:</label>
+          <input type="text" id="emailCode" name="emailCode" required maxlength="6" style="margin-bottom: 12px;">
+          <button type="button" id="verifyCodeBtn" class="btn-save" style="margin-bottom: 8px;">Verify Code</button>
+        </div>
+      </form>
+      <form id="changePasswordForm" style="display:none;">
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const sendCodeBtn = document.getElementById('sendCodeBtn');
+                const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+                const emailStep = document.getElementById('emailStep');
+                const codeStep = document.getElementById('codeStep');
+                const changePasswordForm = document.getElementById('changePasswordForm');
+                const userEmail = '{{user.user_email}}';
+
+                sendCodeBtn.addEventListener('click', async function() {
+                  sendCodeBtn.disabled = true;
+                  sendCodeBtn.textContent = 'Sending...';
+                  try {
+                    const res = await fetch('/owner/profile/send-password-code', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: userEmail })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      emailStep.style.display = 'none';
+                      codeStep.style.display = 'block';
+                      alert('Verification code sent to your email.');
+                    } else {
+                      alert(data.error || 'Failed to send code.');
+                    }
+                  } catch (err) {
+                    alert('Error sending code.');
+                  }
+                  sendCodeBtn.disabled = false;
+                  sendCodeBtn.textContent = 'Send Code';
+                });
+
+                verifyCodeBtn.addEventListener('click', async function() {
+                  const code = document.getElementById('emailCode').value;
+                  if (!code) return alert('Please enter the code.');
+                  verifyCodeBtn.disabled = true;
+                  verifyCodeBtn.textContent = 'Verifying...';
+                  try {
+                    const res = await fetch('/owner/profile/verify-password-code', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: userEmail, code })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      codeStep.style.display = 'none';
+                      changePasswordForm.style.display = 'block';
+                      alert('Code verified. You may now change your password.');
+                    } else {
+                      alert(data.error || 'Invalid code.');
+                    }
+                  } catch (err) {
+                    alert('Error verifying code.');
+                  }
+                  verifyCodeBtn.disabled = false;
+                  verifyCodeBtn.textContent = 'Verify Code';
+                });
+              });
+            </script>
         <div class="form-group">
           <label for="currentPassword">Current Password</label>
           <input type="password" id="currentPassword" name="currentPassword" required>
@@ -296,9 +380,34 @@
             
             if (response.ok) {
               // Populate form with current data
-              document.getElementById('editOwnerName').value = data.store?.owner_name || '';
+              // Prefill owner name from user first/last name when available, otherwise fallback to store owner_name
+              const ownerNameField = document.getElementById('editOwnerName');
+              const userFirst = data.user?.first_name || '';
+              const userLast = data.user?.last_name || '';
+              const userFull = (userFirst + ' ' + userLast).trim();
+              ownerNameField.value = userFull || data.store?.owner_name || '';
               document.getElementById('editContactNumber').value = data.user?.contact_number || data.store?.owner_contact || '';
               document.getElementById('editEmail').value = data.user?.user_email || '';
+              
+              // Populate profile photo preview and remove button
+              const profilePreview = document.getElementById('profilePhotoPreview');
+              const removeBtn = document.getElementById('removeProfilePhotoBtn');
+              const profileInput = document.getElementById('editProfilePhoto');
+              // Remove any previous remove input flag
+              const existingRemove = document.getElementById('removePhotoInput');
+              if (existingRemove) existingRemove.remove();
+
+              // Show the user's profile image (not the store image) in the owner modal
+              if (data.user && data.user.profile_image) {
+                profilePreview.innerHTML = `<img src="${data.user.profile_image}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+              } else {
+                profilePreview.innerHTML = '<i class="fas fa-user" style="font-size:32px;color:#9ca3af;"></i>';
+                if (removeBtn) removeBtn.style.display = 'none';
+              }
+
+              // Clear file input
+              if (profileInput) profileInput.value = '';
               
               // Show modal
               modal.style.display = 'block';
@@ -379,6 +488,56 @@
             // Reset button state
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
+          }
+        });
+      }
+
+      // Profile photo input and remove button handling
+      const profilePreview = document.getElementById('profilePhotoPreview');
+      const profileInput = document.getElementById('editProfilePhoto');
+      const removeProfileBtn = document.getElementById('removeProfilePhotoBtn');
+
+      if (profilePreview && profileInput) {
+        // Clicking preview opens file picker
+        profilePreview.addEventListener('click', () => {
+          profileInput.click();
+        });
+
+        // When a file is selected, preview it and remove any "removePhotoInput" flag
+        profileInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            profilePreview.innerHTML = `<img src="${ev.target.result}" alt="Selected Photo" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
+            if (removeProfileBtn) removeProfileBtn.style.display = 'inline-block';
+            // Remove removePhotoInput if present since user chose new photo
+            const existingRemove = document.getElementById('removePhotoInput');
+            if (existingRemove) existingRemove.remove();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (removeProfileBtn) {
+        removeProfileBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Clear file input
+          if (profileInput) profileInput.value = '';
+          // Reset preview to placeholder
+          profilePreview.innerHTML = '<i class="fas fa-user" style="font-size:32px;color:#9ca3af;"></i>';
+          removeProfileBtn.style.display = 'none';
+          // Add hidden input to indicate removal on submit
+          let removeInput = document.getElementById('removePhotoInput');
+          if (!removeInput) {
+            removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.id = 'removePhotoInput';
+            removeInput.name = 'removePhoto';
+            removeInput.value = 'true';
+            editForm.appendChild(removeInput);
+          } else {
+            removeInput.value = 'true';
           }
         });
       }
@@ -643,7 +802,7 @@
           } finally {
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
-          }
+           }
         });
       }
     });

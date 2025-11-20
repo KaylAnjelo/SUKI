@@ -1,3 +1,40 @@
+import EmailService from '../../../MyApp/services/emailService.js';
+// Store codes in-memory for demo (use DB/Redis for production)
+const emailCodes = new Map();
+
+export const sendPasswordChangeCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Store code with expiry (10 min)
+    emailCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+    // Send code via email
+    await EmailService.sendOTP(email, code);
+    return res.json({ success: true, message: 'Verification code sent to email.' });
+  } catch (err) {
+    console.error('Error sending password change code:', err);
+    return res.status(500).json({ error: 'Failed to send code.' });
+  }
+};
+
+export const verifyPasswordChangeCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ error: 'Email and code required.' });
+    const entry = emailCodes.get(email);
+    if (!entry || entry.code !== code || entry.expires < Date.now()) {
+      return res.status(400).json({ error: 'Invalid or expired code.' });
+    }
+    // Optionally remove code after verification
+    emailCodes.delete(email);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error verifying code:', err);
+    return res.status(500).json({ error: 'Failed to verify code.' });
+  }
+};
 import supabase from "../../config/db.js";
 import bcrypt from "bcrypt";
 
@@ -8,7 +45,7 @@ export const getOwnerProfileData = async (req, res) => {
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('user_id, username, first_name, last_name, contact_number, user_email')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
       .eq('user_id', userId)
       .single();
 
@@ -53,11 +90,11 @@ export const getOwnerProfileData = async (req, res) => {
 
     // Detect if request expects JSON (AJAX)
     if (req.headers.accept?.includes('application/json') || req.xhr) {
-      return res.json({ user, store, stores: storesWithSelection, vendors }); // ✅ send JSON response
+      return res.json({ user, store, stores: storesWithSelection, vendors, timestamp: Date.now() }); // ✅ send JSON response
     }
 
     // Otherwise render the page
-    return res.render("OwnerSide/Profile", { user, store, stores: storesWithSelection, vendors });
+    return res.render("OwnerSide/Profile", { user, store, stores: storesWithSelection, vendors, timestamp: Date.now() });
 
   } catch (error) {
     console.error("❌ Error in getOwnerProfileData:", error);
@@ -70,17 +107,31 @@ export const getOwnerProfileData = async (req, res) => {
 export const updateOwnerProfile = async (req, res) => {
   try {
     const userId = req.session?.user?.id;
-    const { ownerName, contactNumber, email } = req.body;
+    const { ownerName, contactNumber, email, storeId, removePhoto } = req.body;
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    // ✅ Update user info
+    // ✅ Update user info (contact + email)
+    const updateUserData = {
+      contact_number: contactNumber,
+      user_email: email,
+    };
+
+    // If ownerName provided, try to split into first/last and update user names as well
+    if (ownerName) {
+      const parts = ownerName.trim().split(/\s+/);
+      if (parts.length === 1) {
+        updateUserData.first_name = parts[0];
+        updateUserData.last_name = null;
+      } else {
+        updateUserData.first_name = parts.shift();
+        updateUserData.last_name = parts.join(' ');
+      }
+    }
+
     const { error: userError } = await supabase
       .from("users")
-      .update({
-        contact_number: contactNumber,
-        user_email: email,
-      })
+      .update(updateUserData)
       .eq("user_id", userId);
 
     if (userError) {
@@ -88,7 +139,7 @@ export const updateOwnerProfile = async (req, res) => {
       return res.status(500).json({ error: "Failed to update user data" });
     }
 
-    // ✅ Update owner_name in all stores owned by this user
+    // ✅ Update owner_name in all stores owned by this user (keep store-level owner_name in sync)
     if (ownerName) {
       const { error: storeError } = await supabase
         .from("stores")
@@ -99,6 +150,68 @@ export const updateOwnerProfile = async (req, res) => {
         console.error("❌ Failed to update store owner name:", storeError);
         // Don't fail the entire request if this fails
       }
+    }
+
+    // Handle profile photo upload or removal. Owner modal sends owner photo (no storeId)
+    try {
+      const targetStoreId = storeId ? parseInt(storeId) : null;
+
+      // If a file is uploaded and no storeId provided, treat as owner/user profile image
+      if (req.file && !targetStoreId) {
+        const file = req.file;
+        const filePath = `profile_photos/${Date.now()}_${file.originalname}`;
+        console.log('📤 Uploading owner profile photo:', filePath);
+
+        const { error: uploadError } = await supabase.storage
+          .from('store_image')
+          .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+        if (uploadError) {
+          console.error('❌ Error uploading owner profile photo:', uploadError);
+        } else {
+          const { data: publicURL, error: urlError } = await supabase.storage
+            .from('store_image')
+            .getPublicUrl(filePath);
+
+          console.log('✅ Owner photo uploaded. Public URL:', publicURL?.publicUrl);
+          
+          if (!urlError && publicURL && publicURL.publicUrl) {
+            // Save URL to users.profile_image
+            const updateResult = await supabase.from('users').update({ profile_image: publicURL.publicUrl }).eq('user_id', userId);
+            console.log('✅ Saved to users.profile_image for userId:', userId, updateResult);
+          }
+        }
+
+      // If removePhoto and no storeId, remove user's profile image
+      } else if (removePhoto === 'true' && !targetStoreId) {
+        await supabase.from('users').update({ profile_image: null }).eq('user_id', userId);
+
+      // If storeId present, keep previous behavior (update store image)
+      } else if (req.file && targetStoreId) {
+        const file = req.file;
+        const filePath = `profile_photos/${Date.now()}_${file.originalname}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('store_image')
+          .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+        if (uploadError) {
+          console.error('❌ Error uploading store profile photo:', uploadError);
+        } else {
+          const { data: publicURL, error: urlError } = await supabase.storage
+            .from('store_image')
+            .getPublicUrl(filePath);
+
+          if (!urlError && publicURL && publicURL.publicUrl) {
+            await supabase.from('stores').update({ store_image: publicURL.publicUrl }).eq('store_id', targetStoreId);
+          }
+        }
+
+      } else if (removePhoto === 'true' && targetStoreId) {
+        await supabase.from('stores').update({ store_image: null }).eq('store_id', parseInt(storeId));
+      }
+    } catch (photoErr) {
+      console.error('❌ Error handling profile photo:', photoErr);
     }
 
     res.json({

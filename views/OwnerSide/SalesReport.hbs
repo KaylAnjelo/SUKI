@@ -52,17 +52,26 @@
             <ul id="notificationsList"></ul>
           </div>
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{!-- Owner avatar (primary) --}}
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
+
+              {{!-- Store badge (bottom-right) --}}
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
                 {{#if stores}}
-                  <option value="">All Stores</option>
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
@@ -85,7 +94,7 @@
 
         <!-- Filter Section -->
         <div class="filter-section">
-          <div class="filter-row">
+          <div class="filter-row" style="display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
             <div class="filter-group">
               <label for="dateFrom">Date Range:</label>
               <div class="date-range">
@@ -94,7 +103,6 @@
                 <input type="date" id="dateTo" name="dateTo" class="date-input">
               </div>
             </div>
-            
             <div class="filter-group">
               <label for="sortBy">Sort By:</label>
               <select id="sortBy" name="sortBy" class="filter-select">
@@ -105,11 +113,18 @@
                 <option value="product">Product Name</option>
               </select>
             </div>
+            <div class="filter-actions" style="display: flex; gap: 8px; align-items: center; margin-bottom: 0;">
+              <button id="applyFilters" class="filter-btn apply-btn" style="background:#7c0f0f;color:#fff;padding:5px 14px;border:none;border-radius:6px;font-weight:500;cursor:pointer;">
+                <i class="fas fa-filter"></i>
+                Apply
+              </button>
+              <button id="clearFilters" class="filter-btn clear-btn" style="background:#fff;color:#7c0f0f;padding:5px 14px;border:1px solid #7c0f0f;border-radius:6px;font-weight:500;cursor:pointer;">
+                <i class="fas fa-times"></i>
+                Clear
+              </button>
+            </div>
           </div>
-          
-          <div class="filter-actions">
-             <!-- Download Section -->
-          <div class="download-section">
+          <div class="download-section" style="margin-top: 12px; display: flex; gap: 12px;">
             <button id="exportCsv" class="download-btn csv-btn">
               <i class="fas fa-file-csv"></i>
               Download CSV
@@ -117,14 +132,6 @@
             <button id="exportPdf" class="download-btn pdf-btn">
               <i class="fas fa-file-pdf"></i>
               Download PDF
-            </button>
-            <button id="applyFilters" class="filter-btn apply-btn">
-              <i class="fas fa-filter"></i>
-              Apply Filters
-            </button>
-            <button id="clearFilters" class="filter-btn clear-btn">
-              <i class="fas fa-times"></i>
-              Clear Filters
             </button>
           </div>
         </div>
@@ -184,6 +191,20 @@
     </div>
   </div>
 
+</script>
+  <script>
+    // Ensure the store selector behaves like Profile page: reload with selected store_id
+    (function(){
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', (e) => {
+          const storeId = e.target.value;
+          const path = window.location.pathname;
+          window.location.href = `${path}?store_id=${storeId}`;
+        });
+      }
+    })();
+  </script>
   <script src="/js/SalesReport.js"></script>
 </body>
 </html>

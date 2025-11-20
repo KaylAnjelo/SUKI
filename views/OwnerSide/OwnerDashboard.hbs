@@ -47,17 +47,24 @@
         </div>
         <div class="header-right">
           <div class="user-profile">
-            <div class="profile-pic">
-              {{#if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storeImageHeader" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <div class="profile-pic" style="position:relative;width:48px;height:48px;overflow:visible;">
+              {{#if user.profile_image}}
+                <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="ownerImageHeader" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid #e6e6e6;">
               {{else}}
-                <i class="fas fa-store" id="storeIconHeader" style="color: #9ca3af;"></i>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
+
+              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                {{#if store.store_image}}
+                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
+                {{else}}
+                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
+                {{/if}}
+              </div>
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
                 {{#if stores}}
-                  <option value="">All Stores</option>
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
@@ -113,7 +120,24 @@
               </div>
             </div>
             <div class="card-content">
-              <ul id="topProductsList" class="top-products-list" aria-live="polite"></ul>
+              <ul id="topProductsList" class="top-products-list" aria-live="polite">
+                <li class="product-card">
+                  <div class="product-card-inner">
+                    <div class="product-thumb">
+                      <div class="product-placeholder" style="background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-utensils" style="color:#9ca3af;font-size:22px;"></i>
+                      </div>
+                    </div>
+                    <div class="product-body">
+                      <div class="product-name">Product Name</div>
+                      <div class="product-meta">
+                        <span class="purchased-count">Purchased: <strong>0</strong></span>
+                        <span class="sales-amount">₱0</span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -163,6 +187,18 @@
         </div>
     </main>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector) {
+        storeSelector.addEventListener('change', (e) => {
+          const storeId = e.target.value;
+          const path = window.location.pathname;
+          window.location.href = `${path}?store_id=${storeId}`;
+        });
+      }
+    });
+  </script>
   <script src="/js/owner/dashboard.js" defer></script>
 </body>
 </html>

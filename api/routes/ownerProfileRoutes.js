@@ -1,7 +1,13 @@
+
 import express from 'express';
-import { getOwnerProfileData, updateOwnerProfile, changeOwnerPassword } from '../controllers/ownerProfileController.js';
+import { getOwnerProfileData, updateOwnerProfile, changeOwnerPassword, sendPasswordChangeCode, verifyPasswordChangeCode } from '../controllers/ownerProfileController.js';
 import upload from '../../middleware/multerConfig.js';
 const router = express.Router();
+
+// Send password change code to email
+router.post('/send-password-code', sendPasswordChangeCode);
+// Verify password change code
+router.post('/verify-password-code', verifyPasswordChangeCode);
 
 // Main profile page - use controller
 router.get('/', getOwnerProfileData);
@@ -16,6 +22,7 @@ router.get('/data', async (req, res) => {
   }
 });
 
-router.put('/', upload.single('storePhoto'), updateOwnerProfile);
+// Expecting owner profile photo field name 'ownerProfilePhoto' from the edit profile form
+router.put('/', upload.single('ownerProfilePhoto'), updateOwnerProfile);
 
 export default router;

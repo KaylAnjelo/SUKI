@@ -1596,6 +1596,10 @@ h1 {
   padding: 24px;
 }
 
+#editStoreForm {
+  padding: 24px;
+}
+
 .form-group {
   margin-bottom: 20px;
 }

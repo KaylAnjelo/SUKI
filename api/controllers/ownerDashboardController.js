@@ -8,6 +8,13 @@ export const getOwnerDashboard = async (req, res) => {
       return res.redirect('/');
     }
 
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', user.id)
+      .single();
+
     // Fetch the stores owned by the logged-in user
     const { data: stores, error: storeError } = await supabase
       .from('stores')
@@ -49,13 +56,14 @@ export const getOwnerDashboard = async (req, res) => {
     // Store the selected store ID in session for API calls
     req.session.selectedStoreId = store?.store_id;
 
-    // Render your HBS file
+    // Render your HBS file with fresh user data and timestamp
     res.render('OwnerSide/ownerDashboard', {
       title: 'Owner Dashboard',
-      user,
+      user: freshUser || user,
       store,
       stores: storesWithSelection,
       totalSales,
+      timestamp: Date.now(),
     });
 
   } catch (err) {

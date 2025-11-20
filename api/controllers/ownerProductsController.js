@@ -41,7 +41,7 @@ const resetProductsSequence = async () => {
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
-// 🟩 Fetch all products for the owner’s store
+// 🟩 Fetch all products for the owner's store
 export async function getOwnerProducts(req, res) {
   try {
     const ownerId = req.session?.userId || req.session?.user?.id;
@@ -51,6 +51,13 @@ export async function getOwnerProducts(req, res) {
       console.log('getOwnerProducts: no ownerId, redirecting to /login');
       return res.redirect('/');
     }
+
+    // Fetch fresh user data including profile_image
+    const { data: freshUser } = await supabase
+      .from('users')
+      .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image')
+      .eq('user_id', ownerId)
+      .single();
 
     const { data: stores, error: storesErr } = await supabase
       .from('stores')
@@ -87,17 +94,33 @@ export async function getOwnerProducts(req, res) {
 
     const storeIds = (stores || []).map(s => s.store_id);
     if (!storeIds.length) {
-      return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null });
+      return res.render('OwnerSide/Products', { user: freshUser || req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, currentPage: 1, totalPages: 0, timestamp: Date.now() });
     }
 
     // Filter by selected store or all stores
     const targetStoreIds = selectedStoreId ? [selectedStoreId] : storeIds;
 
+    // Get total count
+    const { count: totalCount, error: countErr } = await supabase
+      .from('products')
+      .select('id', { count: 'exact' })
+      .in('store_id', targetStoreIds);
+    if (countErr) {
+      console.error('getOwnerProducts: countErr', countErr);
+      throw countErr;
+    }
+
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil((totalCount || 0) / itemsPerPage);
+    const currentPage = Math.max(1, parseInt(req.query.page || 1));
+    const offset = (currentPage - 1) * itemsPerPage;
+
     const { data: productsData, error: prodErr } = await supabase
       .from('products')
-      .select('id, product_name, price, store_id, product_type, product_image')
+      .select('id, product_name, price, store_id, product_type, product_image, stores(store_name)')
       .in('store_id', targetStoreIds)
-      .order('id', { ascending: true });
+      .order('id', { ascending: true })
+      .range(offset, offset + itemsPerPage - 1);
     if (prodErr) {
       console.error('getOwnerProducts: prodErr', prodErr);
       throw prodErr;
@@ -109,13 +132,15 @@ export async function getOwnerProducts(req, res) {
       product_name: p.product_name,
       price: p.price,
       product_type: p.product_type,
-      product_image: p.product_image || null
+      product_image: p.product_image || null,
+      store_id: p.store_id,
+      store_name: p.stores?.store_name || 'Unknown Store'
     }));
 
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products, store, stores: storesWithSelection, selectedStoreId });
+    return res.render('OwnerSide/Products', { user: freshUser || req.session?.user || null, products, store, stores: storesWithSelection, selectedStoreId, currentPage, totalPages, timestamp: Date.now() });
   } catch (err) {
     console.error('getOwnerProducts error', err);
-    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, error: 'Failed to load products' });
+    return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, currentPage: 1, totalPages: 0, error: 'Failed to load products', timestamp: Date.now() });
   }
 };
 
@@ -330,12 +355,8 @@ export const deleteProduct = async (req, res) => {
     // If product has transactions, prevent deletion
     if (transactions && transactions.length > 0) {
       const errorMessage = "Cannot delete this product because it has transaction history. Products with sales records cannot be removed for data integrity.";
-      
-      if (req.headers.accept?.includes('application/json')) {
-        return res.status(400).json({ success: false, message: errorMessage });
-      }
-      
-      return res.status(400).render("errors/400", { message: errorMessage });
+      // Always send JSON if error view does not exist
+      return res.status(400).json({ success: false, message: errorMessage });
     }
 
     // If no transactions, proceed with deletion
