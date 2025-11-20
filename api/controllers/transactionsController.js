@@ -81,12 +81,13 @@ export const createTransaction = async (req, res) => {
 
     if (error) throw error;
 
-    // Handle points updates
+    // Handle points updates per store
     if (user_id) {
       const { data: userPts } = await supabase
         .from('user_points')
-        .select('user_id, total_points, redeemed_points')
+        .select('id, user_id, total_points, redeemed_points, store_id')
         .eq('user_id', user_id)
+        .eq('store_id', store_id)
         .maybeSingle();
 
       if (transaction_type === 'Purchase') {
@@ -95,16 +96,17 @@ export const createTransaction = async (req, res) => {
           await supabase
             .from('user_points')
             .update({ total_points: newTotal })
-            .eq('user_id', user_id);
+            .eq('user_id', user_id)
+            .eq('store_id', store_id);
         } else {
           await supabase
             .from('user_points')
-            .insert([{ user_id, total_points: totalPoints, redeemed_points: 0 }]);
+            .insert([{ user_id, store_id, total_points: totalPoints, redeemed_points: 0 }]);
         }
       } else if (transaction_type === 'Redemption') {
         const redeemCost = products.reduce((sum, item) => sum + item.quantity * item.price, 0);
         if (!userPts || userPts.total_points < redeemCost) {
-          return res.status(400).json({ error: 'Not enough points to redeem' });
+          return res.status(400).json({ error: 'Not enough points to redeem at this store' });
         }
         await supabase
           .from('user_points')
@@ -112,7 +114,8 @@ export const createTransaction = async (req, res) => {
             total_points: userPts.total_points - redeemCost,
             redeemed_points: (userPts.redeemed_points || 0) + redeemCost,
           })
-          .eq('user_id', user_id);
+          .eq('user_id', user_id)
+          .eq('store_id', store_id);
       }
     }
 

@@ -233,7 +233,9 @@ create table public.user_points (
   user_id integer null,
   total_points integer null default 0,
   redeemed_points numeric(10, 2) null,
+  store_id integer null,
   constraint user_points_pkey primary key (id),
+  constraint user_points_store_id_fkey foreign KEY (store_id) references stores (store_id),
   constraint user_points_user_id_fkey foreign KEY (user_id) references users (user_id) on delete CASCADE
 ) TABLESPACE pg_default;
 
