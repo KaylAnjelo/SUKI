@@ -443,32 +443,41 @@
     }
 
     .engagement-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 4px;
       background: #f9fafb;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .engagement-stat-item {
-      text-align: center;
-      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 2px 0px;
+      min-width: 60px;
+      font-size: 7px;
+      text-align: left;
     }
 
     .engagement-stat-value {
-      display: block;
-      font-size: 18px;
-      font-weight: 700;
+      display: inline;
+      font-size: 7px;
+      font-weight: 600;
       color: #7c0f0f;
-      margin-bottom: 4px;
+      margin-bottom: 0px;
+      margin-left: 2px;
     }
 
     .engagement-stat-label {
-      font-size: 11px;
+      font-size: 7px;
       color: #6b7280;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      display: inline;
     }
 
     /* Dashboard top-products card list */

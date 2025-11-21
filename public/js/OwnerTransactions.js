@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // helper: reload on filter change
   if (storeSelect) storeSelect.addEventListener('change', applyFiltersAndRender);
-  if (typeSelect) typeSelect.addEventListener('change', applyFiltersAndRender);
+  // Removed automatic type filter on change; now only applies on 'Apply' button
 
   // helper functions
   function initTypeFilter() {
