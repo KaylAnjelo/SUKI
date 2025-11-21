@@ -71,22 +71,40 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    redemptionsBody.innerHTML = filteredRedemptions.map(redemption => `
-      <tr>
-        <td>${redemption.redemption_id || 'N/A'}</td>
-        <td>${redemption.customer_name || 'N/A'}</td>
-        <td>${redemption.store_name || 'N/A'}</td>
-        <td>${redemption.reward_name || 'N/A'}</td>
-        <td>${formatPoints(redemption.points_used)}</td>
-        <td>${getStatusBadge(redemption.status)}</td>
-        <td>${formatDate(redemption.redemption_date)}</td>
-        <td>
-          <button class="details-btn" onclick="showRedemptionDetails('${redemption.redemption_id}')" title="View Details">
-            <i class="fas fa-eye"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    redemptionsBody.innerHTML = filteredRedemptions.map(redemption => {
+      let typeDetails = '';
+      if (redemption.reward_type && redemption.reward_details) {
+        switch (redemption.reward_type) {
+          case 'Discount':
+            typeDetails = `<span style='color:green'>Discount: ${redemption.reward_details.discount_value}%</span>`;
+            break;
+          case 'Free Item':
+            typeDetails = `<span style='color:blue'>Free Item Product ID: ${redemption.reward_details.free_item_product_id}</span>`;
+            break;
+          case 'Buy X Get Y':
+            typeDetails = `<span style='color:purple'>Buy ${redemption.reward_details.buy_x_quantity} of Product ${redemption.reward_details.buy_x_product_id}, Get ${redemption.reward_details.get_y_quantity} of Product ${redemption.reward_details.get_y_product_id}</span>`;
+            break;
+          default:
+            typeDetails = `<span>Type: ${redemption.reward_type}</span>`;
+        }
+      }
+      return `
+        <tr>
+          <td>${redemption.redemption_id || 'N/A'}</td>
+          <td>${redemption.customer_name || 'N/A'}</td>
+          <td>${redemption.store_name || 'N/A'}</td>
+          <td>${redemption.reward_name || 'N/A'}<br>${typeDetails}</td>
+          <td>${formatPoints(redemption.points_used)}</td>
+          <td>${getStatusBadge(redemption.status)}</td>
+          <td>${formatDate(redemption.redemption_date)}</td>
+          <td>
+            <button class="details-btn" onclick="showRedemptionDetails('${redemption.redemption_id}')" title="View Details">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // Setup event listeners
@@ -197,7 +215,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modalRef').textContent = `#${redemption.redemption_id}`;
     document.getElementById('modalCustomer').textContent = redemption.customer_name || 'N/A';
     document.getElementById('modalStore').textContent = redemption.store_name || 'N/A';
-    document.getElementById('modalReward').textContent = redemption.reward_name || 'N/A';
+    let typeDetails = '';
+    if (redemption.reward_type && redemption.reward_details) {
+      switch (redemption.reward_type) {
+        case 'Discount':
+          typeDetails = `Discount: ${redemption.reward_details.discount_value}%`;
+          break;
+        case 'Free Item':
+          typeDetails = `Free Item Product ID: ${redemption.reward_details.free_item_product_id}`;
+          break;
+        case 'Buy X Get Y':
+          typeDetails = `Buy ${redemption.reward_details.buy_x_quantity} of Product ${redemption.reward_details.buy_x_product_id}, Get ${redemption.reward_details.get_y_quantity} of Product ${redemption.reward_details.get_y_product_id}`;
+          break;
+        default:
+          typeDetails = `Type: ${redemption.reward_type}`;
+      }
+    }
+    document.getElementById('modalReward').innerHTML = `${redemption.reward_name || 'N/A'}<br><span style='font-size:0.95em'>${typeDetails}</span>`;
     document.getElementById('modalDescription').textContent = redemption.description || 'No description available';
     document.getElementById('modalStatus').innerHTML = getStatusBadge(redemption.status);
     document.getElementById('modalDate').textContent = formatDate(redemption.redemption_date);

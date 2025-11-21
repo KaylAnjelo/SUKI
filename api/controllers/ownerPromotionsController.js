@@ -270,21 +270,38 @@ export const createPromotion = async (req, res) => {
       get_product: getProduct || null
     });
 
-    // Insert reward into database
+    // Insert reward into database with type-specific fields
+    const insertData = {
+      store_id: storeId,
+      reward_name: name,
+      description: finalDescription,
+      points_required: pointsRequired,
+      promotion_code: promotionCode,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: isActive
+    };
+
+    // Add type-specific fields
+    if (discountType === 'discount') {
+      insertData.reward_type = 'Discount';
+      insertData.discount_value = finalDiscountValue;
+    } else if (discountType === 'free') {
+      insertData.reward_type = 'Free Item';
+      insertData.free_item_product_id = selectedProduct;
+    } else if (discountType === 'buy_x_get_y') {
+      insertData.reward_type = 'Buy X Get Y';
+      insertData.buy_x_quantity = buyQuantity;
+      insertData.buy_x_product_id = buyProduct;
+      insertData.get_y_quantity = getQuantity;
+      insertData.get_y_product_id = getProduct;
+    } else {
+      insertData.reward_type = 'generic';
+    }
+
     const { data: reward, error } = await supabase
       .from('rewards')
-      .insert([
-        {
-          store_id: storeId,
-          reward_name: name,
-          description: finalDescription,
-          points_required: pointsRequired,
-          promotion_code: promotionCode,
-          start_date: startDate,
-          end_date: endDate,
-          is_active: isActive
-        }
-      ])
+      .insert([insertData])
       .select()
       .single();
 
@@ -554,8 +571,13 @@ export const updatePromotion = async (req, res) => {
     }
     
     const updateData = {};
-    const allowedFields = ['reward_name', 'description', 'points_required', 'start_date', 'end_date', 'is_active'];
-    
+    // Allow updating all relevant fields including type-specific ones
+    const allowedFields = [
+      'reward_name', 'description', 'points_required', 'start_date', 'end_date', 'is_active',
+      'reward_type', 'discount_value', 'free_item_product_id',
+      'buy_x_quantity', 'buy_x_product_id', 'get_y_quantity', 'get_y_product_id'
+    ];
+
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
         updateData[field] = req.body[field];

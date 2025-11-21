@@ -124,8 +124,27 @@ create table public.rewards (
   is_active boolean null default true,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
-  constraint rewards_pkey primary key (reward_id)
+  start_date timestamp with time zone null,
+  end_date timestamp with time zone null,
+  promotion_code character varying(20) null,
+  reward_type text null default 'generic'::text,
+  discount_value numeric(10, 2) null,
+  free_item_product_id integer null,
+  buy_x_quantity integer null,
+  buy_x_product_id integer null,
+  get_y_quantity integer null,
+  get_y_product_id integer null,
+  constraint rewards_pkey primary key (reward_id),
+  constraint rewards_promotion_code_key unique (promotion_code),
+  constraint rewards_store_id_fkey foreign KEY (store_id) references stores (store_id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+create index IF not exists idx_rewards_promotion_code on public.rewards using btree (promotion_code) TABLESPACE pg_default;
+
+create index IF not exists idx_rewards_dates on public.rewards using btree (start_date, end_date) TABLESPACE pg_default;
+
+create trigger trigger_set_promotion_code BEFORE INSERT on rewards for EACH row
+execute FUNCTION set_promotion_code ();
 
 create trigger update_rewards_updated_at BEFORE
 update on rewards for EACH row
