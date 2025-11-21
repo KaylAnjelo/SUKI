@@ -60,6 +60,20 @@
       
       <!-- Top Row Metrics -->
       <div class="metrics-row-1">
+        <!-- Engagement Line Chart -->
+        <div class="metric-card engagement-chart">
+          <div class="card-header">
+            <h3>Customer Engagement</h3>
+            <select id="timeFilter" class="time-dropdown">
+              <option value="week">Week</option>
+              <option value="month" selected>Month</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
+          <div class="engagement-chart-container">
+            <canvas id="customerHabitsChart"></canvas>
+          </div>
+        </div>
         <div class="metrics-left-column">
           <div class="metric-card total-sales">
             <div class="card-icon">
@@ -227,16 +241,26 @@
                         period === 'month' ? 'Months' : 'Years' 
                 }
               },
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Points Earned'
+                y: {
+                  type: 'linear',
+                  min: 0,
+                  max: 300,
+                  suggestedMin: 0,
+                  suggestedMax: 300,
+                  title: {
+                    display: true,
+                    text: 'Points Earned'
+                  },
+                  ticks: {
+                    stepSize: 50,
+                    callback: function(value) { return value; }
+                  }
                 }
-              }
             }
           }
         });
+          // Debug: Log chart options to verify y-axis config
+          console.log('Engagement Chart Options:', engagementChart.options.scales.y);
       } catch (error) {
         console.error('Error loading engagement data:', error);
       }

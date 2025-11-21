@@ -567,9 +567,10 @@ function renderEngagementChart(payload) {
         y: { 
           beginAtZero: true,
           min: 0,
-          max: 1000,
+          max: 300,
+          suggestedMax: 300,
           ticks: {
-            stepSize: 100,
+            stepSize: 50,
             callback: function(value) {
               return value;
             }
@@ -673,7 +674,7 @@ function renderRecommendations(recs = []) {
 
   container.innerHTML = recs.map(r => {
     const title = escapeHtml(r.product_name || `#${r.product_id || ''}`);
-    const img = (r.image_url || r.product_image) ? `<img src='${escapeHtml(r.image_url || r.product_image)}' alt='${title}' onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='${foodIconPlaceholder}';" />` : foodIconPlaceholder;
+    const img = (r.image_url || r.product_image) ? `<img src='${escapeHtml(r.image_url || r.product_image)}' alt='${title}' style='width:80px;height:80px;object-fit:cover;border-radius:8px;' onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='${foodIconPlaceholder}';" />` : foodIconPlaceholder;
     const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
     
     // Display overall insight if available
