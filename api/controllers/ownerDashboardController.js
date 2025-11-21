@@ -354,14 +354,15 @@ export const getCustomerEngagement = async (req, res) => {
 
     if (txErr) throw txErr;
 
-    // Fetch redemptions
+    // Fetch redemptions from transactions table where transaction_type is 'Redemption'
     const { data: redemptions, error: redemptionErr } = await supabase
-      .from('redemptions')
-      .select('customer_id, redemption_date, store_id')
+      .from('transactions')
+      .select('user_id, transaction_date, store_id, transaction_type')
       .in('store_id', storeIds)
-      .gte('redemption_date', start.toISOString())
-      .lte('redemption_date', end.toISOString())
-      .order('redemption_date', { ascending: true });
+      .eq('transaction_type', 'Redemption')
+      .gte('transaction_date', start.toISOString())
+      .lte('transaction_date', end.toISOString())
+      .order('transaction_date', { ascending: true });
 
     if (redemptionErr) {
       console.error('❌ Error fetching redemptions:', redemptionErr);
@@ -393,12 +394,12 @@ export const getCustomerEngagement = async (req, res) => {
       });
       
       // Count redemptions by month
-      (redemptions || []).forEach(r => {
-        if (!r || !r.redemption_date) return;
-        const date = new Date(r.redemption_date);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
-      });
+        (redemptions || []).forEach(r => {
+          if (!r || !r.transaction_date) return;
+          const date = new Date(r.transaction_date);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+        });
       
     } else if (period === '90d') {
       // Group by 3 months (quarters) for Last 90 Days
@@ -427,12 +428,12 @@ export const getCustomerEngagement = async (req, res) => {
       });
       
       // Count redemptions by month
-      (redemptions || []).forEach(r => {
-        if (!r || !r.redemption_date) return;
-        const date = new Date(r.redemption_date);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
-      });
+        (redemptions || []).forEach(r => {
+          if (!r || !r.transaction_date) return;
+          const date = new Date(r.transaction_date);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+        });
       
     } else if (period === '30d') {
       // Group by 4 weeks for Last 30 Days
@@ -468,19 +469,19 @@ export const getCustomerEngagement = async (req, res) => {
       });
       
       // Count redemptions by week
-      (redemptions || []).forEach(r => {
-        if (!r || !r.redemption_date) return;
-        const date = new Date(r.redemption_date);
-        for (let i = 1; i <= 4; i++) {
-          const weekKey = `week-${i}`;
-          const weekStart = purchaseMap[`${weekKey}-start`];
-          const weekEnd = purchaseMap[`${weekKey}-end`];
-          if (date >= weekStart && date <= weekEnd) {
-            redemptionMap[weekKey] += 1;
-            break;
+        (redemptions || []).forEach(r => {
+          if (!r || !r.transaction_date) return;
+          const date = new Date(r.transaction_date);
+          for (let i = 1; i <= 4; i++) {
+            const weekKey = `week-${i}`;
+            const weekStart = purchaseMap[`${weekKey}-start`];
+            const weekEnd = purchaseMap[`${weekKey}-end`];
+            if (date >= weekStart && date <= weekEnd) {
+              redemptionMap[weekKey] += 1;
+              break;
+            }
           }
-        }
-      });
+        });
       
     } else {
       // Group by days of week for Last 7 Days (default)
@@ -504,11 +505,11 @@ export const getCustomerEngagement = async (req, res) => {
       });
       
       // Count redemptions by day
-      (redemptions || []).forEach(r => {
-        if (!r || !r.redemption_date) return;
-        const key = new Date(r.redemption_date).toISOString().slice(0,10);
-        if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
-      });
+        (redemptions || []).forEach(r => {
+          if (!r || !r.transaction_date) return;
+          const key = new Date(r.transaction_date).toISOString().slice(0,10);
+          if (redemptionMap[key] !== undefined) redemptionMap[key] += 1;
+        });
     }
 
     // Extract data series
