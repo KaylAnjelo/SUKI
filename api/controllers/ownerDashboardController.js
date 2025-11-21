@@ -42,16 +42,39 @@ export const getOwnerDashboard = async (req, res) => {
       is_selected: s.store_id === store?.store_id
     }));
 
-    // Fetch all transactions linked to these stores
-    const { data: transactions, error: txError } = await supabase
-      .from('transactions')
-      .select('*')
-      .in('store_id', stores.map(s => s.store_id));
-
-    if (txError) throw txError;
+    // Fetch top products for the selected store(s)
+    let topProducts = [];
+    if (store) {
+      const { data: txs, error: txError } = await supabase
+        .from('transactions')
+        .select('product_id, quantity, total, products:product_id(id, product_name, product_type, product_image)')
+        .eq('store_id', store.store_id)
+        .order('transaction_date', { ascending: false })
+        .limit(20000);
+      if (!txError && txs) {
+        // Aggregate by product
+        const stats = new Map();
+        txs.forEach(t => {
+          const pid = Number(t.product_id);
+          const prod = t.products || {};
+          if (!stats.has(pid)) stats.set(pid, {
+            product_id: pid,
+            product_name: prod.product_name || String(pid),
+            product_type: prod.product_type || '',
+            product_image: prod.product_image || '',
+            purchased_count: 0,
+            sales_amount: 0
+          });
+          const s = stats.get(pid);
+          s.purchased_count += Number(t.quantity || 0);
+          s.sales_amount += Number(t.total || 0);
+        });
+        topProducts = Array.from(stats.values()).sort((a, b) => b.sales_amount - a.sales_amount).slice(0, 5);
+      }
+    }
 
     // Compute total sales
-    const totalSales = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+    const totalSales = topProducts.reduce((sum, p) => sum + parseFloat(p.sales_amount || 0), 0);
 
     // Store the selected store ID in session for API calls
     req.session.selectedStoreId = store?.store_id;
@@ -63,6 +86,7 @@ export const getOwnerDashboard = async (req, res) => {
       store,
       stores: storesWithSelection,
       totalSales,
+      topProducts,
       timestamp: Date.now(),
     });
 

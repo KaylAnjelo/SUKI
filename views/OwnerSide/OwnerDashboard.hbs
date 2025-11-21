@@ -121,22 +121,29 @@
             </div>
             <div class="card-content">
               <ul id="topProductsList" class="top-products-list" aria-live="polite">
+                {{#each topProducts}}
                 <li class="product-card">
                   <div class="product-card-inner">
                     <div class="product-thumb">
-                      <div class="product-placeholder" style="background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                        <i class="fas fa-utensils" style="color:#9ca3af;font-size:22px;"></i>
-                      </div>
+                      {{#if this.product_image}}
+                        <img src="{{this.product_image}}" alt="{{this.product_name}}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">
+                      {{else}}
+                        <div class="product-placeholder" style="background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                          <i class="fas fa-utensils" style="color:#9ca3af;font-size:22px;"></i>
+                        </div>
+                      {{/if}}
                     </div>
                     <div class="product-body">
-                      <div class="product-name">Product Name</div>
+                      <div class="product-name">{{this.product_name}}</div>
+                      <div class="product-type" style="font-size:13px;color:#6B0000;font-weight:500;margin-bottom:2px;">{{this.product_type}}</div>
                       <div class="product-meta">
-                        <span class="purchased-count">Purchased: <strong>0</strong></span>
-                        <span class="sales-amount">₱0</span>
+                        <span class="purchased-count">Purchased: <strong>{{this.purchased_count}}</strong></span>
+                        <span class="sales-amount">₱{{this.sales_amount}}</span>
                       </div>
                     </div>
                   </div>
                 </li>
+                {{/each}}
               </ul>
             </div>
           </div>

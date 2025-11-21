@@ -222,6 +222,7 @@ if (window._ownerDashboardInit) {
       } else {
         thumbHtml = `<div class='product-placeholder' style='background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;'><i class='fas fa-utensils' style='color:#9ca3af;font-size:22px;'></i></div>`;
       }
+      const type = escapeHtml(it.product_type || '');
       return `
         <li class="product-card">
           <div class="product-card-inner">
@@ -230,6 +231,7 @@ if (window._ownerDashboardInit) {
             </div>
             <div class="product-body">
               <div class="product-name">${name}</div>
+              <div class="product-type" style="font-size:13px;color:#6B0000;font-weight:500;margin-bottom:2px;">${type}</div>
               <div class="product-meta">
                 <span class="purchased-count">Purchased: <strong>${purchases}</strong></span>
                 <span class="sales-amount">₱${sales}</span>
