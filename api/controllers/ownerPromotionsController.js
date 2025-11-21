@@ -539,6 +539,59 @@ export const updatePromotion = async (req, res) => {
   console.log('PUT /api/owner/promotions/:id route hit');
   
   try {
+      // Debug log to inspect incoming payload
+      console.log('Update Promotion Payload:', req.body);
+      // Normalize legacy frontend field names to canonical DB fields
+      const normalized = { ...req.body };
+
+      // Map simple renames
+      if (req.body.name !== undefined) normalized.reward_name = req.body.name;
+      if (req.body.storeId !== undefined) normalized.store_id = req.body.storeId;
+      if (req.body.startDate !== undefined) normalized.start_date = req.body.startDate;
+      if (req.body.endDate !== undefined) normalized.end_date = req.body.endDate;
+      if (req.body.points_required !== undefined) normalized.points_required = req.body.points_required;
+      if (req.body.points !== undefined && normalized.points_required === undefined) normalized.points_required = req.body.points;
+      if (req.body.description !== undefined) normalized.description = req.body.description;
+
+      // Map reward type and payloads from legacy naming
+      if (req.body.discountType !== undefined) {
+        const dt = req.body.discountType;
+        if (dt === 'discount') normalized.reward_type = 'Discount';
+        else if (dt === 'free') normalized.reward_type = 'Free Item';
+        else if (dt === 'buy_x_get_y') normalized.reward_type = 'Buy X Get Y';
+        else normalized.reward_type = dt;
+      }
+
+      if (req.body.discountValue !== undefined) normalized.discount_value = req.body.discountValue;
+      // Prefer explicit discountPercentage when discountValue is empty
+      if (req.body.discountPercentage !== undefined && (normalized.discount_value === undefined || normalized.discount_value === '')) normalized.discount_value = req.body.discountPercentage;
+      if (req.body.selectedProduct !== undefined && req.body.selectedProduct !== '') normalized.free_item_product_id = req.body.selectedProduct;
+      if (req.body.buyQuantity !== undefined && req.body.buyQuantity !== '') normalized.buy_x_quantity = req.body.buyQuantity;
+      if (req.body.buyProduct !== undefined && req.body.buyProduct !== '') normalized.buy_x_product_id = req.body.buyProduct;
+      if (req.body.getQuantity !== undefined && req.body.getQuantity !== '') normalized.get_y_quantity = req.body.getQuantity;
+      if (req.body.getProduct !== undefined && req.body.getProduct !== '') normalized.get_y_product_id = req.body.getProduct;
+
+      console.log('Normalized Update Payload:', normalized);
+
+      // Use normalized object as the source of truth for updates
+      const sourceBody = normalized;
+      // Normalize numeric types where appropriate
+      if (sourceBody.discount_value !== undefined && sourceBody.discount_value !== '') {
+        const dv = Number(sourceBody.discount_value);
+        if (!Number.isNaN(dv)) sourceBody.discount_value = dv;
+      }
+      if (sourceBody.buy_x_quantity !== undefined && sourceBody.buy_x_quantity !== '') {
+        const bx = parseInt(sourceBody.buy_x_quantity, 10);
+        if (!Number.isNaN(bx)) sourceBody.buy_x_quantity = bx;
+      }
+      if (sourceBody.get_y_quantity !== undefined && sourceBody.get_y_quantity !== '') {
+        const gy = parseInt(sourceBody.get_y_quantity, 10);
+        if (!Number.isNaN(gy)) sourceBody.get_y_quantity = gy;
+      }
+      if (sourceBody.points_required !== undefined && sourceBody.points_required !== '') {
+        const pr = parseInt(sourceBody.points_required, 10);
+        if (!Number.isNaN(pr)) sourceBody.points_required = pr;
+      }
     const userId = req.session.userId;
     const promotionId = req.params.id;
     
@@ -579,10 +632,38 @@ export const updatePromotion = async (req, res) => {
     ];
 
     allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
+      // Skip undefined or empty-string values to avoid DB type errors
+      if (sourceBody[field] !== undefined && sourceBody[field] !== '') {
+        updateData[field] = sourceBody[field];
       }
     });
+
+    console.log('Final updateData sent to Supabase:', updateData);
+
+    // If reward_type is being changed, null out unrelated type-specific columns
+    // so old data from a previous type does not persist.
+    if (sourceBody.reward_type) {
+      const rt = String(sourceBody.reward_type).toLowerCase();
+      if (rt.includes('discount')) {
+        // Discount only uses discount_value
+        updateData.free_item_product_id = null;
+        updateData.buy_x_quantity = null;
+        updateData.buy_x_product_id = null;
+        updateData.get_y_quantity = null;
+        updateData.get_y_product_id = null;
+      } else if (rt.includes('free')) {
+        // Free item only uses free_item_product_id
+        updateData.discount_value = null;
+        updateData.buy_x_quantity = null;
+        updateData.buy_x_product_id = null;
+        updateData.get_y_quantity = null;
+        updateData.get_y_product_id = null;
+      } else if (rt.includes('buy')) {
+        // Buy X Get Y uses buy/get fields
+        updateData.discount_value = null;
+        updateData.free_item_product_id = null;
+      }
+    }
     
     const { data: updated, error } = await supabase
       .from('rewards')
@@ -591,8 +672,10 @@ export const updatePromotion = async (req, res) => {
       .select()
       .single();
     
+    console.log('Supabase update response:', { updated, error });
     if (error) {
       console.error('Error updating promotion:', error);
+      console.error('Attempted update data:', JSON.stringify(updateData, null, 2));
       return res.status(500).json({ error: 'Failed to update promotion' });
     }
     
