@@ -8,5 +8,6 @@ router.get('/get/:id', getProductById);
 router.post('/add', upload.single('productImage'), addProduct);
 router.post('/edit/:id', upload.single('productImage'), editProduct);
 router.post('/delete/:id', deleteProduct);
+router.delete('/delete/:id', deleteProduct);
 
 export default router;
