@@ -29,6 +29,11 @@ function renderTransactions(rows) {
     // Points: 10% of total amount, with decimals
     let points = Number(tx.total || 0) * 0.10;
     points = points % 1 === 0 ? points.toFixed(0) : points.toFixed(2);
+    // If redemption, show the actual points used (tx.points_used or tx.points)
+    let pointsDisplay = points;
+    if ((tx.transaction_type || '').toLowerCase() === 'redemption') {
+      pointsDisplay = tx.points_used !== undefined ? tx.points_used : (tx.points !== undefined ? tx.points : points);
+    }
     const type = tx.transaction_type || "";
     const date = new Date(tx.transaction_date).toLocaleString();
 
@@ -36,7 +41,7 @@ function renderTransactions(rows) {
       <td>${ref}</td>
       <td>${storeName}</td>
       <td>₱${amount}</td>
-      <td>${points}</td>
+      <td>${pointsDisplay}</td>
       <td>${type}</td>
       <td>${date}</td>
       <td>
@@ -195,8 +200,13 @@ function showDetails(tx) {
   safeText("modalType", tx.transaction_type || "N/A");
   safeText("modalDate", new Date(tx.transaction_date).toLocaleString());
   // Calculate points as 10% of total amount
-  const points = (Number(tx.total || 0) * 0.10).toFixed(2);
-  safeText("modalPoints", points);
+  let points = (Number(tx.total || 0) * 0.10).toFixed(2);
+  // If redemption, show the actual points used (tx.points_used or tx.points)
+  let pointsDisplay = points;
+  if ((tx.transaction_type || '').toLowerCase() === 'redemption') {
+    pointsDisplay = tx.points_used !== undefined ? tx.points_used : (tx.points !== undefined ? tx.points : points);
+  }
+  safeText("modalPoints", pointsDisplay);
 
   // Dynamic product list
   const productSection = modal.querySelector(".receipt-info");
@@ -243,15 +253,19 @@ function showDetails(tx) {
   document.body.classList.add("modal-open");
 }
 
+// Close modal handler
 function closeModal() {
   const modal = document.getElementById("detailsModal");
   if (modal) {
-    modal.style.display = "none";
     modal.classList.remove("open");
+    setTimeout(() => {
+      modal.style.display = "none";
+      document.body.classList.remove("modal-open");
+    }, 300); // Match the CSS transition duration
   }
-  document.body.classList.remove("modal-open");
 }
 
+// Attach close handler to modal exit button
 function initModalHandlers() {
   const closeBtn = document.querySelector(".receipt-header .close");
   if (closeBtn) {
@@ -270,11 +284,19 @@ function initModalHandlers() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const modal = document.getElementById("detailsModal");
-      if (modal && modal.style.display === 'block') {
+      if (modal && modal.classList.contains("open")) {
         closeModal();
       }
     }
   });
 }
 
-// removed duplicate outside click handlers in favor of initModalHandlers()
+// 🛠️ Debugging: Log transaction data
+function debugLogTransactions(data) {
+  console.log("Transaction Data:", JSON.stringify(data, null, 2));
+}
+
+// Optionally call this function after fetching transactions
+document.addEventListener("DOMContentLoaded", () => {
+  debugLogTransactions(TXN_DATA);
+});
