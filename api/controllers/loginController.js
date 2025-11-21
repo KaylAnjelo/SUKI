@@ -5,15 +5,6 @@ import supabase from "../../config/db.js";
 console.log("🔎 URL:", process.env.SUPABASE_URL);
 console.log("🔎 Key length:", process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
 
-/**
- * Remember Me Functionality:
- * - When "Remember me" is checked, a secure cookie is set with user data and a random token
- * - Cookie expires in 30 days and is httpOnly for security
- * - Session is extended to 30 days for remember me users
- * - Middleware in app.js automatically restores sessions from valid remember me cookies
- * - Cookies are cleared on logout or when invalid
- */
-
 export const login = async (req, res) => {
   const username = req.body.username?.trim();
   const password = req.body.password?.trim();

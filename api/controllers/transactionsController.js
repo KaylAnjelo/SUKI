@@ -1,6 +1,3 @@
-/**
- * Render Transactions Page with Stores Dropdown
- */
 export const renderTransactionsPage = async (req, res) => {
   try {
     // Fetch all stores for the dropdown
@@ -26,7 +23,7 @@ import { generateReferenceNumber } from '../utils/reference.js';
  */
 export const createTransaction = async (req, res) => {
   try {
-    const { store_id, user_id, products = [], transaction_type = 'Purchase' } = req.body || {};
+    const { store_id, user_id, vendor_id, products = [], transaction_type = 'Purchase' } = req.body || {};
 
     if (!store_id) return res.status(400).json({ error: 'store_id is required' });
     if (!Array.isArray(products) || products.length === 0) {
@@ -70,13 +67,13 @@ export const createTransaction = async (req, res) => {
       const parsedQuantity = Number(item.quantity) || 0;
       const parsedPrice = Number(item.price) || 0;
       const itemTotal = parsedQuantity * parsedPrice;
-      
       // Distribute points proportionally to item value
       const itemPoints = totalAmount > 0 ? (itemTotal / totalAmount) * totalPoints : 0;
 
       payloads.push({
         store_id,
         user_id,
+        Vendor_ID: vendor_id,
         product_id: item.product_id,
         quantity: parsedQuantity,
         price: parsedPrice,
