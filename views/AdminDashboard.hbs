@@ -60,20 +60,6 @@
       
       <!-- Top Row Metrics -->
       <div class="metrics-row-1">
-        <!-- Engagement Line Chart -->
-        <div class="metric-card engagement-chart">
-          <div class="card-header">
-            <h3>Customer Engagement</h3>
-            <select id="timeFilter" class="time-dropdown">
-              <option value="week">Week</option>
-              <option value="month" selected>Month</option>
-              <option value="year">Year</option>
-            </select>
-          </div>
-          <div class="engagement-chart-container">
-            <canvas id="customerHabitsChart"></canvas>
-          </div>
-        </div>
         <div class="metrics-left-column">
           <div class="metric-card total-sales">
             <div class="card-icon">
@@ -167,7 +153,6 @@
   </div>
 
   <script>
-    let engagementChart;
     let productChart;
 
     // Load store dropdown
@@ -189,82 +174,7 @@
       }
     }
 
-    // Engagement Line Chart - Updated to use backend sorted data
-    async function loadEngagement(storeId = '', period = 'month') {
-      try {
-        const res = await fetch(`/api/engagement?storeId=${storeId}&period=${period}`);
-        const { labels, data } = await res.json();
-
-        if (engagementChart) engagementChart.destroy();
-
-        const ctx = document.getElementById('customerHabitsChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, '#C72C41');
-        gradient.addColorStop(1, '#7D0006');
-
-        // Use the backend-sorted labels directly instead of predefined arrays
-        engagementChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels, // Use backend sorted labels
-            datasets: [{
-              label: 'Customer Engagement',
-              data: data,
-              borderColor: '#7D0006',
-              borderWidth: 2,
-              fill: false,
-              tension: 0,
-              pointBackgroundColor: '#C72C41',
-              pointBorderColor: '#7D0006',
-              pointRadius: 5,
-              pointHoverRadius: 7
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `Points: ${context.parsed.y}`;
-                  }
-                }
-              }
-            },
-            scales: {
-              x: {
-                title: { 
-                  display: true, 
-                  text: period === 'week' ? 'Days of Week' : 
-                        period === 'month' ? 'Months' : 'Years' 
-                }
-              },
-                y: {
-                  type: 'linear',
-                  min: 0,
-                  max: 300,
-                  suggestedMin: 0,
-                  suggestedMax: 300,
-                  title: {
-                    display: true,
-                    text: 'Points Earned'
-                  },
-                  ticks: {
-                    stepSize: 50,
-                    callback: function(value) { return value; }
-                  }
-                }
-            }
-          }
-        });
-          // Debug: Log chart options to verify y-axis config
-          console.log('Engagement Chart Options:', engagementChart.options.scales.y);
-      } catch (error) {
-        console.error('Error loading engagement data:', error);
-      }
-    }
+    // (Customer engagement chart removed)
 
     // Donut Chart
 // Donut Chart
@@ -398,21 +308,10 @@ async function loadProductBreakdown(store = '') {
     document.addEventListener('DOMContentLoaded', () => {
       loadStores();
       loadProductBreakdown();
-      loadEngagement(); // Default to month view
 
       // Store filter for donut chart
       document.getElementById('storeFilter').addEventListener('change', (e) => {
         loadProductBreakdown(e.target.value);
-        // Also update engagement chart with same store filter
-        const period = document.getElementById('timeFilter').value;
-        loadEngagement(e.target.value, period);
-      });
-
-      // Time filter for engagement chart
-      document.getElementById('timeFilter').addEventListener('change', (e) => {
-        const period = e.target.value;
-        const storeId = document.getElementById('storeFilter').value;
-        loadEngagement(storeId, period);
       });
     });
   </script>
