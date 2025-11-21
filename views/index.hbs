@@ -13,14 +13,14 @@
     </div>
     <h2>Welcome Back to SUKI</h2>
     {{#if error}}
-      <div class="error-message" style="color: red; margin-bottom: 10px; text-align: center;">
+      <div class="error-message">
         {{error}}
       </div>
     {{/if}}
     <form action="/login" method="POST">
-      <input type="text" name="username" placeholder="Enter your username" required>
+      <input type="text" name="username" placeholder="Enter your username" required autocomplete="off">
         <div class="password-container" style="position: relative; width: 100%;">
-          <input type="password" name="password" id="passwordInput" placeholder="Enter your password" required style="width: 100%; padding-right: 40px;">
+          <input type="password" name="password" id="passwordInput" placeholder="Enter your password" required style="width: 100%; padding-right: 40px;" autocomplete="off">
           <span class="eye-icon" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
             <svg id="eyeSvg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           </span>
