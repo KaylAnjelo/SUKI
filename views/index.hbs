@@ -19,7 +19,12 @@
     {{/if}}
     <form action="/login" method="POST">
       <input type="text" name="username" placeholder="Enter your username" required>
-      <input type="password" name="password" placeholder="Enter your password" required>
+        <div class="password-container" style="position: relative; width: 100%;">
+          <input type="password" name="password" id="passwordInput" placeholder="Enter your password" required style="width: 100%; padding-right: 40px;">
+          <span class="eye-icon" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+            <svg id="eyeSvg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </span>
+        </div>
       <div class="options">
         <label>
           <input type="checkbox" name="remember"> Remember me
@@ -27,7 +32,30 @@
         <a href="/forgot-password">Forgot Password?</a>
       </div>
       <button type="submit">Login</button>
+        </form>
+        <!-- Only one script for SVG toggle -->
     </form>
+
+  </form>
+
+  <!-- Move script to end of body for proper DOM access -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const passwordInput = document.getElementById('passwordInput');
+      const togglePassword = document.getElementById('togglePassword');
+      const eyeSvg = document.getElementById('eyeSvg');
+      if (togglePassword && passwordInput && eyeSvg) {
+        // SVG paths for eye and eye-slash
+        const eyePath = '<svg id="eyeSvg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+        const eyeSlashPath = '<svg id="eyeSvg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M9.88 9.88A3 3 0 0012 15a3 3 0 002.12-5.12M6.1 6.1C4.07 7.94 2.46 10.36 2.46 12c1.27 4.06 5.06 7 9.54 7 1.61 0 3.13-.38 4.45-1.05M17.9 17.9C19.93 16.06 21.54 13.64 21.54 12c-1.27-4.06-5.06-7-9.54-7-1.61 0-3.13.38-4.45 1.05"/></svg>';
+        togglePassword.addEventListener('click', function() {
+          const isPassword = passwordInput.type === 'password';
+          passwordInput.type = isPassword ? 'text' : 'password';
+          togglePassword.innerHTML = isPassword ? eyeSlashPath : eyePath;
+        });
+      }
+    });
+  </script>
   </div>
 </body>
 </html>
