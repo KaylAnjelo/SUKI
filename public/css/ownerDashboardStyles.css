@@ -48,6 +48,54 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+/* Overall Revenue Card Styling */
+.metric-card.overall-revenue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #7c0f0f 0%, #5a0000 100%);
+  color: white;
+}
+
+.metric-card.overall-revenue .metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.metric-card.overall-revenue .metric-info {
+  flex: 1;
+}
+
+.metric-card.overall-revenue .metric-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.metric-card.overall-revenue .metric-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.metric-card.overall-revenue .metric-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .stats-row .metric-card {
   display: flex;
   flex-direction: column;
@@ -720,10 +768,10 @@ body { background: #f5f5f5; }
   gap: 10px;
 }
 
-/* Reduce width of the two summary cards (Total Sales / Total Orders) */
+/* Reduce width of the summary cards (Overall Revenue / Total Sales / Total Orders) */
 .sales-summary {
-  /* keep two columns but let cards be a fixed narrower size */
-  grid-template-columns: repeat(2, minmax(0, 320px));
+  /* keep three columns to accommodate the new overall revenue card */
+  grid-template-columns: repeat(3, minmax(0, 320px));
   justify-content: start;
 }
 

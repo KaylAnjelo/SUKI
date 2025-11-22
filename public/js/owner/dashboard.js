@@ -324,6 +324,23 @@ if (window._ownerDashboardInit) {
     }
   }
 
+  // Overall Revenue
+  async function loadOverallRevenue() {
+    const url = `/api/owner/dashboard/overall-revenue`;
+    try {
+      const payload = await tryFetchJson(url);
+      console.debug('Overall revenue payload:', payload);
+      if (typeof renderOverallRevenue === 'function') renderOverallRevenue(payload.totalRevenue ?? 0);
+      if (typeof renderStoreCount === 'function') renderStoreCount(payload.storeCount ?? 0);
+      return payload;
+    } catch (err) {
+      console.warn('Overall revenue fetch failed', err);
+      if (typeof renderOverallRevenue === 'function') renderOverallRevenue(0);
+      if (typeof renderStoreCount === 'function') renderStoreCount(0);
+      return null;
+    }
+  }
+
   // DOM init (single listener)
   document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ DOM fully loaded, initializing dashboard...");
@@ -336,6 +353,7 @@ if (window._ownerDashboardInit) {
     loadProductData().catch(() => {});
     loadRecommendations().catch(() => {});
     loadDashboardSummary().catch(() => {});
+    loadOverallRevenue().catch(() => {});
 
     // UI hooks
     const categoryFilter = document.getElementById("categoryFilter");
@@ -368,6 +386,18 @@ function renderAvgOrderValue(value) {
   const el = document.getElementById('avgOrderValue');
   if (!el) return;
   el.textContent = Number(value || 0).toLocaleString(undefined, { style:'currency', currency:'PHP' });
+}
+
+function renderOverallRevenue(value) {
+  const el = document.getElementById('overallRevenue');
+  if (!el) return;
+  el.textContent = Number(value || 0).toLocaleString(undefined, { style:'currency', currency:'PHP' });
+}
+
+function renderStoreCount(count) {
+  const el = document.getElementById('storeCount');
+  if (!el) return;
+  el.textContent = `${count || 0} store${count !== 1 ? 's' : ''}`;
 }
 
 function renderEngagementChart(payload) {
