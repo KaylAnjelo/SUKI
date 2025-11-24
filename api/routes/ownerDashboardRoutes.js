@@ -4,7 +4,8 @@ import {
   getSalesSummary,
   getCustomerEngagement,
   getTopProducts,
-  getOrderRate
+  getOrderRate,
+  getOverallRevenue
 } from '../controllers/ownerDashboardController.js';
 import recController from '../controllers/recommendationController.js';
 import kmeansRec from '../controllers/recommendationKMeansController.js';
@@ -18,6 +19,7 @@ router.get('/sales-summary', getSalesSummary);
 router.get('/customer-engagement', getCustomerEngagement);
 router.get('/top-products', getTopProducts);
 router.get('/order-rate', getOrderRate);
+router.get('/overall-revenue', getOverallRevenue);
 
 // recommendations: fetch stored results
 router.get('/recommendations', recController.getStoredRecommendations.bind(recController));

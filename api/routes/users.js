@@ -27,6 +27,14 @@ router.post('/stores/delete/:id', UserManagementController.deleteStore);
 
 router.get('/vendor', UserManagementController.getVendors);
 
+// Admin: create a new vendor
+router.post('/vendor/add', UserManagementController.addVendor);
+
+// User APIs for admin edit/delete
+router.get('/user/:id', UserManagementController.getUser);
+router.post('/user/update/:id', UserManagementController.updateUser);
+router.post('/user/delete/:id', UserManagementController.deleteUser);
+
 router.get('/UserManagement/AddUser', (req, res) => {
     res.render('users/AddUser');
 });

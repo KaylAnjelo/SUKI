@@ -26,6 +26,14 @@ const __dirname = path.dirname(__filename); // use path.dirname
 dotenv.config({ path: './.env' });
 
 const app = express();
+// Ensure `next` is available on `req` for rendering callbacks that expect `req.next`
+// (some view engines or middleware may call `req.next`; make this safe and idempotent)
+app.use((req, res, next) => {
+  if (typeof req.next !== 'function') {
+    req.next = next;
+  }
+  next();
+});
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
@@ -106,11 +114,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Fix for Express 5.x - make next available on req for res.render()
-app.use((req, res, next) => {
-  req.next = next;
-  next();
-});
+// (previous placement of req.next middleware removed — handled earlier)
 
 // Simple setUser middleware (ensure res.locals.user is available)
 function setUser(req, res, next) {
@@ -118,8 +122,34 @@ function setUser(req, res, next) {
   next();
 }
 
+// Load store for logged in owner so templates (header/etc.) can access store data
+async function setStore(req, res, next) {
+  try {
+    res.locals.store = null;
+    const userId = req.session?.user?.id;
+    if (!userId) return next();
+
+    // fetch store for this owner if available
+    const { data: store, error } = await supabase
+      .from('stores')
+      .select('store_id, store_name, location, store_image, owner_name, owner_contact')
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (!error && store) {
+      res.locals.store = store;
+    }
+  } catch (err) {
+    console.error('Error loading store for template context:', err);
+    // don't block rendering the page if store lookup fails
+  } finally {
+    return next();
+  }
+}
+
 // Routes
 app.use(setUser);
+app.use(setStore);
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', notificationRoutes);

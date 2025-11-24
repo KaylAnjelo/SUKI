@@ -375,3 +375,43 @@ export const getOrderRate = async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch order rate' });
   }
 };
+
+/**
+ * API: Get Overall Total Revenue (all stores combined, all time)
+ */
+export const getOverallRevenue = async (req, res) => {
+  try {
+    const userId = req.session?.userId || req.session?.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Fetch all stores owned by the user
+    const { data: stores, error: storeError } = await supabase
+      .from('stores')
+      .select('store_id')
+      .eq('owner_id', userId);
+
+    if (storeError) throw storeError;
+
+    if (!stores || stores.length === 0) {
+      return res.json({ totalRevenue: 0, storeCount: 0 });
+    }
+
+    const storeIds = stores.map(s => s.store_id);
+
+    // Fetch all transactions for all owner's stores
+    const { data: transactions, error: txError } = await supabase
+      .from('transactions')
+      .select('total')
+      .in('store_id', storeIds);
+
+    if (txError) throw txError;
+
+    // Sum up all transaction totals
+    const totalRevenue = (transactions || []).reduce((sum, t) => sum + parseFloat(t.total || 0), 0);
+
+    return res.json({ totalRevenue, storeCount: stores.length });
+  } catch (err) {
+    console.error('getOverallRevenue error', err);
+    return res.status(200).json({ totalRevenue: 0, storeCount: 0 });
+  }
+};

@@ -11,7 +11,6 @@
   <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    /* Products specific styles */
     .products-container {
       background: #f5f5f5;
       border-radius: 8px;
@@ -76,12 +75,20 @@
     }
 
     .edit-link {
-      color: #3b82f6;
+      color: #7c0f0f;
       text-decoration: none;
       font-weight: 500;
     }
 
-    .edit-link:hover {
+    .edit-link,
+    .edit-link:link,
+    .edit-link:visited {
+      color: #7c0f0f !important;
+    }
+
+    .edit-link:hover,
+    .edit-link:focus {
+      color: #5a0000 !important;
       text-decoration: underline;
     }
 
@@ -126,6 +133,303 @@
       font-size: 16px;
     }
 
+    /* Modal specific overrides for product forms */
+    #productModal .modal-content {
+      max-width: 650px;
+    }
+
+    #productModal .modal-header {
+      background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
+      color: white;
+      padding: 20px 24px 12px 24px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #productModal .modal-header h2 {
+      margin: 0;
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    #productModal .modal-header .close-btn {
+      color: white;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #productModal .modal-header .close-btn:hover {
+      background: rgba(255,255,255,0.12);
+      color: white;
+    }
+
+    #productModal .form-group {
+      margin-bottom: 18px;
+    }
+
+    #productModal .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    #productModal .form-group input[type="text"],
+    #productModal .form-group input[type="number"],
+    #productModal .form-group input[type="file"],
+    #productModal .form-group select,
+    #productModal .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    #productModal .form-group input[type="text"]:focus,
+    #productModal .form-group input[type="number"]:focus,
+    #productModal .form-group input[type="file"]:focus,
+    #productModal .form-group select:focus,
+    #productModal .form-group textarea:focus {
+      outline: none;
+      border-color: #7c0f0f;
+      box-shadow: 0 0 0 3px rgba(124, 15, 15, 0.1);
+    }
+
+    #productModal .form-group select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23374151' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    #productModal .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    #productModal .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 12px;
+    }
+
+    #productModal .form-row .form-group {
+      margin-bottom: 0;
+    }
+
+    #productModal .file-upload-container {
+      position: relative;
+    }
+
+    #productModal .file-upload-container input[type="file"] {
+      display: none;
+    }
+
+    #productModal .file-upload-display {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      background: #f9fafb;
+    }
+
+    #productModal .file-upload-display:hover {
+      border-color: #7c0f0f;
+      background: #fef2f2;
+    }
+
+    #productModal .file-upload-display i {
+      font-size: 36px;
+      color: #d1d5db;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    #productModal .file-upload-display span {
+      color: #6b7280;
+      font-size: 14px;
+      display: block;
+    }
+
+    #productModal .image-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #9ca3af;
+    }
+
+    #productModal .image-preview img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    /* Checkbox styling */
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+      gap: 8px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #7c0f0f;
+    }
+
+    .checkbox-label .checkmark {
+      display: none;
+    }
+
+    /* Radio button styling */
+    .status-radio-group {
+      display: flex;
+      gap: 24px;
+      margin-top: 10px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+      position: relative;
+    }
+
+    .radio-label input[type="radio"] {
+      appearance: none;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .radio-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .radio-custom::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7c0f0f;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .radio-label input[type="radio"]:checked + .radio-custom {
+      border-color: #7c0f0f;
+      background: #fef2f2;
+    }
+
+    .radio-label input[type="radio"]:checked + .radio-custom::after {
+      opacity: 1;
+    }
+
+    .radio-label:hover .radio-custom {
+      border-color: #7c0f0f;
+    }
+
+    /* Modal form actions */
+    #productModal .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 24px 24px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 8px;
+    }
+
+    #productModal .cancel-btn,
+    #productModal .submit-btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    #productModal .cancel-btn {
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+    }
+
+    #productModal .cancel-btn:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+    }
+
+    #productModal .submit-btn {
+      background: linear-gradient(135deg, #7c0f0f 0%, #C72C41 100%);
+      color: white;
+    }
+
+    #productModal .submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 15, 15, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      #productModal .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      #productModal .modal-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+
+      #productModal .form-actions {
+        flex-direction: column;
+      }
+
+      #productModal .cancel-btn,
+      #productModal .submit-btn {
+        width: 100%;
+      }
+    }
+
     .empty-products {
       text-align: center;
       padding: 40px 20px;
@@ -149,6 +453,262 @@
     .empty-products p {
       font-size: 14px;
       margin: 0;
+    }
+    /* Modal and form styles for Add/Edit Product */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 370px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      font-family: 'Poppins', Arial, sans-serif;
+      position: relative;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 24px 18px 24px;
+      background: #C72C41;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .modal-header h2 { 
+      margin: 0; 
+      font-size: 1.15em;
+      font-weight: 500;
+      color: #fff;
+    }
+    
+    .close-btn { 
+      background: transparent; 
+      border: none; 
+      color: #888; 
+      font-size: 1.5em; 
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .close-btn:hover {
+      color: #C72C41;
+    }
+
+    .modal-content form {
+      padding: 14px 24px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.98em;
+      margin-bottom: 4px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.98em;
+      color: #222;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Required field style */
+    .form-group label[for*="required"]::after,
+    .form-group label[for*="productName"]::after,
+    .form-group label[for*="productPrice"]::after {
+      content: ' *';
+      color: #C72C41;
+    }
+
+    .file-upload-container {
+      position: relative;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      transition: all 0.2s ease;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-upload-container.drag-over {
+      border-color: #C72C41;
+      background: #fff9f9;
+    }
+
+    .file-upload-container input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-preview {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .image-preview i {
+      font-size: 32px;
+      color: #C72C41;
+    }
+
+    .image-preview span {
+      font-size: 0.95em;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 14px 24px 18px;
+      border-top: 1px solid #eee;
+      margin-top: 10px;
+    }
+
+    .cancel-btn {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      background: #C72C41;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #7D0006;
+    }
+
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+    /* Status (Active / Inactive) styles */
+    .status-options {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #555;
+      font-size: 0.98em;
+    }
+    
+    .status-label input { display: none; }
+    
+    .status-box {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #C72C41;
+      border-radius: 4px;
+      display: inline-block;
+      position: relative;
+    }
+    
+    .status-box::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+    
+    .status-label input:checked + .status-box {
+      background: #C72C41;
+      border-color: #C72C41;
+    }
+    
+    .status-label input:checked + .status-box::after {
+      opacity: 1;
+    }
+
+    /* Responsive: stack columns on narrow screens */
+    @media (max-width: 700px) {
+      .modal-content { width: 96%; }
+      .form-row { flex-direction: column; }
     }
   </style>
 </head>
@@ -232,7 +792,14 @@
                   <td>₱{{price}}</td>
                   <td>
                     <div class="action-buttons">
-                      <a href="#" class="edit-link" data-id="{{id}}">Edit</a>
+                 <a href="#" class="edit-link" 
+                   data-id="{{id}}" 
+                   data-name="{{product_name}}" 
+                   data-category="{{product_type}}" 
+                   data-price="{{price}}" 
+                   data-description="{{product_description}}"
+                   data-image="{{product_image}}"
+                   data-active="{{product_active}}">Edit</a>
                       <form action="/api/owner/products/delete/{{id}}" method="POST" style="display:inline;">
                         <button type="submit" class="delete-btn">Delete</button>
                       </form>
@@ -261,42 +828,37 @@
     </main>
   </div>
   <!-- Add/Edit Product Modal -->
-  <div id="productModal" class="modal">
+  <div id="productModal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">Add New Product</h2>
-        <button class="close-btn" id="closeModal">&times;</button>
+        <span id="closeModal" class="close-btn">&times;</span>
       </div>
       
-      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data">
+      <form id="productForm" action="/api/owner/products/add" method="POST" enctype="multipart/form-data" style="padding: 0 24px 24px 24px;">
         <input type="hidden" id="store_id" name="store_id" value="{{store.store_id}}">
+          <input type="hidden" id="productId" name="productId" value="">
         
         <div class="form-row">
           <div class="form-group">
             <label for="productName">Product Name *</label>
-            <input type="text" id="productName" name="productName" required>
+            <input type="text" id="productName" name="productName" required placeholder="Enter product name">
           </div>
           <div class="form-group">
             <label for="productCategory">Category *</label>
             <select id="productCategory" name="product_type" required>
               <option value="">Select Category</option>
-              <option value="food">Food</option>
+              <option value="meal">Meal</option>
+              <option value="sides">Sides</option>
               <option value="beverage">Beverage</option>
-              <option value="snacks">Snacks</option>
               <option value="dessert">Dessert</option>
             </select>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required>
-          </div>
-          <div class="form-group">
-            <label for="productStock">Stock Quantity</label>
-            <input type="number" id="productStock" name="productStock" min="0" value="0">
-          </div>
+        <div class="form-group">
+          <label for="productPrice">Price (₱) *</label>
+          <input type="number" id="productPrice" name="productPrice" step="0.01" min="0" required placeholder="0.00">
         </div>
 
         <div class="form-group">
@@ -306,9 +868,9 @@
 
         <div class="form-group">
           <label for="productImage">Product Image</label>
-          <div class="file-upload-container">
+          <div class="file-upload-container" id="dropZone">
             <input type="file" id="productImage" name="productImage" accept="image/*">
-            <div class="file-upload-display">
+            <div class="file-upload-display" onclick="document.getElementById('productImage').click();">
               <div id="imagePreview" class="image-preview">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <span>Click to upload product image</span>
@@ -318,16 +880,24 @@
         </div>
 
         <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="isActive" name="isActive" checked>
-            <span class="checkmark"></span>
-            Product is active
-          </label>
+          <label>Product Status *</label>
+          <div class="status-radio-group">
+            <label class="radio-label">
+              <input type="radio" name="isActive" value="1" checked>
+              <span class="radio-custom"></span>
+              Active
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="isActive" value="0">
+              <span class="radio-custom"></span>
+              Inactive
+            </label>
+          </div>
         </div>
 
         <div class="form-actions">
           <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-          <button type="submit" class="submit-btn" id="submitBtn">Save Product</button>
+          <button type="submit" class="submit-btn" id="submitBtn">Submit</button>
         </div>
       </form>
     </div>
@@ -363,11 +933,16 @@
       const closeDeleteModal = document.getElementById('closeDeleteModal');
       const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
       const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      const fileUploadDisplay = document.querySelector('.file-upload-display');
 
       // Open add product modal
       addProductBtn.addEventListener('click', () => {
         document.getElementById('modalTitle').textContent = 'Add New Product';
+        // ensure submit button shows 'Submit' for Add flow
+        document.getElementById('submitBtn').textContent = 'Submit';
         productForm.reset();
+        resetImagePreview();
+        productForm.setAttribute('action', '/api/owner/products/add');
         productModal.style.display = 'flex';
       });
 
@@ -423,39 +998,97 @@
           alert('❌ Something went wrong.');
         }
       });
+        // Single form submission handler that handles both add and edit
+        productForm.removeEventListener('submit', async (e) => {});
+        productForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
 
+          const formData = new FormData(productForm);
+          const productId = document.getElementById('productId').value;
+          const url = productId ? `/api/owner/products/edit/${productId}` : '/api/owner/products/add';
 
-      // Handle delete button clicks
-    document.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('delete-btn') && !e.target.id) {
-        e.preventDefault();
-        const form = e.target.closest('form');
-        const action = form.getAttribute('action');
-
-        if (confirm('Are you sure you want to delete this product?')) {
           try {
-            const response = await fetch(action, { method: 'POST' });
+            const response = await fetch(url, {
+                method: 'POST',
+              body: formData
+            });
+
+            const result = await response.json();
+
             if (response.ok) {
-              alert('🗑️ Product deleted successfully');
+              const message = productId ? '✅ Product updated successfully!' : '✅ Product added successfully!';
+              alert(message);
               window.location.reload();
             } else {
-              alert('❌ Failed to delete product');
+              alert(`❌ Failed to save product: ${result.message || 'Unknown error'}`);
             }
-          } catch (err) {
-            console.error(err);
+          } catch (error) {
+            console.error('Error saving product:', error);
             alert('❌ Something went wrong.');
           }
-        }
-      }
-    });
+        });
 
+      // Handle delete button clicks
+      document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-btn') && !e.target.id) {
+          e.preventDefault();
+          const form = e.target.closest('form');
+          const action = form.getAttribute('action');
+
+          if (confirm('Are you sure you want to delete this product?')) {
+            try {
+              const response = await fetch(action, { method: 'POST' });
+              if (response.ok) {
+                alert('🗑️ Product deleted successfully');
+                window.location.reload();
+              } else {
+                alert('❌ Failed to delete product');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('❌ Something went wrong.');
+            }
+          }
+        }
+      });
 
       // Handle edit link clicks
       document.addEventListener('click', (e) => {
         if (e.target.classList.contains('edit-link')) {
           e.preventDefault();
           document.getElementById('modalTitle').textContent = 'Edit Product';
-          // Populate form with existing data
+            const productId = e.target.dataset.id;
+            const productName = e.target.dataset.name;
+            const productCategory = e.target.dataset.category;
+            const productPrice = e.target.dataset.price;
+            const productDescription = e.target.dataset.description;
+            const productImage = e.target.dataset.image;
+            const productActive = e.target.dataset.active;
+
+            // Populate form with existing data
+            document.getElementById('productId').value = productId;
+            document.getElementById('productName').value = productName;
+            document.getElementById('productCategory').value = productCategory;
+            document.getElementById('productPrice').value = productPrice;
+            document.getElementById('productDescription').value = productDescription || '';
+
+            // Set the active status radio button
+            const isActive = productActive === '1' || productActive === true;
+            document.querySelector('input[name="isActive"][value="1"]').checked = isActive;
+            document.querySelector('input[name="isActive"][value="0"]').checked = !isActive;
+
+            // Update form action to edit endpoint
+            productForm.setAttribute('action', `/api/owner/products/edit/${productId}`);
+
+            // Display existing image if available
+            if (productImage && productImage !== 'null') {
+              document.getElementById('imagePreview').innerHTML = `<img src="${productImage}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px; object-fit: contain;">`;
+            } else {
+              resetImagePreview();
+            }
+
+            document.getElementById('submitBtn').textContent = 'Update Product';
+
           productModal.style.display = 'flex';
         }
       });
@@ -469,11 +1102,19 @@
         if (file) {
           const reader = new FileReader();
           reader.onload = (e) => {
-            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">`;
+            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px; object-fit: contain;">`;
           };
           reader.readAsDataURL(file);
         }
       });
+
+      function resetImagePreview() {
+        const imagePreview = document.getElementById('imagePreview');
+        imagePreview.innerHTML = `
+          <i class="fas fa-cloud-upload-alt"></i>
+          <span>Click to upload product image</span>
+        `;
+      }
     });
   </script>
 </body>
