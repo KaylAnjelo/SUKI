@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/AdminStyles.css">
     <script src="/js/logout.js" defer></script>
     <script src="/js/sidebar.js" defer></script>
+    <script src="/js/userManagement.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -58,6 +59,12 @@
                                 <td>{{this.full_name}}</td>
                                 <td>{{this.user_email}}</td>
                                 <td>{{this.contact_number}}</td>
+                                <td style="white-space:nowrap;">
+                                    <button type="button" onclick="showEditUserModal({{this.user_id}})">Edit</button>
+                                    <form style="display:inline;margin-left:6px;" data-user-id="{{this.user_id}}" onsubmit="return deleteUser(event, this);">
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
                             {{/each}}
                         </tbody>

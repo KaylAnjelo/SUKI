@@ -10,6 +10,17 @@
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
   <script src="/js/stores.js" defer></script>
+    <script src="/js/userManagement.js" defer></script>
+    <script>
+      window.__SUKI_STORES = [];
+      {{#if stores}}
+      window.__SUKI_STORES = [
+        {{#each stores}}
+          { store_id: {{this.store_id}}, store_name: "{{this.store_name}}" }{{#unless @last}},{{/unless}}
+        {{/each}}
+      ];
+      {{/if}}
+    </script>
   <style>
   </style>
 </head>
@@ -72,6 +83,7 @@
                   <form class="delete-store-form" data-store-id="{{this.store_id}}" onsubmit="return deleteStore(event, this);">
                     <button type="submit">Delete</button>
                   </form>
+                  <button style="margin-left:6px;" type="button" onclick="showEditUserModal({{this.owner_id}})">Edit Owner</button>
                 </td>
               </tr>
               {{/each}}

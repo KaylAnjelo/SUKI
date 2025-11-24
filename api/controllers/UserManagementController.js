@@ -87,10 +87,136 @@ export const getVendors = async (req, res) => {
 
       
 
-    res.render('users/Vendor', { vendors: vendorsWithStores });
+    // Also provide the stores list so admin can assign vendors to stores
+    res.render('users/Vendor', { vendors: vendorsWithStores, stores });
   } catch (error) {
     console.error("Error fetching vendors:", error.message);
     res.status(500).send('Server Error');
+  }
+};
+
+
+export const addVendor = async (req, res) => {
+  try {
+    const { username, first_name, last_name, user_email, contact_number, password, store_id } = req.body;
+
+    // Basic validation
+    if (!username || !user_email || !password) {
+      return res.status(400).send('Missing required fields: username, email, or password');
+    }
+
+    // Check if email already exists
+    const { data: existingEmail, error: emailErr } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('user_email', user_email)
+      .maybeSingle();
+
+    if (emailErr) throw emailErr;
+    if (existingEmail) {
+      return res.status(400).send('A user with this email already exists');
+    }
+
+    // Check if username already exists
+    const { data: existingUsername, error: userErr } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (userErr) throw userErr;
+    if (existingUsername) {
+      return res.status(400).send('Username already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const storeIdVal = store_id ? parseInt(store_id, 10) : null;
+
+    const { data: newUser, error: insertErr } = await supabase.from('users').insert([{
+      username,
+      password: hashedPassword,
+      first_name: first_name || null,
+      last_name: last_name || null,
+      contact_number: contact_number || null,
+      user_email,
+      role: 'vendor',
+      store_id: storeIdVal
+    }]).select().single();
+
+    if (insertErr) throw insertErr;
+
+    // Redirect back to vendor listing after successful creation
+    return res.redirect('/users/vendor');
+  } catch (error) {
+    console.error('Error adding vendor:', error.message);
+    res.status(500).send('Server Error: ' + error.message);
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Missing user id' });
+
+    const { data: user, error } = await supabase.from('users').select('user_id, username, first_name, last_name, contact_number, user_email, role, store_id').eq('user_id', id).maybeSingle();
+    if (error) throw error;
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    return res.json({ success: true, user });
+  } catch (error) {
+    console.error('Error fetching user:', error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Missing user id' });
+
+    const { username, first_name, last_name, user_email, contact_number, password, store_id } = req.body;
+
+    const updatePayload = {
+      username,
+      first_name: first_name || null,
+      last_name: last_name || null,
+      user_email,
+      contact_number: contact_number || null,
+      store_id: store_id ? parseInt(store_id, 10) : null
+    };
+
+    // Remove undefined fields so we don't overwrite accidentally
+    Object.keys(updatePayload).forEach(k => updatePayload[k] === undefined && delete updatePayload[k]);
+
+    // If password provided and non-empty, hash it
+    if (password && password.trim() !== '') {
+      const hashed = await bcrypt.hash(password, 10);
+      updatePayload.password = hashed;
+    }
+
+    const { error } = await supabase.from('users').update(updatePayload).eq('user_id', id);
+    if (error) throw error;
+
+    return res.json({ success: true, message: 'User updated' });
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Missing user id' });
+
+    const { error } = await supabase.from('users').delete().eq('user_id', id);
+    if (error) throw error;
+
+    return res.json({ success: true, message: 'User deleted', deletedId: id });
+  } catch (error) {
+    console.error('Error deleting user:', error.message);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
