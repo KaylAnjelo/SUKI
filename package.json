@@ -6,7 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "cleanup-backups": "node scripts/cleanup_backups.js",
+    "backup-now": "node scripts/backup_and_upload.js",
+    "list-backups": "node scripts/list_backups.js"
   },
   "keywords": [],
   "author": "",
