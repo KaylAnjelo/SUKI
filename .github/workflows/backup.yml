@@ -1,6 +1,8 @@
 name: Daily DB backup
 
 on:
+  push:
+    branches: [ master ]
   workflow_dispatch: {}
   schedule:
     - cron: '0 2 * * *' # daily at 02:00 UTC
