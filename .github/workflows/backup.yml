@@ -30,8 +30,12 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           mkdir -p tmp
-          echo 'Running pg_dump...'
-          pg_dump --dbname="$DATABASE_URL" -F p -f tmp/dump.sql
+          echo 'Parsing DATABASE_URL and running pg_dump...'
+          # Parse DATABASE_URL of the form postgres://user:pass@host:port/db or postgresql://...
+          eval $(echo "$DATABASE_URL" | sed -E "s#postgres(ql)?://([^:]+):([^@]+)@([^:]+):([0-9]+)/(.+)#export PGUSER='\\2'; export PGPASSWORD='\\3'; export PGHOST='\\4'; export PGPORT='\\5'; export PGDATABASE='\\6';#")
+          export PGSSLMODE=require
+          echo "PGHOST=$PGHOST PGPORT=$PGPORT PGUSER=$PGUSER PGDATABASE=$PGDATABASE"
+          pg_dump -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -F p -f tmp/dump.sql
           gzip -9 tmp/dump.sql
 
       - name: Upload dump to Supabase
