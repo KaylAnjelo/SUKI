@@ -10,26 +10,7 @@
   <script src="/js/logout.js" defer></script>
   <script src="/js/sidebar.js" defer></script>
   <script src="/js/stores.js" defer></script>
-  <style>
-    .store-thumbnail {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      display: inline-block;
-    }
-    .store-placeholder {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: #eee;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      color: #7c7c7c;
-    }
-  </style>
+  <!-- Inline styles moved to /public/css/AdminStyles.css -->
 </head>
 <body>
   <div class="container">
@@ -47,18 +28,32 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="header">
-        <div>
+      <div class="header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
           <a href="/users/UserManagement"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
           <h1>Store Management</h1>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
+            <i class="fas fa-plus"></i> Add New Store
+          </button>
+          <button class="download-btn" style="background-color: #0f7c7c; color: white;" onclick="showAddStoreToExistingOwnerForm()">
+            <i class="fas fa-user-plus"></i> Add Store to Existing Owner
+          </button>
         </div>
       </div>
 
       <!-- Stores Table -->
       <div class="tables-section">
+        <div class="table-actions" style="display:flex;justify-content:center;margin-bottom:12px;width:100%;">
+          <div class="search-wrapper" style="position:relative;width:100%;max-width:720px;">
+            <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#6b7280;font-size:14px;"></i>
+            <input id="storeSearch" type="search" placeholder="Search stores by name, owner, email, contact or store code" style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box;padding-left:36px;min-width:320px;" aria-label="Search stores">
+          </div>
+        </div>
         <div class="table-container">
           {{#if stores.length}}
-          <table class="admin-table">
+          <table class="admin-table" id="storesTable">
             <thead>
               <tr>
                 <th></th>
@@ -67,12 +62,12 @@
                 <th>Owner Email</th>
                 <th>Contact Info</th>
                 <th>Store Code</th>
-                <th></th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {{#each stores}}
-              <tr>
+              <tr data-store-id="{{this.store_id}}" data-location="{{this.location}}" data-store-image="{{this.store_image}}">
                 <td>
                   {{#if this.store_image}}
                     <img src="{{this.store_image}}" alt="Store Image" class="store-thumbnail">
@@ -91,13 +86,19 @@
                 </td>
                 <td>{{this.ownerContact}}</td>
                 <td>{{this.store_code}}</td>
-                <td>
-                  <form class="delete-store-form" data-store-id="{{this.store_id}}" onsubmit="return deleteStore(event, this);">
-                    <button type="submit">Delete</button>
+                <td style="text-align:center;">
+                  <button type="button" class="btn-edit-store edit-btn" aria-label="Edit store">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <form class="delete-store-form" data-store-id="{{this.store_id}}" onsubmit="return deleteStore(event, this);" style="display:inline-block;">
+                    <button type="submit" class="btn-delete-store delete-btn" aria-label="Delete store"><i class="fas fa-trash"></i></button>
                   </form>
                 </td>
               </tr>
               {{/each}}
+              <tr class="no-results" style="display:none; text-align:center; color:#666;">
+                <td colspan="7">No matching stores found</td>
+              </tr>
             </tbody>
           </table>
           {{else}}
@@ -110,15 +111,7 @@
         </div>
       </div>
 
-      <!-- Add Store Buttons -->
-      <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="download-btn" style="background-color: #7c0f0f; color: white;" onclick="showAddStoreForm()">
-          <i class="fas fa-plus"></i> Add New Store
-        </button>
-        <button class="download-btn" style="background-color: #0f7c7c; color: white;" onclick="showAddStoreToExistingOwnerForm()">
-          <i class="fas fa-user-plus"></i> Add Store to Existing Owner
-        </button>
-      </div>
+      
 
       <!-- Add Store Modal -->
       <div id="addStoreModal" class="modal">
@@ -256,6 +249,34 @@
     </main>
   </div>
   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const searchInput = document.getElementById('storeSearch');
+      const table = document.getElementById('storesTable');
+      if (!searchInput || !table) return;
+
+      const tbody = table.querySelector('tbody');
+      const noResultsRow = tbody ? tbody.querySelector('.no-results') : null;
+
+      function filterRows() {
+        const query = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+
+        rows.forEach(row => {
+          const text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
+          const match = text.indexOf(query) !== -1;
+          row.style.display = match ? '' : 'none';
+          if (match) visibleCount += 1;
+        });
+
+        if (noResultsRow) {
+          noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+        }
+      }
+
+      searchInput.addEventListener('input', filterRows);
+    });
+
     function setActiveStep(step) {
       const s1 = document.getElementById('step1');
       const s2 = document.getElementById('step2');
@@ -329,6 +350,51 @@
       preview.appendChild(img);
     }
 
+    function onEditImageSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      const preview = document.getElementById('editImagePreview');
+      const fileName = document.getElementById('editImageFileName');
+      const removeBtn = document.getElementById('removeEditStoreImage');
+      const uploadBtn = document.getElementById('editUploadBtn');
+      const removeFlag = document.getElementById('edit_remove_image');
+      if (!file) {
+        preview.innerHTML = '<i class="fas fa-image" style="font-size:28px;color:#c7c7c7;"></i>';
+        fileName.textContent = 'No file chosen';
+        if (removeBtn) removeBtn.style.display = 'none';
+        if (removeFlag) removeFlag.value = '';
+        if (uploadBtn) uploadBtn.style.display = 'inline-block';
+        return;
+      }
+      // clear any remove flag when selecting a new file
+      if (removeFlag) removeFlag.value = '';
+      fileName.textContent = file.name;
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.innerHTML = '';
+      preview.appendChild(img);
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+      if (uploadBtn) uploadBtn.style.display = 'inline-block';
+    }
+
+    window.removeEditStoreImage = function () {
+      console.log('removeEditStoreImage called');
+      const input = document.getElementById('editStoreImage');
+      const preview = document.getElementById('editImagePreview');
+      const fileName = document.getElementById('editImageFileName');
+      const removeBtn = document.getElementById('removeEditStoreImage');
+      const uploadBtn = document.getElementById('editUploadBtn');
+      const removeFlag = document.getElementById('edit_remove_image');
+      if (input) input.value = '';
+      if (preview) preview.innerHTML = '<i class="fas fa-image" style="font-size:28px;color:#c7c7c7;"></i>';
+      if (fileName) fileName.textContent = 'No file chosen';
+      if (removeBtn) removeBtn.style.display = 'none';
+      if (removeFlag) removeFlag.value = '1';
+      // show upload button so admin can add a new image after removal
+      if (uploadBtn) uploadBtn.style.display = 'inline-block';
+    }
+
     async function showAddStoreToExistingOwnerForm() {
       // Load existing owners
       try {
@@ -358,6 +424,240 @@
       document.body.classList.remove('modal-open');
       clearOwnerForm();
     }
+
+    // --- Edit Store modal & logic ---
+    (function () {
+      // create modal HTML (uses standard .modal/.modal-content styles)
+      const editModalWrapper = document.createElement('div');
+      editModalWrapper.innerHTML = `
+        <div id="editStoreModal" class="modal" style="display:none;">
+          <div class="modal-content" style="max-width:520px; max-height:80vh; overflow-y:auto;">
+            <div class="modal-header">
+              <h2>Edit Store</h2>
+              <span class="close" id="editStoreModalClose">&times;</span>
+            </div>
+            <form id="editStoreForm" onsubmit="event.preventDefault();return false;" enctype="multipart/form-data">
+              <input type="hidden" id="edit_store_id" name="store_id" />
+              <input type="hidden" id="edit_remove_image" name="remove_image" value="">
+              <div class="edit-uploader" style="display:flex;gap:12px;align-items:center;margin:12px 0;flex-direction:column;">
+                <div id="editImagePreviewContainer" class="edit-preview" style="border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f3f4f6;position:relative;width:100%;height:150px;">
+                  <div id="editImagePreview" class="edit-preview-inner"><i class="fas fa-image" style="font-size:28px;color:#c7c7c7;"></i></div>
+                </div>
+                <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;">
+                  <input type="file" id="editStoreImage" name="storeImage" accept="image/*" style="display:none;" onchange="onEditImageSelected(event)">
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <button type="button" id="editUploadBtn" class="upload-btn" onclick="document.getElementById('editStoreImage').click()"><i class="fas fa-upload"></i> Upload</button>
+                    <button type="button" id="removeEditStoreImage" class="cancel-btn" style="display:none;">Remove</button>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div id="editImageFileName" style="margin-top:4px;color:#6b7280;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No file chosen</div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="edit_store_name">Store Name</label>
+                <input type="text" id="edit_store_name" name="store_name" style="padding:12px;border-radius:8px;" required />
+              </div>
+              <div class="form-group">
+                <label for="edit_location">Location</label>
+                <input type="text" id="edit_location" name="location" style="padding:12px;border-radius:8px;" />
+              </div>
+              <div class="form-group">
+                <label for="edit_owner_email">Owner Email</label>
+                <input type="email" id="edit_owner_email" name="owner_email" style="padding:12px;border-radius:8px;" />
+              </div>
+              <div class="form-group">
+                <label for="edit_owner_contact">Owner Contact</label>
+                <input type="text" id="edit_owner_contact" name="owner_contact" style="padding:12px;border-radius:8px;" />
+              </div>
+              <div class="form-group">
+                <label for="edit_store_code">Store Code</label>
+                <input type="text" id="edit_store_code" name="store_code" style="padding:12px;border-radius:8px;" />
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+                <button type="button" id="editStoreCancel" class="cancel-btn">Cancel</button>
+                <button type="submit" id="editStoreSave" class="submit-btn">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(editModalWrapper);
+
+      const editModalEl = document.getElementById('editStoreModal');
+      const editModalClose = document.getElementById('editStoreModalClose');
+      const editCancelBtn = document.getElementById('editStoreCancel');
+      const editForm = document.getElementById('editStoreForm');
+      // track current row id in case hidden input isn't populated
+      let currentEditRowId = null;
+
+      // Attach click listener to remove button to ensure it always invokes the removal logic
+      const removeEditBtn = document.getElementById('removeEditStoreImage');
+      if (removeEditBtn) {
+        removeEditBtn.addEventListener('click', function (e) {
+          e && e.preventDefault && e.preventDefault();
+          if (typeof window.removeEditStoreImage === 'function') {
+            window.removeEditStoreImage();
+            return;
+          }
+          // fallback behavior if global function is missing
+          const input = document.getElementById('editStoreImage');
+          const preview = document.getElementById('editImagePreview');
+          const fileName = document.getElementById('editImageFileName');
+          const removeBtn = document.getElementById('removeEditStoreImage');
+          const uploadBtn = document.getElementById('editUploadBtn');
+          const removeFlag = document.getElementById('edit_remove_image');
+          if (input) input.value = '';
+          if (preview) preview.innerHTML = '<i class="fas fa-image" style="font-size:28px;color:#c7c7c7;"></i>';
+          if (fileName) fileName.textContent = 'No file chosen';
+          if (removeBtn) removeBtn.style.display = 'none';
+          if (removeFlag) removeFlag.value = '1';
+          if (uploadBtn) uploadBtn.style.display = 'inline-block';
+        });
+      }
+
+      function openEditModal(row) {
+        if (!row) return;
+        const cells = row.children;
+        const rid = row.getAttribute('data-store-id') || '';
+        currentEditRowId = rid;
+        const editStoreIdEl = document.getElementById('edit_store_id');
+        if (editStoreIdEl) editStoreIdEl.value = rid;
+        document.getElementById('edit_store_name').value = (cells[1] && cells[1].textContent.trim()) || '';
+        document.getElementById('edit_location').value = row.getAttribute('data-location') || '';
+        document.getElementById('edit_owner_email').value = (cells[3] && cells[3].textContent.trim()) || '';
+        document.getElementById('edit_owner_contact').value = (cells[4] && cells[4].textContent.trim()) || '';
+        document.getElementById('edit_store_code').value = (cells[5] && cells[5].textContent.trim()) || '';
+        // populate image preview if available
+        const imgSrc = row.getAttribute('data-store-image');
+        const preview = document.getElementById('editImagePreview');
+        const fileName = document.getElementById('editImageFileName');
+        const removeBtn = document.getElementById('removeEditStoreImage');
+        const uploadBtn = document.getElementById('editUploadBtn');
+        const removeFlag = document.getElementById('edit_remove_image');
+        const fileInput = document.getElementById('editStoreImage');
+        if (imgSrc) {
+          preview.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = imgSrc;
+          img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+          preview.appendChild(img);
+          if (fileName) fileName.textContent = '';
+          if (removeBtn) removeBtn.style.display = 'inline-block';
+          // always ensure upload button visible so admin can replace image
+          if (uploadBtn) uploadBtn.style.display = 'inline-block';
+          if (removeFlag) removeFlag.value = '';
+        } else {
+          preview.innerHTML = '<i class="fas fa-image" style="font-size:28px;color:#c7c7c7;"></i>';
+          if (fileName) fileName.textContent = 'No file chosen';
+          if (removeBtn) removeBtn.style.display = 'none';
+          // ensure upload button is visible when there's no image
+          if (uploadBtn) uploadBtn.style.display = 'inline-block';
+          if (removeFlag) removeFlag.value = '';
+        }
+        if (fileInput) fileInput.value = '';
+        if (editModalEl) {
+          editModalEl.style.display = 'flex';
+          document.body.classList.add('modal-open');
+        }
+      }
+
+      function closeEditModal() { if (editModalEl) { editModalEl.style.display = 'none'; document.body.classList.remove('modal-open'); } }
+
+      // delegate edit button clicks from table
+      document.addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.edit-btn');
+        if (editBtn) {
+          const tr = editBtn.closest('tr');
+          if (tr) openEditModal(tr);
+        }
+      });
+
+      editModalClose && editModalClose.addEventListener('click', closeEditModal);
+      editCancelBtn && editCancelBtn.addEventListener('click', closeEditModal);
+
+      // submit update (supports optional image upload and removal)
+      if (editForm) {
+        editForm.addEventListener('submit', async function (ev) {
+          ev && ev.preventDefault && ev.preventDefault();
+
+          // ensure we have a store id
+          const storeIdEl = document.getElementById('edit_store_id');
+          const storeIdVal = (storeIdEl && storeIdEl.value) ? storeIdEl.value : currentEditRowId;
+          if (!storeIdVal) {
+            alert('Missing store id. Unable to save changes.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('store_id', storeIdVal);
+          formData.append('store_name', document.getElementById('edit_store_name').value.trim());
+          formData.append('location', document.getElementById('edit_location').value.trim());
+          formData.append('owner_contact', document.getElementById('edit_owner_contact').value.trim());
+          formData.append('store_code', document.getElementById('edit_store_code').value.trim());
+          const removeFlag = document.getElementById('edit_remove_image');
+          if (removeFlag && removeFlag.value) formData.append('remove_image', removeFlag.value);
+          const fileInput = document.getElementById('editStoreImage');
+          const file = fileInput && fileInput.files && fileInput.files[0];
+          if (file) formData.append('storeImage', file);
+
+          try {
+            const res = await fetch('/users/stores/update', {
+              method: 'POST',
+              body: formData
+            });
+
+            let data = {};
+            try { data = await res.json(); } catch (e) { /* ignore non-json response */ }
+
+            if (!res.ok) {
+              alert((data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to update store');
+              return;
+            }
+
+            // Update table row inline
+            const rows = Array.from(document.querySelectorAll('#storesTable tbody tr')).filter(r => !r.classList.contains('no-results'));
+            const row = rows.find(r => r.getAttribute('data-store-id') === String(formData.get('store_id')));
+            if (row) {
+              row.children[1].textContent = formData.get('store_name') || '';
+              row.children[4].textContent = formData.get('owner_contact') || '';
+              row.children[5].textContent = formData.get('store_code') || '';
+              row.setAttribute('data-location', formData.get('location') || '');
+              // handle image update: prefer server-returned URL
+              if (data && data.store_image) {
+                row.setAttribute('data-store-image', data.store_image);
+                const imgEl = row.querySelector('img.store-thumbnail');
+                if (imgEl) imgEl.src = data.store_image;
+                else {
+                  // replace placeholder with image
+                  const td = row.children[0];
+                  td.innerHTML = `<img src="${data.store_image}" alt="Store Image" class="store-thumbnail">`;
+                }
+              } else if (file) {
+                const imgEl = row.querySelector('img.store-thumbnail');
+                const url = URL.createObjectURL(file);
+                if (imgEl) imgEl.src = url;
+                else {
+                  const td = row.children[0];
+                  td.innerHTML = `<img src="${url}" alt="Store Image" class="store-thumbnail">`;
+                }
+              } else if (removeFlag && removeFlag.value === '1') {
+                // removed image -> show placeholder
+                const td = row.children[0];
+                td.innerHTML = `<span class="store-placeholder"><i class="fas fa-store"></i></span>`;
+                row.removeAttribute('data-store-image');
+              }
+            }
+
+            alert((data && data.message) ? data.message : 'Store updated');
+            closeEditModal();
+          } catch (err) {
+            console.error('Error updating store:', err);
+            alert('Unable to update store.');
+          }
+        });
+      }
+    })();
 
     function clearOwnerForm() {
       document.getElementById('addStoreToOwnerForm').reset();

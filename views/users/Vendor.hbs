@@ -9,6 +9,38 @@
     <script src="/js/sidebar.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Modal spacing and header styles to match customer modal */
+        .receipt-content {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            width: 420px;
+            max-width: 95vw;
+            padding: 20px 22px;
+            position: relative;
+            animation: fadeIn 0.18s;
+        }
+        @keyframes fadeIn { from { transform: scale(0.98); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+        .receipt-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+        .receipt-logo { font-size:1.15em;font-weight:600;color:#C72C41;display:flex;align-items:center;gap:8px }
+        .receipt-header .close { font-size:20px;color:#6b7280;cursor:pointer; }
+        .receipt-header .close:hover { color:#C72C41; }
+        .receipt-body { padding: 6px 0 0 0; }
+        .receipt-body label { display:block; font-weight:500; margin-bottom:4px; color:#111827 }
+        /* small button styles matching customer view */
+        .btn-delete-store {
+            background: #fff;
+            color: #7c0f0f;
+            border: 1px solid #fca5a5;
+            width: 32px; height: 32px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition: all 0.15s ease;
+        }
+        .btn-delete-store:hover { background:#fff6f6; transform: translateY(-1px); }
+        .btn-delete-store i { font-size:14px; color:#ef4444; }
+        .btn-edit-store { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; width:32px; height:32px; border-radius:6px; background:#7c0f0f; color:#fff; border:none; cursor:pointer; transition: all 0.15s ease; }
+        .btn-edit-store i { font-size:14px; }
+        .btn-edit-store:hover { background:#5a0a0a; transform: translateY(-1px); }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -32,34 +64,55 @@
         </aside>
 
         <main class="main-content">
-            <div class="header">
-                <div>
+            <div class="header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
                     <a href="/users/UserManagement"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
                     <h1>Vendor Management</h1>
+                </div>
+                <div>
+                    <button id="addVendorBtn" type="button" style="padding:8px 12px;border-radius:8px;background:#065f46;color:#fff;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-user-plus"></i> Add Vendor</button>
                 </div>
             </div>
             
             <div class="tables-section">
+                <div class="table-actions" style="display:flex;justify-content:center;margin-bottom:12px;width:100%;">
+                    <div class="search-wrapper" style="position:relative;width:100%;max-width:720px;">
+                        <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#6b7280;font-size:14px;"></i>
+                        <input id="vendorSearch" type="search" placeholder="Search vendors by name, email, contact or store" style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box;padding-left:36px;min-width:320px;" aria-label="Search vendors">
+                    </div>
+                </div>
                 <div class="table-container">
                     {{#if vendors.length}}
-                    <table class="admin-table">
+                    <table class="admin-table" id="vendorsTable">
                     <thead>
                         <tr>
                         <th>Name</th>
                         <th>Contact Information</th>
                         <th>Email</th>
                         <th>Store</th>
+                        <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#each vendors}}
-                        <tr>
+                        <tr data-username="{{this.username}}" data-user-id="{{this.user_id}}" data-full-name="{{this.first_name}} {{this.last_name}}">
                         <td>{{this.username}}</td>
                         <td>{{this.contact_number}}</td>
                         <td>{{this.user_email}}</td>
                         <td>{{this.store_name}}</td>
+                        <td style="text-align:center;">
+                            <button type="button" class="btn-edit-store edit-btn" aria-label="Edit vendor" style="margin-right:8px;">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn-delete-store delete-btn" aria-label="Delete vendor">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                         </tr>
                         {{/each}}
+                        <tr class="no-results" style="display:none; text-align:center; color:#666;">
+                            <td colspan="5">No matching vendors found</td>
+                        </tr>
                     </tbody>
                     </table>
                     {{else}}
@@ -70,8 +123,370 @@
                     </div>
                     {{/if}}
                 </div>
+                <!-- Hidden server-rendered store options for modal to consume -->
+                <select id="storesOptions" style="display:none;">
+                    {{#each stores}}
+                        <option value="{{this.store_id}}">{{this.store_name}}</option>
+                    {{/each}}
+                </select>
             </div>
         </main>
     </div>
+
+    <div id="globalMessage" role="status" aria-live="polite" style="display:none;position:fixed;right:16px;top:16px;z-index:1100;padding:10px 14px;border-radius:8px;box-shadow:0 6px 18px rgba(2,6,23,0.08);font-size:14px;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('vendorSearch');
+            const table = document.getElementById('vendorsTable');
+            if (!searchInput || !table) return;
+
+            const tbody = table.querySelector('tbody');
+            const noResultsRow = tbody ? tbody.querySelector('.no-results') : null;
+
+            function filterRows() {
+                const query = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+                const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+
+                rows.forEach(row => {
+                    const text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
+                    const match = text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount += 1;
+                });
+
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            searchInput.addEventListener('input', filterRows);
+
+            // Modal handling: Edit opens modal, Delete sends DELETE (vendor)
+            const editModal = document.createElement('div');
+            editModal.innerHTML = `
+              <div id="editVendorModal" class="receipt-modal">
+                <div class="receipt-content">
+                  <div class="receipt-header">
+                    <div class="receipt-logo"><i class="fas fa-user-edit"></i> Edit Vendor</div>
+                    <span class="close" id="editVendorModalClose">&times;</span>
+                  </div>
+                  <div class="receipt-body">
+                    <div id="editVendorMessage" aria-live="polite" style="display:none"></div>
+                    <form id="editVendorForm" onsubmit="event.preventDefault(); return false;">
+                      <div style="display:flex;flex-direction:column;gap:10px;">
+                        <label>Username: <input type="text" id="edit_username_vendor" name="username" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <input type="hidden" id="edit_original_username_vendor" name="original_username" />
+                        <input type="hidden" id="edit_original_user_id_vendor" name="original_user_id" />
+                        <label>Full name: <input type="text" id="edit_full_name_vendor" name="full_name" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <label>Email: <input type="email" id="edit_user_email_vendor" name="user_email" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <label>Contact number: <input type="text" id="edit_contact_number_vendor" name="contact_number" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <label>Store: <select id="edit_vendor_store_id" name="store_id" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"></select></label>
+                      </div>
+                      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+                        <button type="button" id="editVendorCancel" style="padding:8px 12px;border-radius:6px;border:1px solid #d1d5db;background:#f3f4f6;">Cancel</button>
+                        <button type="button" id="editVendorSave" style="padding:8px 12px;border-radius:6px;border:none;background:#7D0006;color:white;">Save</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(editModal);
+
+            const editModalEl = document.getElementById('editVendorModal');
+            const editModalClose = document.getElementById('editVendorModalClose');
+            const editCancel = document.getElementById('editVendorCancel');
+            const editForm = document.getElementById('editVendorForm');
+
+            function openEditModal(row) {
+                const username = row.dataset.username || '';
+                const userId = row.dataset.userId || '';
+                document.getElementById('edit_username_vendor').value = username;
+                const originalInput = document.getElementById('edit_original_username_vendor');
+                if (originalInput) originalInput.value = username;
+                const originalIdInput = document.getElementById('edit_original_user_id_vendor');
+                if (originalIdInput) originalIdInput.value = userId;
+                // Fill fields from row cells: username (0), contact(1), email(2), store(3)
+                document.getElementById('edit_full_name_vendor').value = row.dataset.fullName || '';
+                document.getElementById('edit_user_email_vendor').value = row.children[2].textContent.trim();
+                document.getElementById('edit_contact_number_vendor').value = row.children[1].textContent.trim();
+                // populate store select and set selected
+                const sel = document.getElementById('edit_vendor_store_id');
+                const template = document.getElementById('storesOptions');
+                if (sel && template) {
+                    sel.innerHTML = '<option value="" disabled>Select store</option>' + template.innerHTML;
+                    // try to match by visible store name
+                    const visibleStore = row.children[3].textContent.trim();
+                    if (visibleStore) {
+                        const opt = Array.from(sel.options).find(o => o.textContent.trim() === visibleStore);
+                        if (opt) sel.value = opt.value;
+                    }
+                }
+                editModalEl.classList.add('open');
+                document.body.classList.add('modal-open');
+            }
+
+            function closeEditModal() {
+                editModalEl.classList.remove('open');
+                document.body.classList.remove('modal-open');
+            }
+
+            function showMessage(type, text) {
+                const msgEl = document.getElementById('editVendorMessage');
+                if (!msgEl) return;
+                msgEl.textContent = text;
+                msgEl.style.display = 'block';
+                if (type === 'success') {
+                    msgEl.style.color = '#065f46'; msgEl.style.background = '#ecfdf5'; msgEl.style.border = '1px solid #34d399';
+                } else {
+                    msgEl.style.color = '#7f1d1d'; msgEl.style.background = '#fff1f2'; msgEl.style.border = '1px solid #fca5a5';
+                }
+                if (msgEl._hideTimeout) clearTimeout(msgEl._hideTimeout);
+                msgEl._hideTimeout = setTimeout(() => { msgEl.style.display = 'none'; }, 3200);
+            }
+
+            function showGlobalMessage(type, text) {
+                const el = document.getElementById('globalMessage');
+                if (!el) return;
+                el.textContent = text; el.style.display = 'block';
+                if (type === 'success') { el.style.background = '#ecfdf5'; el.style.color = '#065f46'; el.style.border = '1px solid #34d399'; }
+                else { el.style.background = '#fff1f2'; el.style.color = '#7f1d1d'; el.style.border = '1px solid #fca5a5'; }
+                if (el._hideTimeout) clearTimeout(el._hideTimeout);
+                el._hideTimeout = setTimeout(() => { el.style.display = 'none'; }, 3500);
+            }
+
+            editModalClose && editModalClose.addEventListener('click', closeEditModal);
+            editCancel && editCancel.addEventListener('click', closeEditModal);
+
+            tbody.addEventListener('click', function (e) {
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) {
+                    const tr = editBtn.closest('tr');
+                    if (tr) openEditModal(tr);
+                    return;
+                }
+
+                const delBtn = e.target.closest('.delete-btn');
+                if (delBtn) {
+                    const tr = delBtn.closest('tr');
+                    const username = tr && tr.dataset && tr.dataset.username;
+                    const userId = tr && tr.dataset && tr.dataset.userId;
+                    const displayName = username || userId || 'vendor';
+                    if (!confirm('Delete vendor "' + displayName + '"? This action cannot be undone.')) return;
+
+                    const deleteUrl = userId ? '/users/id/' + encodeURIComponent(userId) : '/users/' + encodeURIComponent(username);
+
+                    fetch(deleteUrl, { method: 'DELETE' })
+                        .then(async res => {
+                            let data = {};
+                            try {
+                                if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                                    data = await res.json();
+                                }
+                            } catch (e) {}
+
+                            if (res.ok) {
+                                tr.remove();
+                                const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+                                if (rows.length === 0 && noResultsRow) noResultsRow.style.display = '';
+                                showGlobalMessage('success', (data && data.message) ? data.message : 'Vendor deleted');
+                            } else {
+                                const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to delete vendor';
+                                showGlobalMessage('error', msg);
+                            }
+                        })
+                        .catch(() => { showGlobalMessage('error', 'Unable to perform delete request'); });
+                }
+            });
+
+            // Handle edit form submit via Save button
+            if (editForm) {
+                editForm.addEventListener('submit', async function (ev) {
+                    ev && ev.preventDefault && ev.preventDefault();
+                });
+                const editSaveBtn = document.getElementById('editVendorSave');
+                if (editSaveBtn) {
+                    editSaveBtn.addEventListener('click', async function (e) {
+                        e.preventDefault();
+                        const newUsername = document.getElementById('edit_username_vendor').value.trim();
+                        const originalUsername = document.getElementById('edit_original_username_vendor').value || newUsername;
+                        const originalUserId = document.getElementById('edit_original_user_id_vendor').value || null;
+                        const payload = {
+                            username: newUsername,
+                            full_name: document.getElementById('edit_full_name_vendor').value.trim(),
+                            user_email: document.getElementById('edit_user_email_vendor').value.trim(),
+                            contact_number: document.getElementById('edit_contact_number_vendor').value.trim(),
+                            store_id: document.getElementById('edit_vendor_store_id').value || null,
+                            original_username: originalUsername,
+                            original_user_id: originalUserId
+                        };
+                        try {
+                            const res = await fetch('/users/update', {
+                                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                            });
+                            let data = null;
+                            if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) data = await res.json();
+                            else { const txt = await res.text(); data = txt ? { message: txt } : {}; }
+                            if (!res.ok) { const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to update vendor'; showMessage('error', msg); return; }
+
+                            const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+                            const rowById = payload.original_user_id ? rows.find(r => r.dataset && r.dataset.userId === String(payload.original_user_id)) : null;
+                            const row = rowById || rows.find(r => r.dataset && r.dataset.username === originalUsername);
+                            if (row) {
+                                row.dataset.username = payload.username;
+                                row.children[0].textContent = payload.username;
+                                row.children[1].textContent = payload.contact_number;
+                                row.children[2].textContent = payload.user_email;
+                                // update store name by looking up option text
+                                const storeOpt = document.getElementById('storesOptions').querySelector('option[value="' + (payload.store_id || '') + '"]');
+                                if (storeOpt) row.children[3].textContent = storeOpt.textContent;
+                            }
+
+                            showMessage('success', 'Vendor saved successfully');
+                            setTimeout(closeEditModal, 900);
+                        } catch (err) {
+                            console.error('Error updating vendor:', err);
+                            showMessage('error', 'Unable to update vendor. Please check the server or try again.');
+                        }
+                    });
+                }
+            }
+
+            // --- Add Vendor modal & logic ---
+            const addVendorBtn = document.getElementById('addVendorBtn');
+            function createAddModal() {
+                const addModal = document.createElement('div');
+                addModal.innerHTML = `
+                    <div id="addVendorModal" class="receipt-modal">
+                        <div class="receipt-content">
+                            <div class="receipt-header">
+                                <div class="receipt-logo"><i class="fas fa-user-plus"></i> Add Vendor</div>
+                                <span class="close" id="addVendorModalClose">&times;</span>
+                            </div>
+                            <div class="receipt-body">
+                                <div id="addVendorMessage" aria-live="polite" style="display:none;margin-bottom:8px;padding:8px;border-radius:6px;font-size:13px;"></div>
+                                <form id="addVendorForm" onsubmit="event.preventDefault(); return false;">
+                                    <div style="display:flex;flex-direction:column;gap:10px;">
+                                        <label>Password: <input type="text" id="add_vendor_password" name="password" value="changemeplease" readonly style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;" autocomplete="new-password"/></label>
+                                        <div style="font-size:12px;color:#374151;margin-top:4px;">Default password shown for reference — user will be required to change it on first login.</div>
+                                        <label>Full name: <input type="text" id="add_vendor_full_name" name="full_name" required style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                        <label>Email: <input type="email" id="add_vendor_user_email" name="user_email" required style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                        <label>Contact number: <input type="text" id="add_vendor_contact_number" name="contact_number" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                        <label>Store: <select id="add_vendor_store_id" name="store_id" required style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"></select></label>
+                                    </div>
+                                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+                                        <button type="button" id="addVendorCancel" style="padding:8px 12px;border-radius:6px;border:1px solid #d1d5db;background:#f3f4f6;">Cancel</button>
+                                        <button type="submit" id="addVendorSave" style="padding:8px 12px;border-radius:6px;border:none;background:#065f46;color:white;">Create</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(addModal);
+                // populate store select from hidden server-rendered options
+                const sel = document.getElementById('add_vendor_store_id');
+                const template = document.getElementById('storesOptions');
+                if (sel && template) {
+                    sel.innerHTML = '<option value="" disabled selected>Select store</option>' + template.innerHTML;
+                }
+                return document.getElementById('addVendorModal');
+            }
+
+            let addVendorModalEl = null;
+            async function fetchStoresOptions(selectEl) {
+                if (!selectEl) return;
+                try {
+                    const res = await fetch('/users/stores');
+                    // The /users/stores route renders a page; instead fetch via reports or API if available.
+                    // Fallback: try an API endpoint that returns JSON owners/stores — if not available, keep empty.
+                } catch (err) {
+                    // ignore, optional field
+                }
+            }
+
+            function openAddVendorModal() {
+                if (!addVendorModalEl) addVendorModalEl = createAddModal();
+                const el = addVendorModalEl;
+                el.classList.add('open');
+                document.body.classList.add('modal-open');
+                const closeBtn = document.getElementById('addVendorModalClose');
+                const addCancel = document.getElementById('addVendorCancel');
+                const addForm = document.getElementById('addVendorForm');
+                const addMessage = document.getElementById('addVendorMessage');
+
+                if (addMessage) { addMessage.style.display = 'none'; addMessage.textContent = ''; }
+
+                closeBtn && closeBtn.addEventListener('click', () => { el.classList.remove('open'); document.body.classList.remove('modal-open'); if (addForm) addForm.reset(); });
+                addCancel && addCancel.addEventListener('click', () => { el.classList.remove('open'); document.body.classList.remove('modal-open'); if (addForm) addForm.reset(); });
+
+                if (addForm && !addForm._bound) {
+                    addForm._bound = true;
+                    addForm.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+                        const payload = {
+                            password: document.getElementById('add_vendor_password').value || 'changemeplease',
+                            full_name: document.getElementById('add_vendor_full_name').value.trim(),
+                            user_email: document.getElementById('add_vendor_user_email').value.trim(),
+                            contact_number: document.getElementById('add_vendor_contact_number').value.trim(),
+                            store_id: document.getElementById('add_vendor_store_id').value || null
+                        };
+
+                        try {
+                            const res = await fetch('/users/vendor', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            let data = {};
+                            if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                                data = await res.json();
+                            }
+                            const msgEl = document.getElementById('addVendorMessage');
+                            if (!res.ok) {
+                                const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to create vendor';
+                                if (msgEl) { msgEl.style.display = 'block'; msgEl.style.background = '#fff1f2'; msgEl.style.color = '#7f1d1d'; msgEl.style.border = '1px solid #fca5a5'; msgEl.textContent = msg; }
+                                return;
+                            }
+
+                            const newUser = data && data.user ? data.user : payload;
+                            const tbodyEl = document.querySelector('#vendorsTable tbody');
+                            if (tbodyEl) {
+                                const tr = document.createElement('tr');
+                                tr.dataset.username = newUser.username || payload.username || newUser.user_email;
+                                tr.dataset.userId = newUser.user_id || '';
+                                tr.innerHTML = `
+                                    <td>${(newUser.username || newUser.user_email) || ''}</td>
+                                    <td>${(newUser.contact_number || payload.contact_number) || ''}</td>
+                                    <td>${(newUser.user_email || payload.user_email) || ''}</td>
+                                    <td>${(newUser.store_name || '') || ''}</td>
+                                `;
+                                const noRes = tbodyEl.querySelector('.no-results');
+                                if (noRes) tbodyEl.insertBefore(tr, noRes);
+                                else tbodyEl.appendChild(tr);
+                            }
+
+                            if (msgEl) { msgEl.style.display = 'block'; msgEl.style.background = '#ecfdf5'; msgEl.style.color = '#065f46'; msgEl.style.border = '1px solid #34d399'; msgEl.textContent = (data && data.message) ? data.message : 'Vendor created'; }
+                            // close modal after a short delay and reset
+                            setTimeout(() => {
+                                el.classList.remove('open');
+                                document.body.classList.remove('modal-open');
+                                if (addForm) addForm.reset();
+                            }, 900);
+                        } catch (err) {
+                            console.error('Error creating vendor:', err);
+                            const msgEl = document.getElementById('addVendorMessage');
+                            if (msgEl) { msgEl.style.display = 'block'; msgEl.style.background = '#fff1f2'; msgEl.style.color = '#7f1d1d'; msgEl.style.border = '1px solid #fca5a5'; msgEl.textContent = 'Unable to create vendor'; }
+                        }
+                    });
+                }
+            }
+
+            addVendorBtn && addVendorBtn.addEventListener('click', openAddVendorModal);
+        });
+    </script>
+
 </body>
-</html> 
+</html>

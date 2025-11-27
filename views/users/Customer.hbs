@@ -9,6 +9,76 @@
     <script src="/js/sidebar.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/transactionReceipt.css">
+        <link rel="stylesheet" href="/css/OwnerStyles.css">
+        <style>
+            /* small local rule to match Owner 'stores' delete appearance */
+            .btn-delete-store {
+                background: #fff;
+                color: #7c0f0f;
+                border: 1px solid #fca5a5;
+                width: 32px;
+                height: 32px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.15s ease;
+            }
+            .btn-delete-store:hover { background:#fff6f6; transform: translateY(-1px); }
+            .btn-delete-store i { font-size:14px; color:#ef4444; }
+            /* ensure edit button matches delete button alignment and sizing */
+            .btn-edit-store {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                vertical-align: middle;
+                width: 32px;
+                height: 32px;
+                border-radius: 6px;
+                background: #7c0f0f;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+            .btn-edit-store i { font-size:14px; }
+            .btn-edit-store:hover { background:#5a0a0a; transform: translateY(-1px); }
+            /* Edit modal action buttons hover */
+            #editSave, #editCancel {
+                transition: all 0.12s ease;
+            }
+            #editSave:hover {
+                transform: translateY(-2px);
+                filter: brightness(0.95);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            }
+            #editCancel:hover {
+                transform: translateY(-2px);
+                background: #eef2ff; /* subtle tint */
+            }
+            /* Inline message inside modal */
+            #editMessage {
+                display: none;
+                padding: 8px 10px;
+                border-radius: 6px;
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+            /* Global message (for delete / global actions) */
+            #globalMessage {
+                position: fixed;
+                right: 16px;
+                top: 16px;
+                z-index: 1100;
+                display: none;
+                padding: 10px 14px;
+                border-radius: 8px;
+                box-shadow: 0 6px 18px rgba(2,6,23,0.08);
+                font-size: 14px;
+            }
+        </style>
 </head>
 <body>
     <div class="container">
@@ -32,34 +102,55 @@
         </aside>
 
         <main class="main-content">
-            <div class="header">
-                <div>
+            <div class="header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
                     <a href="/users/UserManagement"><i class="fas fa-arrow-left" style="color:#000;"></i></a>
                     <h1>Customer Management</h1>
+                </div>
+                <div>
+                    <button id="addCustomerBtn" type="button" style="padding:8px 12px;border-radius:8px;background:#065f46;color:#fff;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-user-plus"></i> Add Customer</button>
                 </div>
             </div>
             
             <div class="tables-section">
+                <div class="table-actions" style="display:flex;justify-content:center;margin-bottom:12px;width:100%;">
+                    <div class="search-wrapper" style="position:relative;width:100%;max-width:720px;">
+                        <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#6b7280;font-size:14px;"></i>
+                        <input id="customerSearch" type="search" placeholder="Search customers by username, name, email or contact" style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box;padding-left:36px;min-width:320px;" aria-label="Search customers">
+                    </div>
+                </div>
                 <div class="table-container">
                     {{#if customers.length}}
-                    <table class="admin-table">
+                    <table class="admin-table" id="customersTable">
                         <thead>
                             <tr>
                                 <th>Username</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Contact Number</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {{#each customers}}
-                            <tr>
+                            <tr data-username="{{this.username}}" data-user-id="{{this.user_id}}">
                                 <td>{{this.username}}</td>
                                 <td>{{this.full_name}}</td>
                                 <td>{{this.user_email}}</td>
                                 <td>{{this.contact_number}}</td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="btn-edit-store edit-btn" aria-label="Edit customer" style="margin-right:8px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn-delete-store delete-btn" aria-label="Delete customer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
                             </tr>
                             {{/each}}
+                            <tr class="no-results" style="display:none; text-align:center; color:#666;">
+                                <td colspan="5">No matching customers found</td>
+                            </tr>
                         </tbody>
                     </table>
                     {{else}}
@@ -71,7 +162,439 @@
                     {{/if}}
                 </div>
             </div>
+                <!-- Add Customer action originally here (moved to header) -->
         </main>
     </div>
+
+    <!-- Add Customer Modal placeholder (created dynamically) -->
+
+    <div id="globalMessage" role="status" aria-live="polite"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('customerSearch');
+            const table = document.getElementById('customersTable');
+            if (!searchInput || !table) return;
+
+            const tbody = table.querySelector('tbody');
+            const noResultsRow = tbody.querySelector('.no-results');
+
+            function filterRows() {
+                const query = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+                const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+
+                rows.forEach(row => {
+                    const text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
+                    const match = text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount += 1;
+                });
+
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            searchInput.addEventListener('input', filterRows);
+
+            // Modal handling: Edit opens modal, Delete sends DELETE
+            const editModal = document.createElement('div');
+            editModal.innerHTML = `
+              <div id="editModal" class="receipt-modal" style="display:none;">
+                <div class="receipt-content">
+                  <div class="receipt-header">
+                    <div class="receipt-logo"><i class="fas fa-user-edit"></i> Edit Customer</div>
+                    <span class="close" id="editModalClose">&times;</span>
+                  </div>
+                                    <div class="receipt-body">
+                                        <div id="editMessage" aria-live="polite"></div>
+                                        <form id="editCustomerForm" onsubmit="event.preventDefault(); return false;">
+                      <div style="display:flex;flex-direction:column;gap:10px;">
+                        <label>Username: <input type="text" id="edit_username" name="username" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <input type="hidden" id="edit_original_username" name="original_username" />
+                        <input type="hidden" id="edit_original_user_id" name="original_user_id" />
+                        <label>Full name: <input type="text" id="edit_full_name" name="full_name" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <label>Email: <input type="email" id="edit_user_email" name="user_email" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                        <label>Contact number: <input type="text" id="edit_contact_number" name="contact_number" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                      </div>
+                                            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+                                                <button type="button" id="editCancel" style="padding:8px 12px;border-radius:6px;border:1px solid #d1d5db;background:#f3f4f6;">Cancel</button>
+                                                <button type="button" id="editSave" style="padding:8px 12px;border-radius:6px;border:none;background:#7D0006;color:white;">Save</button>
+                                            </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(editModal);
+
+            const editModalEl = document.getElementById('editModal');
+            const editModalClose = document.getElementById('editModalClose');
+            const editCancel = document.getElementById('editCancel');
+            const editForm = document.getElementById('editCustomerForm');
+
+            function openEditModal(row) {
+                const username = row.dataset.username || '';
+                const userId = row.dataset.userId || '';
+                document.getElementById('edit_username').value = username;
+                // store the original username and user_id so server can identify the record
+                const originalInput = document.getElementById('edit_original_username');
+                if (originalInput) originalInput.value = username;
+                const originalIdInput = document.getElementById('edit_original_user_id');
+                if (originalIdInput) originalIdInput.value = userId;
+                document.getElementById('edit_full_name').value = row.children[1].textContent.trim();
+                document.getElementById('edit_user_email').value = row.children[2].textContent.trim();
+                document.getElementById('edit_contact_number').value = row.children[3].textContent.trim();
+                editModalEl.style.display = 'flex';
+            }
+
+            function closeEditModal() {
+                editModalEl.style.display = 'none';
+            }
+
+            function showMessage(type, text) {
+                const msgEl = document.getElementById('editMessage');
+                if (!msgEl) return;
+                msgEl.textContent = text;
+                if (type === 'success') {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = '#065f46';
+                    msgEl.style.background = '#ecfdf5';
+                    msgEl.style.border = '1px solid #34d399';
+                } else {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = '#7f1d1d';
+                    msgEl.style.background = '#fff1f2';
+                    msgEl.style.border = '1px solid #fca5a5';
+                }
+                // clear any previous timeout
+                if (msgEl._hideTimeout) clearTimeout(msgEl._hideTimeout);
+                msgEl._hideTimeout = setTimeout(() => {
+                    msgEl.style.display = 'none';
+                }, 3200);
+            }
+
+            function showGlobalMessage(type, text) {
+                const el = document.getElementById('globalMessage');
+                if (!el) return;
+                el.textContent = text;
+                el.style.display = 'block';
+                if (type === 'success') {
+                    el.style.background = '#ecfdf5';
+                    el.style.color = '#065f46';
+                    el.style.border = '1px solid #34d399';
+                } else {
+                    el.style.background = '#fff1f2';
+                    el.style.color = '#7f1d1d';
+                    el.style.border = '1px solid #fca5a5';
+                }
+                if (el._hideTimeout) clearTimeout(el._hideTimeout);
+                el._hideTimeout = setTimeout(() => { el.style.display = 'none'; }, 3500);
+            }
+
+            editModalClose && editModalClose.addEventListener('click', closeEditModal);
+            editCancel && editCancel.addEventListener('click', closeEditModal);
+
+            tbody.addEventListener('click', function (e) {
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) {
+                    const tr = editBtn.closest('tr');
+                    if (tr) openEditModal(tr);
+                    return;
+                }
+
+                const delBtn = e.target.closest('.delete-btn');
+                if (delBtn) {
+                    const tr = delBtn.closest('tr');
+                    const username = tr && tr.dataset && tr.dataset.username;
+                    const userId = tr && tr.dataset && tr.dataset.userId;
+                    const displayName = username || userId || 'customer';
+                    if (!confirm('Delete customer "' + displayName + '"? This action cannot be undone.')) return;
+
+                    // Prefer delete-by-id to avoid special-character issues in usernames
+                    const deleteUrl = userId ? '/users/id/' + encodeURIComponent(userId) : '/users/' + encodeURIComponent(username);
+
+                    fetch(deleteUrl, { method: 'DELETE' })
+                        .then(async res => {
+                            let data = {};
+                            try {
+                                if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                                    data = await res.json();
+                                }
+                            } catch (e) {
+                                // ignore
+                            }
+
+                            if (res.ok) {
+                                tr.remove();
+                                const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+                                if (rows.length === 0 && noResultsRow) {
+                                    noResultsRow.style.display = '';
+                                }
+                                showGlobalMessage('success', (data && data.message) ? data.message : 'Customer deleted');
+                            } else {
+                                const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to delete customer';
+                                showGlobalMessage('error', msg);
+                            }
+                        })
+                        .catch(() => {
+                            showGlobalMessage('error', 'Unable to perform delete request');
+                        });
+                }
+            });
+
+            // Handle form submit -> send PUT to update (robust async handler)
+            if (editForm) {
+                editForm.addEventListener('submit', async function (ev) {
+                    ev && ev.preventDefault && ev.preventDefault();
+                            const newUsername = document.getElementById('edit_username').value.trim();
+                        const originalUsername = document.getElementById('edit_original_username').value || newUsername;
+                        const originalUserId = document.getElementById('edit_original_user_id').value || null;
+
+                        const payload = {
+                            username: newUsername,
+                            full_name: document.getElementById('edit_full_name').value.trim(),
+                            user_email: document.getElementById('edit_user_email').value.trim(),
+                            contact_number: document.getElementById('edit_contact_number').value.trim(),
+                            original_username: originalUsername, // kept for backward compatibility
+                            original_user_id: originalUserId
+                        };
+
+                    try {
+                        const res = await fetch('/users/update', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        // If server returns non-JSON (204/empty), handle accordingly
+                        let data = null;
+                        if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                            data = await res.json();
+                        } else {
+                            // try to read text for debugging/error message
+                            const txt = await res.text();
+                            data = txt ? { message: txt } : {};
+                        }
+
+                        if (!res.ok) {
+                            const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to update customer';
+                            showMessage('error', msg);
+                            return;
+                        }
+
+                        // Find the row by dataset user id if available, fallback to username
+                        const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('no-results'));
+                        const rowById = payload.original_user_id ? rows.find(r => r.dataset && r.dataset.userId === String(payload.original_user_id)) : null;
+                        const row = rowById || rows.find(r => r.dataset && r.dataset.username === originalUsername);
+
+                        if (row) {
+                            row.dataset.username = payload.username;
+                            row.children[0].textContent = payload.username;
+                            row.children[1].textContent = payload.full_name;
+                            row.children[2].textContent = payload.user_email;
+                            row.children[3].textContent = payload.contact_number;
+                        } else {
+                            // Row not found visually — it's still OK: close modal and user can refresh
+                            console.warn('Updated user but row not found for', originalUsername);
+                        }
+
+                        showMessage('success', 'Customer saved successfully');
+                        // close after short delay so user can see the confirmation
+                        setTimeout(closeEditModal, 900);
+                    } catch (err) {
+                        console.error('Error updating user:', err);
+                        showMessage('error', 'Unable to update customer. Please check the server or try again.');
+                    }
+                });
+
+                // Also bind the Save button click to trigger the same submit handler
+                const editSaveBtn = document.getElementById('editSave');
+                if (editSaveBtn) {
+                    editSaveBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        // trigger form submit event which our handler listens to
+                        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                        editForm.dispatchEvent(submitEvent);
+                    });
+                }
+            
+                        // --- Add Customer modal & logic ---
+                        const addCustomerBtn = document.getElementById('addCustomerBtn');
+                        function createAddModal() {
+                                const addModal = document.createElement('div');
+                                addModal.innerHTML = `
+                                    <div id="addModal" class="receipt-modal" style="display:none;">
+                                        <div class="receipt-content">
+                                            <div class="receipt-header">
+                                                <div class="receipt-logo"><i class="fas fa-user-plus"></i> Add Customer</div>
+                                                <span class="close" id="addModalClose">&times;</span>
+                                            </div>
+                                            <div class="receipt-body">
+                                                <div id="addMessage" aria-live="polite" style="display:none;margin-bottom:8px;padding:8px;border-radius:6px;font-size:13px;"></div>
+                                                <form id="addCustomerForm" onsubmit="event.preventDefault(); return false;">
+                                                    <div style="display:flex;flex-direction:column;gap:10px;">
+                                                        <!-- Username removed: server will assign username or use email -->
+                                                        <!-- Show the default password to the admin but keep it read-only (server will assign it) -->
+                                                        <label>Password: <input type="text" id="add_password" name="password" value="changemeplease" readonly style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;" autocomplete="new-password"/></label>
+                                                        <div style="font-size:12px;color:#374151;margin-top:4px;">Default password shown for reference — user will be required to change it on first login.</div>
+                                                        <label>Full name: <input type="text" id="add_full_name" name="full_name" required style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                                        <label>Email: <input type="email" id="add_user_email" name="user_email" required style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                                        <label>Contact number: <input type="text" id="add_contact_number" name="contact_number" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;"/></label>
+                                                    </div>
+                                                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+                                                        <button type="button" id="addCancel" style="padding:8px 12px;border-radius:6px;border:1px solid #d1d5db;background:#f3f4f6;">Cancel</button>
+                                                        <button type="submit" id="addSave" style="padding:8px 12px;border-radius:6px;border:none;background:#065f46;color:white;">Create</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                document.body.appendChild(addModal);
+                                return document.getElementById('addModal');
+                        }
+
+                        let addModalEl = null;
+                        function openAddModal() {
+                                if (!addModalEl) addModalEl = createAddModal();
+                                const el = addModalEl;
+                                el.style.display = 'flex';
+                                // wire handlers
+                                const closeBtn = document.getElementById('addModalClose');
+                                const addCancel = document.getElementById('addCancel');
+                                const addForm = document.getElementById('addCustomerForm');
+                                const addMessage = document.getElementById('addMessage');
+                                // hide any previous message when opening the modal for a fresh create
+                                if (addMessage) {
+                                    addMessage.style.display = 'none';
+                                    addMessage.textContent = '';
+                                }
+                                closeBtn && closeBtn.addEventListener('click', () => {
+                                    el.style.display = 'none';
+                                    if (addForm) {
+                                        addForm.reset();
+                                        const pw = document.getElementById('add_password');
+                                        if (pw) pw.value = 'changemeplease';
+                                    }
+                                    if (addMessage) { addMessage.style.display = 'none'; addMessage.textContent = ''; }
+                                });
+                                addCancel && addCancel.addEventListener('click', () => {
+                                    el.style.display = 'none';
+                                    if (addForm) {
+                                        addForm.reset();
+                                        const pw2 = document.getElementById('add_password');
+                                        if (pw2) pw2.value = 'changemeplease';
+                                    }
+                                    if (addMessage) { addMessage.style.display = 'none'; addMessage.textContent = ''; }
+                                });
+
+                                if (addForm && !addForm._bound) {
+                                    addForm._bound = true;
+                                    // ensure form cleared when first bound
+                                    addForm.reset();
+                                    const pw = document.getElementById('add_password');
+                                    if (pw) pw.value = 'changemeplease';
+                                    addForm.addEventListener('submit', async function (e) {
+                                    e.preventDefault();
+                                            const payload = {
+                                            // Username removed from form; server will derive or assign one (e.g., from email)
+                                            // password intentionally omitted so server will assign default 'changemeplease'
+                                            full_name: document.getElementById('add_full_name').value.trim(),
+                                            user_email: document.getElementById('add_user_email').value.trim(),
+                                            contact_number: document.getElementById('add_contact_number').value.trim()
+                                        };
+                                                try {
+                                                        const res = await fetch('/users', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify(payload)
+                                                        });
+                                                        let data = {};
+                                                        if (res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                                                                data = await res.json();
+                                                        }
+                                                        if (!res.ok) {
+                                                                const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to create user';
+                                                                addMessage.style.display = 'block';
+                                                                addMessage.style.background = '#fff1f2';
+                                                                addMessage.style.color = '#7f1d1d';
+                                                                addMessage.style.border = '1px solid #fca5a5';
+                                                                addMessage.textContent = msg;
+                                                                return;
+                                                        }
+
+                                                        // success: append new row to table
+                                                        const newUser = data && data.user ? data.user : payload;
+                                                        const tbodyEl = document.querySelector('#customersTable tbody');
+                                                        if (tbodyEl) {
+                                                                const tr = document.createElement('tr');
+                                                                tr.dataset.username = newUser.username || payload.username;
+                                                                tr.dataset.userId = newUser.user_id || newUser.userId || '';
+                                                                tr.innerHTML = `
+                                                                        <td>${(newUser.username || payload.username) || ''}</td>
+                                                                        <td>${(newUser.full_name || payload.full_name) || ''}</td>
+                                                                        <td>${(newUser.user_email || payload.user_email) || ''}</td>
+                                                                        <td>${(newUser.contact_number || payload.contact_number) || ''}</td>
+                                                                        <td style="text-align:center;">
+                                                                                <button type="button" class="btn-edit-store edit-btn" aria-label="Edit customer" style="margin-right:8px;"><i class="fas fa-edit"></i></button>
+                                                                                <button type="button" class="btn-delete-store delete-btn" aria-label="Delete customer"><i class="fas fa-trash"></i></button>
+                                                                        </td>
+                                                                `;
+                                                                // insert before .no-results if present
+                                                                const noRes = tbodyEl.querySelector('.no-results');
+                                                                if (noRes) tbodyEl.insertBefore(tr, noRes);
+                                                                else tbodyEl.appendChild(tr);
+                                                        }
+
+                                                        // show success (do not clear inputs here; clear only on explicit user-close)
+                                                        const msgEl = document.getElementById('addMessage');
+                                                        if (msgEl) {
+                                                            msgEl.style.display = 'block';
+                                                            msgEl.style.background = '#ecfdf5';
+                                                            msgEl.style.color = '#065f46';
+                                                            msgEl.style.border = '1px solid #34d399';
+                                                            msgEl.textContent = (data && data.message) ? data.message : 'Customer created';
+                                                        }
+                                                        // keep modal open so admin can continue or explicitly close it
+                                                } catch (err) {
+                                                        addMessage.style.display = 'block';
+                                                        addMessage.style.background = '#fff1f2';
+                                                        addMessage.style.color = '#7f1d1d';
+                                                        addMessage.style.border = '1px solid #fca5a5';
+                                                        addMessage.textContent = 'Unable to create user';
+                                                }
+                                        });
+                                }
+                                // ensure modal inputs are cleared each time modal is opened
+                                const addCancelBtn = document.getElementById('addCancel');
+                                const addCloseBtn = document.getElementById('addModalClose');
+                                if (addCancelBtn) addCancelBtn.addEventListener('click', () => {
+                                    el.style.display = 'none';
+                                    if (addForm) {
+                                        addForm.reset();
+                                        const pw3 = document.getElementById('add_password');
+                                        if (pw3) pw3.value = 'changemeplease';
+                                    }
+                                    const m = document.getElementById('addMessage');
+                                    if (m) { m.style.display = 'none'; m.textContent = ''; }
+                                });
+                                if (addCloseBtn) addCloseBtn.addEventListener('click', () => {
+                                    el.style.display = 'none';
+                                    if (addForm) {
+                                        addForm.reset();
+                                        const pw4 = document.getElementById('add_password');
+                                        if (pw4) pw4.value = 'changemeplease';
+                                    }
+                                    const m2 = document.getElementById('addMessage');
+                                    if (m2) { m2.style.display = 'none'; m2.textContent = ''; }
+                                });
+                        }
+
+                        addCustomerBtn && addCustomerBtn.addEventListener('click', openAddModal);
+            }
+        });
+    </script>
 </body>
 </html>

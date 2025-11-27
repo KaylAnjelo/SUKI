@@ -2567,3 +2567,95 @@ body.modal-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* === Styles moved from views/users/Store.hbs === */
+.store-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+}
+.store-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #7c7c7c;
+}
+/* Match customer management action button styles */
+.btn-delete-store {
+  background: #fff;
+  color: #7c0f0f;
+  border: 1px solid #fca5a5;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-delete-store:hover { background:#fff6f6; transform: translateY(-1px); }
+.btn-delete-store i { font-size:14px; color:#ef4444; }
+
+.btn-edit-store {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #7c0f0f;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-right: 8px;
+}
+.btn-edit-store i { font-size:14px; }
+.btn-edit-store:hover { background:#5a0a0a; transform: translateY(-1px); }
+/* Improve modal & form visuals to match app style */
+.receipt-logo { color: #b91c1c; font-weight:700; display:flex;align-items:center;gap:10px;font-size:18px; }
+.receipt-logo i { background:#fee2e2;color:#b91c1c;padding:8px;border-radius:50%;font-size:16px; }
+.receipt-header .close { font-size:20px;color:#6b7280;cursor:pointer; }
+.receipt-body .form-group label { display:block;margin-bottom:6px;color:#374151;font-weight:600;font-size:14px; }
+.receipt-body .form-group input { width:100%; padding:12px 14px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; box-sizing:border-box; }
+.receipt-body .form-group input:focus { outline:none; box-shadow:0 6px 20px rgba(124,15,15,0.06); border-color:#7c0f0f; }
+.cancel-btn { background:#fff;color:#111;border:1px solid #d1d5db;padding:8px 14px;border-radius:8px; }
+.submit-btn { background:#7c0f0f;color:#fff;padding:8px 14px;border-radius:8px;border:none; }
+.upload-btn { padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer; }
+#editImagePreviewContainer { border:1px solid #eef2f2; }
+#editImagePreviewContainer img { width:100%;height:100%;object-fit:cover;display:block; }
+.store-thumbnail { width:56px;height:56px;border-radius:8px; }
+/* === End moved styles === */
+
+/* --- Edit Store modal: improved image editor UI --- */
+.edit-uploader { display:flex; gap:12px; align-items:flex-start; flex-direction:column; }
+.edit-preview { position:relative; width:100%; height:150px; max-width:100%; border-radius:8px; overflow:hidden; background:#f3f4f6; display:flex; align-items:center; justify-content:center; }
+.edit-preview-inner img { width:100%; height:100%; object-fit:cover; display:block; }
+.edit-preview-overlay { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; gap:8px; padding:8px; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.28) 100%); opacity:0; transition:opacity 0.18s ease; }
+.edit-preview:hover .edit-preview-overlay, .edit-preview:focus-within .edit-preview-overlay { opacity:1; }
+.icon-btn { background: rgba(255,255,255,0.95); border: none; width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.12); }
+.icon-btn i { color:#7c0f0f; font-size:14px; }
+.icon-btn:hover { transform: translateY(-2px); }
+.edit-change { background: white; }
+.edit-remove { background: white; }
+#editImageFileName { font-size:13px; color:#6b7280; }
+
+/* make overlay buttons slightly smaller on small screens */
+@media (max-width: 992px) {
+  /* keep same visual height but slightly reduced on medium screens */
+  .edit-preview { height:130px; }
+}
+
+@media (max-width: 576px) {
+  .edit-preview { height:110px; }
+  .icon-btn { width:30px; height:30px; }
+}

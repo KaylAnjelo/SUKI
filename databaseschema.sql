@@ -285,3 +285,19 @@ create table public.notifications (
   constraint notifications_pkey primary key (id),
   constraint notifications_user_id_fkey foreign KEY (user_id) references users (user_id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+create table public.users_dump (
+  user_id integer not null default nextval('users_user_id_seq'::regclass),
+  username character varying(50) not null,
+  password character varying(255) not null,
+  first_name character varying(50) null,
+  last_name character varying(50) null,
+  contact_number character varying(20) null,
+  user_email text null,
+  role text null default 'customer'::text,
+  store_id integer null,
+  profile_image text null,
+  constraint users_dump_pkey primary key (user_id),
+  constraint users_dump_user_email_key unique (user_email),
+  constraint users_dump_username_key unique (username)
+) TABLESPACE pg_default;
