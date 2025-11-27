@@ -77,7 +77,8 @@ async function saveBlobWithPicker(suggestedName, mimeType, ext, blob) {
 async function downloadCSV(filename) {
   const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
-  const user = document.getElementById('userFilter')?.value || '';
+  const customer = document.getElementById('customerFilter')?.value || '';
+  const vendor = document.getElementById('vendorFilter')?.value || '';
   const activityType = document.getElementById('activityType')?.value || '';
   const transactionType = document.getElementById('transactionType')?.value || '';
   const shouldIncludeFilters = window.filtersApplied === true;
@@ -87,7 +88,9 @@ async function downloadCSV(filename) {
     if (endDate) params.set('endDate', endDate);
     if (store) params.set('store', store);
     if (sortOrder) params.set('sortOrder', sortOrder);
-    if (user) params.set('user', user);
+    // send customer and vendor separately so export matches UI filtering
+    if (customer) params.set('customer', customer);
+    if (vendor) params.set('vendor', vendor);
     if (activityType) params.set('activityType', activityType);
     if (transactionType) params.set('transactionType', transactionType);
   } else {
@@ -106,7 +109,8 @@ async function downloadCSV(filename) {
 async function downloadPDF(filename) {
   const path = window.location.pathname || '';
   const { startDate, endDate, store, sortOrder } = getCurrentSalesFilters();
-  const user = document.getElementById('userFilter')?.value || '';
+  const customer = document.getElementById('customerFilter')?.value || '';
+  const vendor = document.getElementById('vendorFilter')?.value || '';
   const activityType = document.getElementById('activityType')?.value || '';
   const transactionType = document.getElementById('transactionType')?.value || '';
   const shouldIncludeFilters = window.filtersApplied === true;
@@ -116,7 +120,9 @@ async function downloadPDF(filename) {
     if (endDate) params.set('endDate', endDate);
     if (store) params.set('store', store);
     if (sortOrder) params.set('sortOrder', sortOrder);
-    if (user) params.set('user', user);
+    // send customer and vendor separately so export matches UI filtering
+    if (customer) params.set('customer', customer);
+    if (vendor) params.set('vendor', vendor);
     if (activityType) params.set('activityType', activityType);
     if (transactionType) params.set('transactionType', transactionType);
   } else {

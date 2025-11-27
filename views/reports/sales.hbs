@@ -80,7 +80,7 @@
           </div>
           <div style="display:flex; gap:12px; align-items:flex-end;">
             <button id="applyFilters" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Apply</button>
-            <button type="button" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;" onclick="window.filtersApplied=false;">Clear</button>
+            <button type="button" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;" onclick="clearFilters()">Clear</button>
           </div>
         </div>
       </div>
@@ -138,9 +138,9 @@
 
       // Initialize pagination with initial sales data rendered by server
       try {
-        const initialData = {{#if initialSalesData}}{{{initialSalesData}}}{{else}}[]{{/if}};
-        if (window.pagination && Array.isArray(initialData)) {
-          window.pagination.init(initialData);
+        window.__initialSalesData = {{#if initialSalesData}}{{{initialSalesData}}}{{else}}[]{{/if}};
+        if (window.pagination && Array.isArray(window.__initialSalesData)) {
+          window.pagination.init(window.__initialSalesData);
         }
       } catch (e) {
         console.error('Failed to init pagination with initial data:', e);

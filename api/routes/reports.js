@@ -12,6 +12,7 @@ import {
   getUsersForFilter,
   getUserRolesForFilter,
   getStoresForFilter
+  ,debugVendorData
 } from '../controllers/reportsController.js';
 
 const router = express.Router();
@@ -57,5 +58,7 @@ router.get('/transaction-types', (req, res) => {
 router.get('/transactions/users', getUsersForFilter);
 router.get('/transactions/stores', getStoresForFilter);
 router.get('/activity/users', getUsersForFilter);
+// Debugging endpoint
+router.get('/debug/vendor-data', debugVendorData);
 
 export default router;

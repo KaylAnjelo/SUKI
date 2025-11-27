@@ -67,9 +67,26 @@
               <option value="refund">Refund</option>
             </select>
           </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:160px;">
+            <label for="storeFilter" style="font-weight:500; font-size:13px;">Store:</label>
+            <select id="storeFilter" name="store" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:140px;">
+              <option value="">All Stores</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:280px;">
+            <label style="font-weight:500; font-size:13px;">Filter By User:</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="customerFilter" name="customer" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:120px;">
+                <option value="">Customer</option>
+              </select>
+              <select id="vendorFilter" name="vendor" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:140px;">
+                <option value="">Vendor</option>
+              </select>
+            </div>
+          </div>
           <div style="display:flex; gap:12px; align-items:flex-end;">
-            <button id="applyFilters" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Apply</button>
-            <button id="clearFilters" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Clear</button>
+            <button type="button" id="applyFilters" class="filter-btn" onclick="if(typeof applyFilters==='function') applyFilters();" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Apply</button>
+            <button type="button" id="clearFilters" class="filter-btn" onclick="if(typeof clearFilters==='function') clearFilters();" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Clear</button>
           </div>
         </div>
       </div>
@@ -79,11 +96,12 @@
           <thead>
             <tr>
               <th>Date</th>
-              <th>User</th>
+              <th>Customer</th>
               <th>Transaction Type</th>
               <th>Reference Number</th>
               <th>Amount</th>
               <th>Store</th>
+              <th>Vendor</th>
               <th>Details</th>
             </tr>
           </thead>
@@ -114,20 +132,102 @@
     </main>
   </div>
   <script>
-    document.addEventListener('DOMContentLoaded', async function() {
-      try {
-        // Populate users dropdown
-        const res = await fetch('/reports/transactions/users');
-        if (res.ok) {
-          const users = await res.json();
-          const sel = document.getElementById('userFilter');
-          if (Array.isArray(users) && sel) {
-            users.forEach(u => {
-              const opt = document.createElement('option');
-              opt.value = u;
-              opt.textContent = u;
-              sel.appendChild(opt);
-            });
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+        // Populate separate customer/vendor selects and stores
+        async function populateCustomerAndVendorSelects() {
+          try {
+            const [custRes, vendRes] = await Promise.all([
+              fetch('/reports/transactions/users?role=customer'),
+              fetch('/reports/transactions/users?role=vendor')
+            ]);
+
+            const custSel = document.getElementById('customerFilter');
+            const vendSel = document.getElementById('vendorFilter');
+
+            if (custSel && custRes && custRes.ok) {
+              const customers = await custRes.json();
+              custSel.innerHTML = '<option value="">Customer</option>';
+              if (Array.isArray(customers)) {
+                customers.forEach(u => {
+                  const opt = document.createElement('option');
+                  opt.value = u.user_id || u.username || '';
+                  const full = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+                  opt.textContent = full || u.username || opt.value;
+                  custSel.appendChild(opt);
+                });
+              }
+            }
+
+            if (vendSel && vendRes && vendRes.ok) {
+              const vendors = await vendRes.json();
+              vendSel.innerHTML = '<option value="">Vendor</option>';
+              if (Array.isArray(vendors)) {
+                vendors.forEach(u => {
+                  const opt = document.createElement('option');
+                  opt.value = u.user_id || u.username || '';
+                  const full = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+                  opt.textContent = full || u.username || opt.value;
+                  vendSel.appendChild(opt);
+                });
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to populate customer/vendor selects:', e);
+          }
+        }
+
+        // initial populate: customers, vendors and stores
+        await populateCustomerAndVendorSelects();
+        await populateStoresForRole('', '');
+
+        // when customer or vendor selection changes, repopulate stores based on selected users
+        const custSel = document.getElementById('customerFilter');
+        const vendSel = document.getElementById('vendorFilter');
+        if (custSel) {
+          custSel.addEventListener('change', function() {
+            // allow selecting both customer and vendor at the same time
+            populateStoresForRole(custSel.value || '', vendSel ? vendSel.value || '' : '');
+          });
+        }
+        if (vendSel) {
+          vendSel.addEventListener('change', function() {
+            // allow selecting both customer and vendor at the same time
+            populateStoresForRole(custSel ? custSel.value || '' : '', vendSel.value || '');
+          });
+        }
+
+        // Helper to populate stores dropdown based on optional customer and vendor ids
+        async function populateStoresForRole(customerId, vendorId) {
+          try {
+            let url = '/reports/transactions/stores';
+            const qs = [];
+            if (customerId) qs.push(`customer=${encodeURIComponent(customerId)}`);
+            if (vendorId) qs.push(`vendor=${encodeURIComponent(vendorId)}`);
+            if (qs.length) url += `?${qs.join('&')}`;
+
+            const resStores = await fetch(url);
+            if (!resStores.ok) return;
+            const stores = await resStores.json();
+            const storeSel = document.getElementById('storeFilter');
+            if (!storeSel) return;
+            // Reset options but keep default
+            storeSel.innerHTML = '<option value="">All Stores</option>';
+            if (Array.isArray(stores)) {
+              stores.forEach(s => {
+                const opt = document.createElement('option');
+                if (s && typeof s === 'object') {
+                  opt.value = s.store_id || s.id || '';
+                  opt.textContent = s.store_name || s.name || opt.value;
+                } else {
+                  opt.value = s;
+                  opt.textContent = s;
+                }
+                storeSel.appendChild(opt);
+              });
+            }
+          } catch (e) {
+            console.warn('Could not populate stores list:', e);
           }
         }
       } catch (e) {

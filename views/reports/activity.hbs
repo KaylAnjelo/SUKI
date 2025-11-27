@@ -66,7 +66,22 @@
               <option value="">All Activities</option>
               <option value="purchase">Purchase</option>
               <option value="redemption">Redemption</option>
+              <option value="refund">Refund</option>
             </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:160px;">
+            <label for="storeFilter" style="font-weight:500; font-size:13px;">Store:</label>
+            <select id="storeFilter" name="store" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:140px;">
+              <option value="">All Stores</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
+            <label style="font-weight:500; font-size:13px;">Filter By Customer:</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="customerFilter" name="customer" style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:200px;">
+                <option value="">Customer</option>
+              </select>
+            </div>
           </div>
           <div style="display:flex; gap:12px; align-items:flex-end;">
             <button id="applyFilters" class="filter-btn" style="padding:10px 28px; border-radius:6px; background:#7c0f0f; color:#fff; font-weight:500; border:none;">Apply</button>
@@ -83,7 +98,8 @@
               <th>User</th>
               <th>Activity Type</th>
               <th>Details</th>
-              <th>Status</th>
+                <th>Store</th>
+                <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -113,29 +129,84 @@
     </main>
   </div>
 <script>
-  document.addEventListener('DOMContentLoaded', async function() {
-    // Populate users dropdown
-    try {
-      const res = await fetch('/reports/activity/users');
-      if (res.ok) {
-        const users = await res.json();
-        const sel = document.getElementById('userFilter');
-        if (Array.isArray(users) && sel) {
-          users.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u;
-            opt.textContent = u;
-            sel.appendChild(opt);
-          });
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          // Populate customer select and stores for activity
+          async function populateCustomerSelect() {
+            try {
+              const custRes = await fetch('/reports/activity/users?role=customer');
+              const custSel = document.getElementById('customerFilter');
+
+              if (custSel && custRes && custRes.ok) {
+                const customers = await custRes.json();
+                custSel.innerHTML = '<option value="">Customer</option>';
+                if (Array.isArray(customers)) {
+                  customers.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.user_id || u.username || '';
+                    const full = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+                    opt.textContent = full || u.username || opt.value;
+                    custSel.appendChild(opt);
+                  });
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to populate customer select:', e);
+            }
+          }
+
+          async function populateStoresForRole(role, userId) {
+            try {
+              let url = '/reports/transactions/stores';
+              const qs = [];
+              if (role) qs.push(`role=${encodeURIComponent(role)}`);
+              if (userId) qs.push(`user=${encodeURIComponent(userId)}`);
+              if (qs.length) url += `?${qs.join('&')}`;
+
+              const resStores = await fetch(url);
+              if (!resStores.ok) return;
+              const stores = await resStores.json();
+              const storeSel = document.getElementById('storeFilter');
+              if (!storeSel) return;
+              storeSel.innerHTML = '<option value="">All Stores</option>';
+              if (Array.isArray(stores)) {
+                stores.forEach(s => {
+                  const opt = document.createElement('option');
+                  if (s && typeof s === 'object') {
+                    opt.value = s.store_id || s.id || '';
+                    opt.textContent = s.store_name || s.name || opt.value;
+                  } else {
+                    opt.value = s;
+                    opt.textContent = s;
+                  }
+                  storeSel.appendChild(opt);
+                });
+              }
+            } catch (e) {
+              console.warn('Could not populate stores list:', e);
+            }
+          }
+
+          // initial populate and wiring
+          await populateCustomerSelect();
+          await populateStoresForRole('', '');
+
+          const custSel = document.getElementById('customerFilter');
+          if (custSel) {
+            custSel.addEventListener('change', function() {
+              populateStoresForRole('customer', custSel.value || '');
+            });
+          }
+        } catch (e) {
+          console.warn('Could not populate users/stores list:', e);
         }
+
+      try {
+        if (typeof applyFilters === 'function') applyFilters();
+      } catch (e) {
+        console.error('Failed to fetch initial activity data:', e);
       }
-    } catch (_) {}
-    // Kick off an initial fetch to populate and initialize pagination
-    const applyFiltersBtn = document.getElementById('applyFilters');
-    if (applyFiltersBtn) {
-      applyFiltersBtn.click();
-    }
-  });
+    });
 </script>
 </body>
 </html>
