@@ -14,6 +14,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BACKUP_BUCKET = process.env.BACKUP_BUCKET || 'backups';
 
+// Force PGHOST to localhost for local backups
+process.env.PGHOST = 'db.czscuaoinqgolqraaqut.supabase.co';
+
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in env');
   process.exit(1);
@@ -79,6 +82,38 @@ async function runPgDump(outPath) {
   });
 }
 
+function checkGzipContainsSchema(gzPath, maxRead = 128 * 1024) {
+  return new Promise((resolve, reject) => {
+    const gunzip = zlib.createGunzip();
+    const rs = fs.createReadStream(gzPath);
+    let collected = Buffer.alloc(0);
+    let done = false;
+    rs.on('error', (err) => { if (!done) { done = true; reject(err); } });
+    gunzip.on('data', (chunk) => {
+      if (done) return;
+      collected = Buffer.concat([collected, chunk]);
+      if (collected.length >= maxRead) {
+        done = true;
+        rs.destroy();
+        gunzip.end();
+        const txt = collected.toString('utf8', 0, maxRead);
+        const found = /(^CREATE TABLE|^COPY )/im.test(txt);
+        resolve(found);
+      }
+    });
+    gunzip.on('end', () => {
+      if (!done) {
+        done = true;
+        const txt = collected.toString('utf8');
+        const found = /(^CREATE TABLE|^COPY )/im.test(txt);
+        resolve(found);
+      }
+    });
+    gunzip.on('error', (err) => { if (!done) { done = true; reject(err); } });
+    rs.pipe(gunzip);
+  });
+}
+
 async function uploadToSupabase(filePath, key, contentType) {
   // Read file into a Buffer to avoid streaming bodies which require the
   // `duplex` RequestInit option in Node's undici fetch. Reading into a
@@ -96,6 +131,9 @@ async function main() {
   const sqlPath = path.join(tmpDir, `dump-${ts}.sql`);
   const gzPath = `${sqlPath}.gz`;
 
+  const FAIL_ON_DUMP_ERROR = (process.env.FAIL_ON_DUMP_ERROR || 'true') !== 'false';
+  const MIN_BYTES = parseInt(process.env.BACKUP_MIN_BYTES || '10240', 10); // default 10KB
+
   try {
     console.log('Starting backup...');
     let producedDump = false;
@@ -107,14 +145,38 @@ async function main() {
       console.log('pg_dump completed');
     } catch (err) {
       console.warn('pg_dump failed or not available:', err.message);
-      // fallback: create a small SQL file as a test upload
+      if (FAIL_ON_DUMP_ERROR) {
+        throw new Error('pg_dump failed and FAIL_ON_DUMP_ERROR is true — aborting backup');
+      }
+      // fallback: create a small SQL file as a test upload (only when allowed)
       const testSql = `-- test backup created at ${new Date().toISOString()}\n`;
       fs.writeFileSync(sqlPath, testSql, 'utf8');
-      console.log('Wrote test SQL file instead');
+      console.log('Wrote test SQL file instead (fallback allowed)');
     }
 
     console.log('Compressing dump...');
     await gzipFile(sqlPath, gzPath);
+
+    // Verify the produced gzip is not a tiny stub and contains SQL schema/data
+    const stats = fs.statSync(gzPath);
+    if (stats.size < MIN_BYTES) {
+      const msg = `Backup gzip is too small (${stats.size} bytes < ${MIN_BYTES})`;
+      if (FAIL_ON_DUMP_ERROR) throw new Error(msg);
+      else console.warn(msg);
+    }
+
+    let containsSchema = false;
+    try {
+      containsSchema = await checkGzipContainsSchema(gzPath);
+    } catch (e) {
+      console.warn('Failed to inspect gzip contents:', e.message);
+    }
+
+    if (!containsSchema) {
+      const msg = 'Backup gzip does not appear to contain CREATE TABLE or COPY statements';
+      if (FAIL_ON_DUMP_ERROR) throw new Error(msg);
+      else console.warn(msg);
+    }
 
     const checksum = await sha256File(gzPath);
     const key = `db/dump-${ts}.sql.gz`;

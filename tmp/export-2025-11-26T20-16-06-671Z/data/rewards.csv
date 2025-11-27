@@ -1,0 +1,2 @@
+reward_id,store_id,reward_name,description,points_required,is_active,created_at,updated_at,start_date,end_date,promotion_code,reward_type,discount_value,free_item_product_id,buy_x_quantity,buy_x_product_id,get_y_quantity,get_y_product_id
+1,2,Defense Promo,Get 10% off your next purchase,2,false,2025-11-22T02:32:28.297226+00:00,2025-11-25T08:26:09.077822+00:00,2025-11-22T00:00:00+00:00,2025-11-23T00:00:00+00:00,NUTE046071,Discount,10,,,,,

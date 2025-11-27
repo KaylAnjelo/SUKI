@@ -1,0 +1,14 @@
+/tmp/databaseschema.sql:notifications
+/tmp/databaseschema.sql:products
+/tmp/databaseschema.sql:promotions
+/tmp/databaseschema.sql:redemptions
+/tmp/databaseschema.sql:rewards
+/tmp/databaseschema.sql:store_dump
+/tmp/databaseschema.sql:stores
+/tmp/databaseschema.sql:transactions
+/tmp/databaseschema.sql:user_logs
+/tmp/databaseschema.sql:user_points
+/tmp/databaseschema.sql:users
+/tmp/export/schema/products.sql:products
+/tmp/export/schema/stores.sql:stores
+/tmp/export/schema/users.sql:users

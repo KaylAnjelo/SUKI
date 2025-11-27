@@ -1,0 +1,5 @@
+Listing tables...
+Falling back to parsing local databaseschema.sql for table list
+Found tables: notifications, products, promotions, redemptions, rewards, store_dump, stores, transactions, user_logs, user_points, users
+Exporting table notifications
+Could not fetch columns for table notifications: supabase.from(...).withSchema is not a function

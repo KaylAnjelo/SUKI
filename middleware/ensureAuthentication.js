@@ -1,5 +1,7 @@
 export function ensureAuthenticated(req, res, next) {
   try {
+    console.log('Auth middleware: req.session:', req.session);
+    console.log('Auth middleware: req.session.user:', req.session ? req.session.user : undefined);
     if (req.session && req.session.user) {
       req.user = req.session.user; // attach user to req for controllers
       return next();

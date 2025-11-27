@@ -1,0 +1,37 @@
+psql:/tmp/databaseschema.sql:11: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:13: ERROR:  relation "public.products" does not exist
+psql:/tmp/databaseschema.sql:42: ERROR:  relation "rewards" does not exist
+psql:/tmp/databaseschema.sql:44: ERROR:  relation "public.redemptions" does not exist
+psql:/tmp/databaseschema.sql:46: ERROR:  relation "public.redemptions" does not exist
+psql:/tmp/databaseschema.sql:48: ERROR:  relation "public.redemptions" does not exist
+psql:/tmp/databaseschema.sql:52: ERROR:  relation "redemptions" does not exist
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+psql:/tmp/databaseschema.sql:116: ERROR:  function update_promotions_updated_at() does not exist
+psql:/tmp/databaseschema.sql:140: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:142: ERROR:  relation "public.rewards" does not exist
+psql:/tmp/databaseschema.sql:144: ERROR:  relation "public.rewards" does not exist
+psql:/tmp/databaseschema.sql:147: ERROR:  relation "rewards" does not exist
+psql:/tmp/databaseschema.sql:151: ERROR:  relation "rewards" does not exist
+CREATE TABLE
+psql:/tmp/databaseschema.sql:182: ERROR:  syntax error at or near "constraint"
+LINE 13:   constraint stores_store_code_key unique (store_code),
+           ^
+psql:/tmp/databaseschema.sql:184: ERROR:  relation "public.stores" does not exist
+psql:/tmp/databaseschema.sql:187: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:193: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:197: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:227: ERROR:  syntax error at or near "("
+LINE 9: ... ALWAYS as (((quantity)::numeric * price)) STORED (10, 2) nu...
+                                                             ^
+psql:/tmp/databaseschema.sql:229: ERROR:  relation "public.transactions" does not exist
+psql:/tmp/databaseschema.sql:231: ERROR:  relation "public.transactions" does not exist
+psql:/tmp/databaseschema.sql:233: ERROR:  relation "public.transactions" does not exist
+psql:/tmp/databaseschema.sql:235: ERROR:  relation "public.transactions" does not exist
+psql:/tmp/databaseschema.sql:237: ERROR:  relation "public.transactions" does not exist
+psql:/tmp/databaseschema.sql:248: ERROR:  relation "users" does not exist
+psql:/tmp/databaseschema.sql:259: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:276: ERROR:  relation "stores" does not exist
+psql:/tmp/databaseschema.sql:287: ERROR:  relation "users" does not exist

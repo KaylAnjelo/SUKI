@@ -1,0 +1,16 @@
+user_id,username,password,first_name,last_name,contact_number,user_email,role,store_id,profile_image
+1,admin,$2b$10$TS/Jzo0Od6QvVuGsIW4TpunKAYQPk7Alu1KOP7XWW4k2ECsQHAmQG,,,,,admin,,
+3,kalmario828@gmail.com,$2b$10$l2HUZZi8cDRA9Di2T1RCGet2AcngjOO3GksFAFvgiLJEulVkkJbFq,Kyle,Almario,09901234567,kalmario828@gmail.com,owner,,
+5,jckqpid@gmail.com,$2b$10$YgbitB7qP50sESANt1MN7OHMJMpyY.l307KyBNxD.99Vkyey9n9Ei,Dimsum,Factory,09123456789,jckqpid@gmail.com,owner,,
+7,archielled025@gmail.com,$2b$10$utmycat7W42w.lsG31mnP.XnvlUDdiK.mgYWYt0VnxIDT50.lJVbi,archielled ,arl,09634047264,archielled025@gmail.com,vendor,1,
+8,deleteme@gmail.com,$2b$10$c2INbzuwxrIm1cb6C6IvEO0OxRfsel0/ydNEeXHAKOy8NNhiAzfge,Delete ,Me,09090909090,deleteme@gmail.com,owner,,
+9,villena.enrico@yahoo.com.ph,$2b$10$KVVa8Jqf89WPbMpZt1rz6uQKalmNwxidwUxwejzr.IfqAmbelcroe,Enrico,Villena,0911823129,villena.enrico@yahoo.com.ph,vendor,2,
+10,del@gmail.com,$2b$10$JTDTPLn92BexQxjU/L/rUOtutYYhirX4dDXQEDkIs2kAPIEY8chYq,del,me,0912345678,del@gmail.com,owner,,
+11,dele@gmail.com,$2b$10$6sv2ttKooFJTbx8dL5a6peGevqviJxVkoq4bLtG76tq7cIpND6F8q,dele,te,123456789,dele@gmail.com,owner,,
+2,acupidojecka@gmail.com,$2b$10$ORAEwjwJ2zrRpy5sAGrqU.l40AFyq91R2IZ/Tc1yT6XxSQPsg80sm,Raks,Plates,09265902810,acupidojecka@gmail.com,owner,,https://czscuaoinqgolqraaqut.supabase.co/storage/v1/object/public/store_image/profile_photos/1763629728677_dogie.jpg
+12,forsocialandgamelinkacc@gmail.com,$2b$10$MZ758EixwyGdZ1JannQya.iEdnMztdd4./h9TrQsMRKS85niOvkwq,Archielled,Arl II,09953214568,forsocialandgamelinkacc@gmail.com,vendor,1,
+6,archielled21@gmail.com,$2b$10$RNHta5033Na3YoCk1BQOdeRZFsqkE5tF2d/XG6dTV33nuAT3VJkYi,archielled,acot,09956237653,archielled21@gmail.com,customer,,
+13,elaine@gmail.com,$2b$10$iBokmabgL9APunEWx2ZC/erZ1Yrp9xTY1bMVMsxfieN7/zN00qkRC,Elaine,Ilao,123456789,elaine@gmail.com,owner,,
+17,pangdotalang0011@gmail.com,$2b$10$H17tN.HpZNbgFx9FL9XFgulJqI2xXnOs1gGY0uW1Ifcl8HJkDv34m,never,more,0996325147,pangdotalang0011@gmail.com,vendor,3,
+18,acupidojedidah@gmail.com,$2b$10$3vFqvu1fT9IpHoCy3Ia05ueA63Z77yKb22m7TkR5Ulg9Y78Jsgw/W,Jecka,Qpids,09265902810,acupidojedidah@gmail.com,customer,,
+4,kyleangeloalmario@lpubatangas.edu.ph,Akosikyle,Kyle,Angelo,09683491886,kyleangeloalmario@lpubatangas.edu.ph,customer,,

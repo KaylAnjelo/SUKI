@@ -1,0 +1,6 @@
+store_id,owner_id,store_name,location,is_active,store_code,store_image,owner_name,owner_contact,inactive_since
+3,3,brewaholic,LPU-B Main,true,HYQXY2,,Kyle Almario,09901234567,
+4,5,Dimsum,LPU-B Main,true,6ETGCM,,Dimsum Factory,09123456789,
+1,2,Supreme Bowl,LPU-B Main,true,JF2R6E,https://czscuaoinqgolqraaqut.supabase.co/storage/v1/object/public/store_image/stores/1763630279692_wp2.jpg,,,
+2,2,Nutella Waffle,LPU-B Main,true,1CUUPZ,https://czscuaoinqgolqraaqut.supabase.co/storage/v1/object/public/store_image/stores/1763629760023_wp1.jpg,,,
+6,13,TuhogTuhog,LPU-B Main,true,RMF32I,https://czscuaoinqgolqraaqut.supabase.co/storage/v1/object/public/store_image/stores/1763777667728_chick_fillet.jpg,Elaine Ilao,123456789,
