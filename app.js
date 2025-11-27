@@ -1,3 +1,4 @@
+// ...existing code...
 import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
@@ -20,6 +21,8 @@ import * as ownerTransactions from './api/controllers/ownerTransactionController
 import * as ownerSales from './api/controllers/ownerSalesController.js';
 import ownerProductsRoutes from './api/routes/ownerProductsRoutes.js';
 import ownerPromotionsRoutes from './api/routes/ownerPromotionsRoutes.js';
+
+// ...existing code...
 
 
 // For __dirname equivalent in ES modules
@@ -64,13 +67,21 @@ hbs.registerHelper('eq', function(a, b, options) {
   return a === b ? options.fn(this) : options.inverse(this);
 });
 
+// Create the PG session store
+import pg from 'pg';
+import connectPgSimple from 'connect-pg-simple';
+
+// Use PostgreSQL for session storage
+const PgSession = connectPgSimple(session);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'db7035c4a02c2fa82bc6a111051e978322bd154eb0342956fe9de230808f3bec2e3c93c40b6b8125708665760e408df217012c5cea9a7950adab10f2f910ccaa',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: false,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours default
+  cookie: {
+    secure: false, // true if using HTTPS
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax', // or 'none' if using cross-site cookies
   }
 }));
 
@@ -154,6 +165,8 @@ app.use('/owner/dashboard', ownerDashboardRoutes);      // view paths
 app.use('/api/owner/dashboard', ownerDashboardRoutes);  // canonical API path frontend uses
 app.use('/api/owner', ownerDashboardRoutes); // compatibility
 app.use('/api/owner/promotions', ownerPromotionsRoutes); // promotions API
+
+// ...existing code...
 
 
 // Views
@@ -497,28 +510,32 @@ async function updatePromotionActiveStates() {
       let updatedCount = 0;
       
       for (const promo of promotions) {
-        const startDate = new Date(promo.start_date);
-        const endDate = new Date(promo.end_date);
-        
-        // Set time boundaries
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        
-        const shouldBeActive = now >= startDate && now <= endDate;
-        
-        // Update if status has changed
-        if (promo.is_active !== shouldBeActive) {
-          const { error: updateError } = await supabase
-            .from('rewards')
-            .update({ is_active: shouldBeActive })
-            .eq('reward_id', promo.reward_id);
+        try {
+          const startDate = new Date(promo.start_date);
+          const endDate = new Date(promo.end_date);
           
-          if (!updateError) {
-            updatedCount++;
-            console.log(`📅 Updated promotion ${promo.reward_id}: ${promo.is_active} → ${shouldBeActive}`);
-          } else {
-            console.error(`❌ Failed to update promotion ${promo.reward_id}:`, updateError);
+          // Set time boundaries
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+          
+          const shouldBeActive = now >= startDate && now <= endDate;
+          
+          // Update if status has changed
+          if (promo.is_active !== shouldBeActive) {
+            const { error: updateError } = await supabase
+              .from('rewards')
+              .update({ is_active: shouldBeActive })
+              .eq('reward_id', promo.reward_id);
+            
+            if (!updateError) {
+              updatedCount++;
+              console.log(`📅 Updated promotion ${promo.reward_id}: ${promo.is_active} → ${shouldBeActive}`);
+            } else {
+              console.error(`❌ Failed to update promotion ${promo.reward_id}:`, updateError);
+            }
           }
+        } catch (err) {
+          console.error('Error processing promotion:', promo, err);
         }
       }
       

@@ -1,0 +1,20 @@
+CREATE TABLE public.rewards (
+  "reward_id" text,
+  "store_id" text,
+  "reward_name" text,
+  "description" text,
+  "points_required" text,
+  "is_active" text,
+  "created_at" text,
+  "updated_at" text,
+  "start_date" text,
+  "end_date" text,
+  "promotion_code" text,
+  "reward_type" text,
+  "discount_value" text,
+  "free_item_product_id" text,
+  "buy_x_quantity" text,
+  "buy_x_product_id" text,
+  "get_y_quantity" text,
+  "get_y_product_id" text
+);

@@ -183,7 +183,7 @@ async function loadProductBreakdown(store = '') {
     const res = await fetch(`/api/product-breakdown?store=${store}`);
     const { labels, data, totalPoints } = await res.json();
 
-    if (productChart) productChart.destroy();
+        if (productChart) productChart.destroy();
 
     const ctx = document.getElementById('productStatsChart').getContext('2d');
     const colors = ['#7D0006', '#C72C41', '#F5B7B1', '#F8C471', '#7FB3D5', '#27AE60', '#8E44AD', '#E67E22'];

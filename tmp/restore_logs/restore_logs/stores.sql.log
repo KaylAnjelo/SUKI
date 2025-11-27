@@ -1,0 +1,1 @@
+psql:/tmp/export/schema/stores.sql:12: ERROR:  relation "stores" already exists
