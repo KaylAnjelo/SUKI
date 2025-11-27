@@ -1,26 +1,4 @@
-// Schedule daily backup at 3:00 AM
-import('./scripts/backup_and_upload.js').then(mod => {
-  if (typeof mod.default === 'function') {
-    mod.default();
-  }
-});
-
-cron.schedule('0 3 * * *', async () => {
-  console.log('[scheduler] Daily backup started', new Date().toISOString());
-  try {
-    const mod = await import('./scripts/backup_and_upload.js');
-    if (typeof mod.default === 'function') {
-      await mod.default();
-    } else if (typeof mod === 'function') {
-      await mod();
-    }
-    console.log('[scheduler] Daily backup finished', new Date().toISOString());
-  } catch (err) {
-    console.error('[scheduler] Daily backup error:', err);
-  }
-}, {
-  timezone: 'Asia/Manila'
-});
+// ...existing code...
 import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
