@@ -143,6 +143,7 @@
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Store</th>
                     <th>Contact #</th>
                     <th>Email</th>
                   </tr>
@@ -151,8 +152,9 @@
                   {{#each vendors}}
                   <tr>
                     <td>{{first_name}} {{last_name}}</td>
+                    <td>{{store_name}}</td>
                     <td>{{contact_number}}</td>
-                    <td>{{user_email}}</td>       
+                    <td>{{user_email}}</td>
                   </tr>
                   {{/each}}
                 </tbody>

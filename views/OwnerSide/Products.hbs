@@ -60,6 +60,8 @@
       background: #f5f5f5;
       border-radius: 8px;
       padding: 20px;
+      /* extra bottom padding so floating actions (Add Product) don't overlap the table */
+      padding-bottom: 110px;
       margin-bottom: 20px;
     }
 
@@ -72,6 +74,8 @@
       flex-wrap:wrap;
     }
 
+    /* Filter is not sticky by default */
+
     .filter-bar .filter-input,
     .filter-bar .filter-select,
     .filter-bar .filter-number {
@@ -80,6 +84,12 @@
       border-radius: 8px;
       background: white;
       font-size: 14px;
+    }
+
+    /* Make search input expand to fill available space */
+    .filter-bar .filter-input {
+      flex: 1 1 420px;
+      min-width: 240px;
     }
 
     .filter-actions {
@@ -100,11 +110,56 @@
     .products-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed; /* make columns respect widths so header/body align when tbody scrolls */
       background: white;
       border-radius: 8px;
-      overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
+
+    /* Make the table wrapper scrollable so all products can be listed on one page */
+    .table-scroll {
+      max-height: 60vh;
+      /* let tbody handle scrolling so sticky header works consistently */
+      overflow: visible;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      position: relative; /* anchor for sticky header if needed */
+    }
+
+    /* Keep the header visible while scrolling the table body: make thead/table header fixed layout */
+    .products-table thead {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+    .products-table thead th {
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      z-index: 5; /* higher than table rows */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    /* Make tbody scrollable while keeping header fixed */
+    .products-table tbody {
+      display: block;
+      max-height: 60vh;
+      overflow: auto;
+      width: 100%;
+    }
+    .products-table tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    /* Column width hints for consistent alignment */
+    .products-table th:nth-child(1), .products-table td:nth-child(1) { width: 40%; }
+    .products-table th:nth-child(2), .products-table td:nth-child(2) { width: 20%; }
+    .products-table th:nth-child(3), .products-table td:nth-child(3) { width: 15%; }
+    .products-table th:nth-child(4), .products-table td:nth-child(4) { width: 12%; }
+    .products-table th:nth-child(5), .products-table td:nth-child(5) { width: 13%; }
 
     .products-table th {
       background: #f9fafb;
@@ -247,6 +302,13 @@
       align-items: center;
       gap: 8px;
       transition: all 0.2s ease;
+    }
+
+    /* Keep some space between the table and the add button */
+    .add-product-btn {
+      margin-top: 16px;
+      position: relative;
+      z-index: 4;
     }
 
     .add-product-btn:hover {
@@ -576,7 +638,6 @@
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
-                <option value="" {{#unless selectedStoreId}}selected{{/unless}}>All Stores</option>
                 {{#if stores}}
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
@@ -602,15 +663,13 @@
             <option value="Sides" {{#eq category 'Sides'}}selected{{/eq}}>Sides</option>
             <option value="Beverages" {{#eq category 'Beverages'}}selected{{/eq}}>Beverages</option>
           </select>
-          <input id="priceMin" name="min_price" class="filter-number" type="number" step="0.01" min="0" placeholder="Min ₱" aria-label="Minimum price" value="{{min_price}}">
-          <input id="priceMax" name="max_price" class="filter-number" type="number" step="0.01" min="0" placeholder="Max ₱" aria-label="Maximum price" value="{{max_price}}">
+          <!-- Price filter removed -->
           <input type="hidden" name="store_id" value="{{selectedStoreId}}">
-          <div class="filter-actions">
-            <button id="clearFilters" class="filter-btn" type="button">Clear</button>
-          </div>
+          <div class="filter-actions"></div>
         </form>
 
-        <table class="products-table">
+        <div class="table-scroll">
+          <table class="products-table">
           <thead>
             <tr>
               <th>Product Name</th>
@@ -672,56 +731,8 @@
               </tr>
             {{/if}}
           </tbody>
-        </table>
-
-        <!-- Pagination Controls -->
-        {{#gt totalPages 1}}
-          <div class="pagination-container">
-            {{#eq currentPage 1}}
-              <button class="pagination-btn" disabled>
-                <i class="fas fa-chevron-left"></i> First
-              </button>
-            {{else}}
-              <a href="?page=1{{#if selectedStoreId}}&store_id={{selectedStoreId}}{{/if}}{{#if q}}&q={{q}}{{/if}}{{#if category}}&category={{category}}{{/if}}{{#if min_price}}&min_price={{min_price}}{{/if}}{{#if max_price}}&max_price={{max_price}}{{/if}}" class="pagination-btn">
-                <i class="fas fa-chevron-left"></i> First
-              </a>
-            {{/eq}}
-            
-            {{#eq currentPage 1}}
-              <button class="pagination-btn" disabled>
-                Previous
-              </button>
-            {{else}}
-              <a href="?page={{subtract currentPage 1}}{{#if selectedStoreId}}&store_id={{selectedStoreId}}{{/if}}{{#if q}}&q={{q}}{{/if}}{{#if category}}&category={{category}}{{/if}}{{#if min_price}}&min_price={{min_price}}{{/if}}{{#if max_price}}&max_price={{max_price}}{{/if}}" class="pagination-btn">
-                Previous
-              </a>
-            {{/eq}}
-            
-            <span class="pagination-info">
-              Page <strong>{{currentPage}}</strong> of <strong>{{totalPages}}</strong>
-            </span>
-            
-            {{#gte currentPage totalPages}}
-              <button class="pagination-btn" disabled>
-                Next
-              </button>
-            {{else}}
-              <a href="?page={{add currentPage 1}}{{#if selectedStoreId}}&store_id={{selectedStoreId}}{{/if}}{{#if q}}&q={{q}}{{/if}}{{#if category}}&category={{category}}{{/if}}{{#if min_price}}&min_price={{min_price}}{{/if}}{{#if max_price}}&max_price={{max_price}}{{/if}}" class="pagination-btn">
-                Next
-              </a>
-            {{/gte}}
-            
-            {{#gte currentPage totalPages}}
-              <button class="pagination-btn" disabled>
-                Last <i class="fas fa-chevron-right"></i>
-              </button>
-            {{else}}
-              <a href="?page={{totalPages}}{{#if selectedStoreId}}&store_id={{selectedStoreId}}{{/if}}{{#if q}}&q={{q}}{{/if}}{{#if category}}&category={{category}}{{/if}}{{#if min_price}}&min_price={{min_price}}{{/if}}{{#if max_price}}&max_price={{max_price}}{{/if}}" class="pagination-btn">
-                Last <i class="fas fa-chevron-right"></i>
-              </a>
-            {{/gte}}
-          </div>
-        {{/gt}}
+          </table>
+        </div>
       </div>
 
       <!-- Add Product Button -->
@@ -822,9 +833,6 @@
       // Client-side filtering elements
       const productSearch = document.getElementById('productSearch');
       const categoryFilter = document.getElementById('categoryFilter');
-      const priceMin = document.getElementById('priceMin');
-      const priceMax = document.getElementById('priceMax');
-      const clearFiltersBtn = document.getElementById('clearFilters');
 
       function parsePrice(text) {
         if (!text) return NaN;
@@ -837,8 +845,7 @@
         // Keep lightweight client-side filtering for immediate feedback on current page
         const q = productSearch && productSearch.value.trim().toLowerCase();
         const cat = categoryFilter && categoryFilter.value;
-        const min = priceMin && priceMin.value !== '' ? parseFloat(priceMin.value) : NaN;
-        const max = priceMax && priceMax.value !== '' ? parseFloat(priceMax.value) : NaN;
+        // price filtering removed
 
         const table = document.querySelector('.products-table tbody');
         if (!table) return;
@@ -853,8 +860,7 @@
           let visible = true;
           if (q && !nameCell.includes(q)) visible = false;
           if (cat && cat !== '' && catCell !== cat) visible = false;
-          if (!isNaN(min) && (isNaN(priceVal) || priceVal < min)) visible = false;
-          if (!isNaN(max) && (isNaN(priceVal) || priceVal > max)) visible = false;
+          // price filtering removed
 
           row.style.display = visible ? '' : 'none';
         });
@@ -876,26 +882,32 @@
 
       // Attach filtering listeners: client-side for instant feedback, and server submit on change/enter
       if (productSearch) {
-        productSearch.addEventListener('input', filterProducts);
+        // Debounced server-side search: keep lightweight client-side filtering for instant feedback,
+        // but submit the form after the user pauses typing so the server performs a search across all pages.
+        let searchDebounce = null;
+        productSearch.addEventListener('input', (ev) => {
+          // Immediate local feedback on current page
+          filterProducts();
+          // Debounce server submission to avoid flooding
+          if (searchDebounce) clearTimeout(searchDebounce);
+          searchDebounce = setTimeout(() => {
+            // Submit filters to server (will reset to page 1 and apply q across entire dataset)
+            submitFilters();
+          }, 700);
+        });
+
         productSearch.addEventListener('keydown', (ev) => {
           if (ev.key === 'Enter') {
             ev.preventDefault();
+            if (searchDebounce) clearTimeout(searchDebounce);
             submitFilters();
           }
         });
       }
       if (categoryFilter) categoryFilter.addEventListener('change', submitFilters);
-      if (priceMin) priceMin.addEventListener('change', submitFilters);
-      if (priceMax) priceMax.addEventListener('change', submitFilters);
-      if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', () => {
-          if (productSearch) productSearch.value = '';
-          if (categoryFilter) categoryFilter.value = '';
-          if (priceMin) priceMin.value = '';
-          if (priceMax) priceMax.value = '';
-          submitFilters();
-        });
-      }
+
+      // price sliders removed; no wiring required
+      
 
       // Store selector functionality: update hidden store_id in filter form and submit filters
       if (storeSelector) {
@@ -908,6 +920,31 @@
           submitFilters();
         });
       }
+
+      // Auto-select the first store and submit if no store is currently selected
+      (function autoSelectFirstStore() {
+        if (!storeSelector) return;
+        try {
+          const options = Array.from(storeSelector.options || []);
+          const hasSelected = options.some(opt => opt.selected);
+          // find first option that represents a real store (non-empty value)
+          const firstStoreOption = options.find(opt => opt.value && opt.value.trim() !== '');
+          if (!hasSelected && firstStoreOption) {
+            // select it and submit filters so page loads for that store
+            firstStoreOption.selected = true;
+            const storeInput = document.querySelector('#filterForm input[name="store_id"]');
+            if (storeInput) storeInput.value = firstStoreOption.value;
+            // Give the browser a tick to finish parsing before submitting
+            setTimeout(() => {
+              submitFilters();
+            }, 50);
+          }
+        } catch (err) {
+          console.error('autoSelectFirstStore error', err);
+        }
+      })();
+
+      // Filter bar will not be sticky; no JS changes needed
 
       async function updateStoreImage(storeId) {
         if (!storeId) return;

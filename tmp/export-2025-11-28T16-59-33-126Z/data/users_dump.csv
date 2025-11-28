@@ -1,0 +1,10 @@
+user_id,username,password,first_name,last_name,contact_number,user_email,role,store_id,profile_image,deleted_at
+14,jeckaluuuu,$2b$10$tl5tlZ1EJdW1CmcD5nkb0e0uJgzvR3sZhffCTu0TTYd7GTlORoa7e,Jedidah,Acupido,09265902810,acupidojedidah@gmail.com,customer,,,2025-11-27T11:42:31.89+00:00
+15,jeckski,$2b$10$uxIuWk4NgrdX1poLvlq/Ae3k12ZFpaXwlRYdzU0yWJa3fjNgA2g8i,Jedidah,Acupido,09265902810,acupidojedi@gmail.com,customer,,,2025-11-27T12:53:45.325+00:00
+16,jecka,$2b$10$HqWnBHWYdBfgjMNexmety.Qlm1JlnBdirW02eoiZiYUSYgoIrAz/S,Jedidah,Acupido,09265902810,acupidojedidah@gmail.com,customer,,,2025-11-27T15:46:39.651+00:00
+19,test@gmail.com,$2b$10$4FZqESaBGOF/2HYLL4Q1qedjmVHf8vAvzE23bvrVkMOMaY6mhq6Re,test,,124151412,test@gmail.com,customer,,,2025-11-27T15:51:53.708+00:00
+20,test@gmail.com,$2b$10$PMSFLXIwF2JJ2JkqIkPNguoiMTVOC6wlsxQ.tu8/6/58NbcnX8CZq,test,,1241241,test@gmail.com,customer,,,2025-11-27T15:53:43.522+00:00
+21,testtest@gmail.com,$2b$10$O.QLAOa3Vv8UuSph.lUI..eqRnyrgXAihGDz1SYm10gGH7II/EPOO,test,test,1234567890,testtest@gmail.com,customer,,,2025-11-27T15:59:35.168+00:00
+22,test3@gmail.com,$2b$10$DRnswFwk85KOCyL37NrmZOU1qFGhrumkIS9/BQsSbwQ3PGojQBHYS,test,3,1234567890,test3@gmail.com,customer,,,2025-11-27T16:00:29.566+00:00
+23,test@gmail.com,$2b$10$ds8IeJ74i4k1nTzlXW74te5suHN.NRzXCuS23vGVVotbIP4ZZdzrm,test,test,1234567,test@gmail.com,vendor,6,,2025-11-27T16:22:02.151+00:00
+18,acupidojedidah@gmail.com,$2b$10$3vFqvu1fT9IpHoCy3Ia05ueA63Z77yKb22m7TkR5Ulg9Y78Jsgw/W,Jecka,Qpids,09265902810,acupidojedidah@gmail.com,customer,,,2025-11-28T07:36:59.926+00:00

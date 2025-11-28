@@ -67,6 +67,15 @@ hbs.registerHelper('eq', function(a, b, options) {
   return a === b ? options.fn(this) : options.inverse(this);
 });
 
+// Register partials directory so templates can use shared components
+hbs.registerPartials(path.join(__dirname, 'views', 'partials'));
+
+// Global timestamp available in all views to bust image caches
+app.use((req, res, next) => {
+  res.locals.timestamp = Date.now();
+  next();
+});
+
 // Create the PG session store
 // Import the CommonJS build directly to avoid environments where the
 // ESM entry (`pg/esm/index.mjs`) is missing from the installed package.
@@ -103,7 +112,7 @@ app.use(async (req, res, next) => {
       // Verify the remember me token by fetching user from database
       const { data: user, error } = await supabase
         .from("users")
-        .select("user_id, username, first_name, last_name, role")
+        .select("user_id, username, first_name, last_name, role, profile_image")
         .eq("user_id", userId)
         .eq("username", username) // Additional validation
         .maybeSingle();
@@ -115,7 +124,8 @@ app.use(async (req, res, next) => {
           username: user.username,
           first_name: user.first_name,
           last_name: user.last_name,
-          role: user.role
+          role: user.role,
+          profile_image: user.profile_image || null
         };
         req.session.userId = user.user_id;
         

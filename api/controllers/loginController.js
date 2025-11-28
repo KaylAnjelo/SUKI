@@ -21,7 +21,7 @@ export const login = async (req, res) => {
     // Select all necessary fields including role
     const { data: user, error } = await supabase
       .from("users")
-      .select("user_id, username, password, first_name, last_name, role")
+      .select("user_id, username, password, first_name, last_name, role, profile_image")
       .eq("username", username)
       .maybeSingle();
 
@@ -59,7 +59,8 @@ export const login = async (req, res) => {
       username: user.username,
       first_name: user.first_name,
       last_name: user.last_name,
-      role: user.role
+      role: user.role,
+      profile_image: user.profile_image || null
     };
     req.session.userId = user.user_id; // Also store userId for compatibility
 

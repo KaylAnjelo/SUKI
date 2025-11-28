@@ -369,10 +369,19 @@ export const getPromotions = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get selectedStoreId from session (null means "All Stores")
-    let storeId = req.session.selectedStoreId;
-    
-    console.log('Selected store_id:', storeId);
+    // Determine selected store: prefer `store_id` query param (could be '' for All Stores),
+    // otherwise fall back to session.selectedStoreId. If still missing, default to first store.
+    let storeId = null;
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      storeId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session for subsequent API calls/navigation
+      req.session.selectedStoreId = storeId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      storeId = req.session.selectedStoreId;
+    }
+
+    console.log('Selected store_id (query or session):', storeId);
 
     // If no specific store selected, get all stores for this owner
     let storeIds = [];

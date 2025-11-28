@@ -78,14 +78,37 @@ export const getOwnerProfileData = async (req, res) => {
       is_selected: s.store_id === store?.store_id
     }));
 
+    // Determine vendor scope: if a specific store is selected, use it; otherwise use all owner's stores
     let vendors = [];
-    if (store) {
-      const { data: vendorData } = await supabase
-        .from("users")
-        .select("user_id, username, first_name, last_name, contact_number, user_email")
-        .eq("store_id", store.store_id)
-        .eq("role", "vendor");
-      vendors = vendorData || [];
+    try {
+      const storeIds = (stores || []).map(s => s.store_id).filter(Boolean);
+      if (storeIds.length > 0) {
+        const targetStoreIds = selectedStoreId ? [selectedStoreId] : storeIds;
+        const { data: vendorData, error: vendorErr } = await supabase
+          .from('users')
+          .select('user_id, username, first_name, last_name, contact_number, user_email, profile_image, role, store_id')
+          .in('store_id', targetStoreIds)
+          .eq('role', 'vendor')
+          .order('first_name', { ascending: true });
+
+        if (vendorErr) {
+          console.error('getOwnerProfileData: vendorErr', vendorErr);
+        } else {
+          // Enrich vendors with store_name for easier rendering in the template
+          const storeMap = (stores || []).reduce((acc, s) => {
+            acc[s.store_id] = s.store_name;
+            return acc;
+          }, {});
+
+          vendors = (vendorData || []).map(v => ({
+            ...v,
+            store_name: storeMap[v.store_id] || 'Unknown Store'
+          }));
+        }
+      }
+    } catch (vErr) {
+      console.error('Error fetching vendors:', vErr);
+      vendors = [];
     }
 
     // Detect if request expects JSON (AJAX)
@@ -179,12 +202,19 @@ export const updateOwnerProfile = async (req, res) => {
             // Save URL to users.profile_image
             const updateResult = await supabase.from('users').update({ profile_image: publicURL.publicUrl }).eq('user_id', userId);
             console.log('✅ Saved to users.profile_image for userId:', userId, updateResult);
+            // Also update session so header shows the new image immediately
+            if (req.session && req.session.user) {
+              req.session.user.profile_image = publicURL.publicUrl;
+            }
           }
         }
 
       // If removePhoto and no storeId, remove user's profile image
       } else if (removePhoto === 'true' && !targetStoreId) {
         await supabase.from('users').update({ profile_image: null }).eq('user_id', userId);
+          if (req.session && req.session.user) {
+            req.session.user.profile_image = null;
+          }
 
       // If storeId present, keep previous behavior (update store image)
       } else if (req.file && targetStoreId) {
