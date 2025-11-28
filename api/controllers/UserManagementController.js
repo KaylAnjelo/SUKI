@@ -1,6 +1,7 @@
 import supabase from "../../config/db.js";
 import bcrypt from "bcrypt";
 import dns from 'dns/promises';
+import EmailService from '../services/emailService.js';
 
 // Test database connection
 export const testConnection = async (req, res) => {
@@ -41,7 +42,7 @@ export const getCustomers = async (req, res) => {
     const { data: customers, error } = await supabase
       .from('users')
       .select('user_id, username, contact_number, user_email, first_name, last_name')
-      .eq('role', 'customer')
+      .in('role', ['customer', 'Admin-Created(Customer)'])
       .order('user_id', { ascending: true });
 
     if (error) throw error;
@@ -67,7 +68,7 @@ export const getVendors = async (req, res) => {
       const { data: vendors, error } = await supabase
       .from('users')
       .select('user_id, username, contact_number, user_email, role, store_id, first_name, last_name')
-    .eq('role', 'vendor')
+    .in('role', ['vendor', 'Admin-Created(Vendor)'])
     .order('user_id', { ascending: true });
 
   if (error) throw error;
@@ -420,9 +421,6 @@ export const addCustomer = async (req, res) => {
     // If username not provided, use the email as the username
     const finalUsername = (username && String(username).trim()) ? String(username).trim() : String(user_email).trim();
 
-    // Basic email domain validation via MX record lookup. This helps catch mistyped domains
-    // Note: There's no public Gmail/Yahoo API to verify arbitrary addresses — provider APIs don't expose that.
-    // For stronger validation consider a third-party email verification service (ZeroBounce, mailboxlayer, Hunter, etc.).
     try {
       const parts = String(user_email).split('@');
       if (parts.length !== 2 || !parts[1]) {
@@ -487,10 +485,9 @@ export const addCustomer = async (req, res) => {
       user_email,
       contact_number: contact_number || null,
       password: hashed,
-      role: 'customer',
+      role: plainPassword === 'changemeplease' ? 'Admin-Created(Customer)' : 'customer',
       first_name,
       last_name,
-      // If the admin didn't provide a password we set a default and force change on first login
       must_change_password: plainPassword === 'changemeplease'
     };
 
@@ -498,7 +495,7 @@ export const addCustomer = async (req, res) => {
     // column (PGRST204), retry without it for compatibility with older schemas.
     let newUser = null;
     try {
-      const { data, error: insertErr } = await supabase.from('users').insert([insertPayload]).select('user_id, username, first_name, last_name, user_email, contact_number').single();
+      const { data, error: insertErr } = await supabase.from('users').insert([insertPayload]).select('user_id, username, first_name, last_name, user_email, contact_number, role').single();
       if (insertErr) throw insertErr;
       newUser = data;
     } catch (insertErr) {
@@ -519,6 +516,18 @@ export const addCustomer = async (req, res) => {
       }
     }
 
+    // Send email notification to the new customer
+    try {
+      if (newUser && newUser.user_email) {
+        await EmailService.sendAccountCreated(newUser.user_email, {
+          name: `${newUser.first_name} ${newUser.last_name}`,
+          username: newUser.username,
+          role: newUser.role,
+        });
+      }
+    } catch (emailErr) {
+      console.warn('Failed to send account creation email to customer:', emailErr && emailErr.message);
+    }
     // return created user (do not include password)
     res.status(201).json({ success: true, user: newUser, message: 'Customer created' });
   } catch (err) {
@@ -592,7 +601,7 @@ export const addVendor = async (req, res) => {
       user_email,
       contact_number: contact_number || null,
       password: hashed,
-      role: 'vendor',
+      role: plainPassword === 'changemeplease' ? 'Admin-Created(Vendor)' : 'vendor',
       first_name,
       last_name,
       store_id: store_id || null,
@@ -601,7 +610,7 @@ export const addVendor = async (req, res) => {
 
     let newUser = null;
     try {
-      const { data, error: insertErr } = await supabase.from('users').insert([insertPayload]).select('user_id, username, first_name, last_name, user_email, contact_number, store_id').single();
+      const { data, error: insertErr } = await supabase.from('users').insert([insertPayload]).select('user_id, username, first_name, last_name, user_email, contact_number, store_id, role').single();
       if (insertErr) throw insertErr;
       newUser = data;
     } catch (insertErr) {
@@ -631,6 +640,18 @@ export const addVendor = async (req, res) => {
       console.warn('Could not attach store_name to new vendor response', attachErr && attachErr.message);
     }
 
+    // Send email notification to the new vendor
+    try {
+      if (newUser && newUser.user_email) {
+        await EmailService.sendAccountCreated(newUser.user_email, {
+          name: `${newUser.first_name} ${newUser.last_name}`,
+          username: newUser.username,
+          role: newUser.role,
+        });
+      }
+    } catch (emailErr) {
+      console.warn('Failed to send account creation email to vendor:', emailErr && emailErr.message);
+    }
     res.status(201).json({ success: true, user: newUser, message: 'Vendor created' });
   } catch (err) {
     console.error('Unexpected error in addVendor:', err);
