@@ -170,6 +170,7 @@
 
     <div id="globalMessage" role="status" aria-live="polite"></div>
 
+    <script src="/js/customConfirm.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('customerSearch');
@@ -296,7 +297,7 @@
             editModalClose && editModalClose.addEventListener('click', closeEditModal);
             editCancel && editCancel.addEventListener('click', closeEditModal);
 
-            tbody.addEventListener('click', function (e) {
+            tbody.addEventListener('click', async function (e) {
                 const editBtn = e.target.closest('.edit-btn');
                 if (editBtn) {
                     const tr = editBtn.closest('tr');
@@ -310,7 +311,9 @@
                     const username = tr && tr.dataset && tr.dataset.username;
                     const userId = tr && tr.dataset && tr.dataset.userId;
                     const displayName = username || userId || 'customer';
-                    if (!confirm('Delete customer "' + displayName + '"? This action cannot be undone.')) return;
+                    // use customConfirm modal if available, fallback to window.confirm
+                    const ok = (window.customConfirm) ? await window.customConfirm('Delete customer "' + displayName + '"? This action cannot be undone.') : confirm('Delete customer "' + displayName + '"? This action cannot be undone.');
+                    if (!ok) return;
 
                     // Prefer delete-by-id to avoid special-character issues in usernames
                     const deleteUrl = userId ? '/users/id/' + encodeURIComponent(userId) : '/users/' + encodeURIComponent(username);

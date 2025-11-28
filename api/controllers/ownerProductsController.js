@@ -71,16 +71,15 @@ export async function getOwnerProducts(req, res) {
 
     // Get selected store from query param
     const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    // Get filtering params from query
+    const q = req.query.q ? String(req.query.q).trim() : null;
+    const category = req.query.category ? String(req.query.category) : null;
+    const minPrice = req.query.min_price !== undefined && req.query.min_price !== '' ? parseFloat(req.query.min_price) : null;
+    const maxPrice = req.query.max_price !== undefined && req.query.max_price !== '' ? parseFloat(req.query.max_price) : null;
     let store = null;
     
     if (selectedStoreId && stores) {
       store = stores.find(s => s.store_id === selectedStoreId);
-    }
-    
-    // Only use first store as fallback if we still don't have one (for header image display)
-    // But don't auto-select it in the dropdown
-    if (!store && stores && stores.length > 0) {
-      store = stores[0];
     }
 
     // Mark selected store in stores array
@@ -93,18 +92,40 @@ export async function getOwnerProducts(req, res) {
     console.log('storesWithSelection:', storesWithSelection.map(s => ({ id: s.store_id, name: s.store_name, selected: s.is_selected })));
 
     const storeIds = (stores || []).map(s => s.store_id);
-    if (!storeIds.length) {
-      return res.render('OwnerSide/Products', { user: freshUser || req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, currentPage: 1, totalPages: 0, timestamp: Date.now() });
+
+    // If owner has no stores, render with empty products
+    if (!storeIds || storeIds.length === 0) {
+      return res.render('OwnerSide/Products', {
+        user: freshUser || req.session?.user || null,
+        products: [],
+        store: null,
+        stores: storesWithSelection,
+        selectedStoreId: null,
+        currentPage: 1,
+        totalPages: 0,
+        timestamp: Date.now(),
+        q: '',
+        category: '',
+        min_price: '',
+        max_price: ''
+      });
     }
 
-    // Filter by selected store or all stores
+    // If a specific store is selected, filter only that store. Otherwise include all owner's stores.
     const targetStoreIds = selectedStoreId ? [selectedStoreId] : storeIds;
 
-    // Get total count
-    const { count: totalCount, error: countErr } = await supabase
+    // Build count query with filters (apply filters across all products)
+    let countQuery = supabase
       .from('products')
       .select('id', { count: 'exact' })
       .in('store_id', targetStoreIds);
+
+    if (q) countQuery = countQuery.ilike('product_name', `%${q}%`);
+    if (category) countQuery = countQuery.eq('product_type', category);
+    if (minPrice !== null && !Number.isNaN(minPrice)) countQuery = countQuery.gte('price', minPrice);
+    if (maxPrice !== null && !Number.isNaN(maxPrice)) countQuery = countQuery.lte('price', maxPrice);
+
+    const { count: totalCount, error: countErr } = await countQuery;
     if (countErr) {
       console.error('getOwnerProducts: countErr', countErr);
       throw countErr;
@@ -115,10 +136,18 @@ export async function getOwnerProducts(req, res) {
     const currentPage = Math.max(1, parseInt(req.query.page || 1));
     const offset = (currentPage - 1) * itemsPerPage;
 
-    const { data: productsData, error: prodErr } = await supabase
+    // Build product query with same filters as count (so pagination is applied to filtered result)
+    let prodQuery = supabase
       .from('products')
       .select('id, product_name, price, store_id, product_type, product_image, stores(store_name)')
-      .in('store_id', targetStoreIds)
+      .in('store_id', targetStoreIds);
+
+    if (q) prodQuery = prodQuery.ilike('product_name', `%${q}%`);
+    if (category) prodQuery = prodQuery.eq('product_type', category);
+    if (minPrice !== null && !Number.isNaN(minPrice)) prodQuery = prodQuery.gte('price', minPrice);
+    if (maxPrice !== null && !Number.isNaN(maxPrice)) prodQuery = prodQuery.lte('price', maxPrice);
+
+    const { data: productsData, error: prodErr } = await prodQuery
       .order('id', { ascending: true })
       .range(offset, offset + itemsPerPage - 1);
     if (prodErr) {
@@ -137,7 +166,21 @@ export async function getOwnerProducts(req, res) {
       store_name: p.stores?.store_name || 'Unknown Store'
     }));
 
-    return res.render('OwnerSide/Products', { user: freshUser || req.session?.user || null, products, store, stores: storesWithSelection, selectedStoreId, currentPage, totalPages, timestamp: Date.now() });
+    return res.render('OwnerSide/Products', { 
+      user: freshUser || req.session?.user || null, 
+      products, 
+      store, 
+      stores: storesWithSelection, 
+      selectedStoreId, 
+      currentPage, 
+      totalPages, 
+      timestamp: Date.now(),
+      // echo back filters so template can preserve them in forms/links
+      q: q || '',
+      category: category || '',
+      min_price: minPrice !== null && !Number.isNaN(minPrice) ? minPrice : '',
+      max_price: maxPrice !== null && !Number.isNaN(maxPrice) ? maxPrice : ''
+    });
   } catch (err) {
     console.error('getOwnerProducts error', err);
     return res.render('OwnerSide/Products', { user: req.session?.user || null, products: [], store: null, stores: [], selectedStoreId: null, currentPage: 1, totalPages: 0, error: 'Failed to load products', timestamp: Date.now() });

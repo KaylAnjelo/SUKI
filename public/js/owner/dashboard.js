@@ -72,8 +72,8 @@ if (window._ownerDashboardInit) {
       // Add all allowed options
       const options = [
         { value: 'all', text: 'All Categories' },
-        { value: 'Meal', text: 'Meals' },
-        { value: 'Side', text: 'Sides' },
+        { value: 'Meals', text: 'Meals' },
+        { value: 'Sides', text: 'Sides' },
         { value: 'Beverages', text: 'Beverages' }
       ];
       
@@ -98,7 +98,7 @@ if (window._ownerDashboardInit) {
   }
 
   // update loader to capture categories and populate dropdown
-  async function loadProductData(category = 'all', limit = 5) {
+  async function loadProductData(category = 'all', limit = 6) {
     const storeId = getSelectedStoreId();
     console.log('📊 loadProductData - storeId:', storeId);
     const storeParam = (storeId && storeId !== '') ? `&store_id=${encodeURIComponent(storeId)}` : '';
@@ -132,6 +132,10 @@ if (window._ownerDashboardInit) {
         product_type: it.product_type ?? it.type ?? it.productType ?? null,
         total_quantity: Number(it.total_quantity ?? it.quantity ?? it.count ?? it.purchased_count ?? it.total_qty ?? 0),
         total_sales: Number(it.total_sales ?? it.total_amount ?? it.total ?? it.sales ?? 0)
+      ,
+        // preserve optional store info from server
+        store_id: it.store_id ?? it.storeId ?? null,
+        store_name: it.store_name ?? it.storeName ?? null
       }));
 
       // Validate image URLs to prevent syntax errors
@@ -223,6 +227,7 @@ if (window._ownerDashboardInit) {
         thumbHtml = `<div class='product-placeholder' style='background:#f3f4f6;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;'><i class='fas fa-utensils' style='color:#9ca3af;font-size:22px;'></i></div>`;
       }
       const type = escapeHtml(it.product_type || '');
+      const storeName = escapeHtml(it.store_name || it.storeName || '');
       return `
         <li class="product-card">
           <div class="product-card-inner">
@@ -232,6 +237,7 @@ if (window._ownerDashboardInit) {
             <div class="product-body">
               <div class="product-name">${name}</div>
               <div class="product-type" style="font-size:13px;color:#6B0000;font-weight:500;margin-bottom:2px;">${type}</div>
+              ${storeName ? `<div class="product-store" style="font-size:12px;color:#374151;margin-top:4px;">Store: <strong>${storeName}</strong></div>` : ''}
               <div class="product-meta">
                 <span class="purchased-count">Purchased: <strong>${purchases}</strong></span>
                 <span class="sales-amount">₱${sales}</span>
@@ -403,13 +409,16 @@ if (window._ownerDashboardInit) {
   }
 
   async function updateStoreImage(storeId) {
+    const wrapper = document.getElementById('storeBadgeWrapper');
     const imgContainer = document.getElementById('storeImageHeader');
     const iconContainer = document.getElementById('storeIconHeader');
     
-    // If no store selected (All Stores), show default icon
+    // If no store selected (All Stores), hide wrapper so mini badge is removed
     if (!storeId) {
+      if (wrapper) wrapper.style.display = 'none';
+      // keep img/icon hidden too
       if (imgContainer) imgContainer.style.display = 'none';
-      if (iconContainer) iconContainer.style.display = 'flex';
+      if (iconContainer) iconContainer.style.display = 'none';
       return;
     }
     
@@ -418,6 +427,8 @@ if (window._ownerDashboardInit) {
       if (response.ok) {
         const store = await response.json();
         
+        // Ensure wrapper is visible when we have a store
+        if (wrapper) wrapper.style.display = 'flex';
         if (store.store_image) {
           if (imgContainer) {
             imgContainer.src = store.store_image;
@@ -675,6 +686,7 @@ function renderRecommendations(recs = []) {
   container.innerHTML = recs.map(r => {
     const title = escapeHtml(r.product_name || `#${r.product_id || ''}`);
     const img = (r.image_url || r.product_image) ? `<img src='${escapeHtml(r.image_url || r.product_image)}' alt='${title}' style='width:80px;height:80px;object-fit:cover;border-radius:8px;' onerror="this.onerror=null;this.style.display='none';this.parentNode.innerHTML='${foodIconPlaceholder}';" />` : foodIconPlaceholder;
+    const productStore = escapeHtml(r.store_name || r.storeName || '');
     const recommended = Array.isArray(r.recommended) ? r.recommended : (Array.isArray(r.recommended_with) ? r.recommended_with : []);
     
     // Display overall insight if available
@@ -705,6 +717,7 @@ function renderRecommendations(recs = []) {
             ${ix}
             <div class="rec-meta">
               <div class="rec-name">${escapeHtml(x.product_name || `#${x.product_id || ''}`)}</div>
+              ${x.store_name ? `<div class="rec-store" style="font-size:12px;color:#374151;margin-top:4px;">Store: <strong>${escapeHtml(x.store_name)}</strong></div>` : ''}
               ${metrics}
               ${insight}
             </div>
@@ -715,7 +728,7 @@ function renderRecommendations(recs = []) {
     return `<div class="recommendation-card">
       <div class="rec-head">
         ${img}
-        <div class="rec-head-title">${title}</div>
+        <div class="rec-head-title">${title}${productStore ? `<div class="rec-head-store" style="font-size:12px;color:#374151;margin-top:6px;">Store: <strong>${productStore}</strong></div>` : ''}</div>
       </div>
       <div class="rec-body">
         <div class="rec-subtitle">Frequently bought together:</div>

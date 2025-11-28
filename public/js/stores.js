@@ -58,8 +58,25 @@ function deleteStore(event, form) {
     alert('Store ID not found!');
     return false;
   }
-  if (!confirm('Are you sure you want to delete this store?')) return false;
+  // use customConfirm modal if available, fallback to confirm
+  const proceed = (window.customConfirm)
+    ? false // placeholder: since this is not async handler, we will handle below
+    : confirm('Are you sure you want to delete this store?');
 
+  if (window.customConfirm) {
+    // show modal asynchronously then perform delete inside promise
+    window.customConfirm('Are you sure you want to delete this store?').then(ok => {
+      if (!ok) return false;
+      doDelete(storeId, form);
+    });
+    return false;
+  }
+
+  if (!proceed) return false;
+  return doDelete(storeId, form);
+}
+
+function doDelete(storeId, form) {
   fetch(`/users/stores/delete/${storeId}`, {
     method: 'POST',
     headers: { 'Accept': 'application/json' }

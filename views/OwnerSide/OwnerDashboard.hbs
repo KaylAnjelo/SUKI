@@ -54,22 +54,22 @@
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:50%;"><i class="fas fa-user" id="ownerIconHeader" style="color:#9ca3af;font-size:18px;"></i></div>
               {{/if}}
 
-              <div style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
-                {{#if store.store_image}}
-                  <img id="storeImageHeader" src="{{store.store_image}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">
-                {{else}}
-                  <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>
-                {{/if}}
+              <div id="storeBadgeWrapper" style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);z-index:3;">
+                <!-- Always render both image and icon so client-side JS can toggle them when store is selected -->
+                <img id="storeImageHeader" src="{{#if store}}{{store.store_image}}{{/if}}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);display:{{#if store}}block{{else}}none{{/if}};">
+                <i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;display:{{#if store}}none{{else}}flex{{/if}};"></i>
               </div>
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
+                {{!-- Always allow selecting all stores (empty value -> treated as null by frontend) --}}
+                <option value="" {{#unless store}}selected{{/unless}}>All stores</option>
                 {{#if stores}}
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
                 {{else}}
-                  <option value="">No stores available</option>
+                  <option value="" disabled>No stores available</option>
                 {{/if}}
               </select>
             </div>
@@ -195,16 +195,8 @@
     </main>
   </div>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const storeSelector = document.getElementById('storeSelector');
-      if (storeSelector) {
-        storeSelector.addEventListener('change', (e) => {
-          const storeId = e.target.value;
-          const path = window.location.pathname;
-          window.location.href = `${path}?store_id=${storeId}`;
-        });
-      }
-    });
+    // Store selection and data loading are handled by `/public/js/owner/dashboard.js`.
+    // The script is intentionally left minimal here to avoid duplicate handlers.
   </script>
   <script src="/js/owner/dashboard.js" defer></script>
 </body>

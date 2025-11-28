@@ -23,17 +23,11 @@ export const getOwnerDashboard = async (req, res) => {
 
     if (storeError) throw storeError;
 
-    // Get selected store from query param or use first store
+    // Get selected store from query param. If none provided, treat as "All stores" (store === null)
     const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
     let store = null;
-    
     if (selectedStoreId && stores) {
       store = stores.find(s => s.store_id === selectedStoreId);
-    }
-    
-    // Fallback to first store if no valid selection
-    if (!store && stores && stores.length > 0) {
-      store = stores[0];
     }
 
     // Mark selected store in stores array
@@ -42,35 +36,44 @@ export const getOwnerDashboard = async (req, res) => {
       is_selected: s.store_id === store?.store_id
     }));
 
-    // Fetch top products for the selected store(s)
+    // Fetch top products for the selected store(s) (if store===null => aggregate across all owned stores)
     let topProducts = [];
-    if (store) {
-      const { data: txs, error: txError } = await supabase
-        .from('transactions')
-        .select('product_id, quantity, total, products:product_id(id, product_name, product_type, product_image)')
-        .eq('store_id', store.store_id)
-        .order('transaction_date', { ascending: false })
-        .limit(20000);
-      if (!txError && txs) {
-        // Aggregate by product
-        const stats = new Map();
-        txs.forEach(t => {
-          const pid = Number(t.product_id);
-          const prod = t.products || {};
-          if (!stats.has(pid)) stats.set(pid, {
-            product_id: pid,
-            product_name: prod.product_name || String(pid),
-            product_type: prod.product_type || '',
-            product_image: prod.product_image || '',
-            purchased_count: 0,
-            sales_amount: 0
+    try {
+      const userStoreIds = (stores || []).map(s => s.store_id);
+      const targetStoreIds = store ? [store.store_id] : userStoreIds;
+      if (targetStoreIds.length) {
+        const { data: txs, error: txError } = await supabase
+          .from('transactions')
+          .select('product_id, quantity, total, products:product_id(id, product_name, product_type, product_image)')
+          .in('store_id', targetStoreIds)
+          .order('transaction_date', { ascending: false })
+          .limit(20000);
+        if (!txError && txs) {
+          const stats = new Map();
+          txs.forEach(t => {
+            const pid = Number(t.product_id);
+            const prod = t.products || {};
+            if (!stats.has(pid)) stats.set(pid, {
+              product_id: pid,
+              product_name: prod.product_name || String(pid),
+              product_type: prod.product_type || '',
+              product_image: prod.product_image || '',
+              purchased_count: 0,
+              sales_amount: 0
+            });
+            const s = stats.get(pid);
+            s.purchased_count += Number(t.quantity || 0);
+            s.sales_amount += Number(t.total || 0);
           });
-          const s = stats.get(pid);
-          s.purchased_count += Number(t.quantity || 0);
-          s.sales_amount += Number(t.total || 0);
-        });
-        topProducts = Array.from(stats.values()).sort((a, b) => b.sales_amount - a.sales_amount).slice(0, 5);
+          // If no specific store selected (aggregating across all owned stores),
+          // rank by number of purchases (purchased_count) and return top 6.
+          // For a single store, we still rank by purchased_count and return top 6 for consistency.
+          topProducts = Array.from(stats.values()).sort((a, b) => (b.purchased_count || 0) - (a.purchased_count || 0)).slice(0, 6);
+        }
       }
+    } catch (err) {
+      console.warn('Error fetching topProducts for dashboard:', err);
+      topProducts = [];
     }
 
     // Compute total sales
@@ -115,7 +118,7 @@ export const getTopProducts = async (req, res) => {
     const userId = req.session?.userId || req.session?.user?.id;
     if (!userId) return res.status(401).json({ items: [] });
 
-    const { category = 'all', limit = 5, days = 30, store_id } = req.query;
+    const { category = 'all', limit = 6, days = 30, store_id } = req.query;
     
     // Use filtered store ID if provided, otherwise get all stores
     let storeIds;
@@ -137,7 +140,7 @@ export const getTopProducts = async (req, res) => {
     // Fetch relevant transactions with joined product info, ordered by date DESC
     const { data: txs, error } = await supabase
       .from('transactions')
-      .select('product_id, quantity, total, transaction_date, products:product_id(id, product_name, product_type, product_image)')
+      .select('product_id, quantity, total, transaction_date, store_id, products:product_id(id, product_name, product_type, product_image)')
       .in('store_id', storeIds)
       .gte('transaction_date', dateFilter)
       .order('transaction_date', { ascending: false })
@@ -147,22 +150,27 @@ export const getTopProducts = async (req, res) => {
 
     console.log(`📊 [TopProducts] Fetched ${txs?.length || 0} transactions`);
 
-    // Aggregate in JS (safe and flexible)
+    // Aggregate in JS (safe and flexible), track per-store counts for each product
     const stats = new Map();
     (txs || []).forEach(t => {
       const pid = Number(t.product_id);
       const prod = t.products || {};
+      const txStoreId = t.store_id || null;
       if (!stats.has(pid)) stats.set(pid, { 
         product_id: pid, 
         product_name: prod.product_name || String(pid), 
         product_type: prod.product_type || null,
         product_image: prod.product_image || null,
         total_sales: 0, 
-        total_quantity: 0 
+        total_quantity: 0,
+        storeCounts: {} // map store_id -> purchased count
       });
       const s = stats.get(pid);
       s.total_sales += Number(t.total || 0);
       s.total_quantity += Number(t.quantity || 0);
+      if (txStoreId) {
+        s.storeCounts[txStoreId] = (s.storeCounts[txStoreId] || 0) + Number(t.quantity || 0);
+      }
     });
 
     let items = Array.from(stats.values());
@@ -172,8 +180,30 @@ export const getTopProducts = async (req, res) => {
       items = items.filter(it => String(it.product_type || '').toLowerCase() === String(category).toLowerCase());
     }
 
-    items.sort((a, b) => b.total_sales - a.total_sales);
-    items = items.slice(0, Math.max(0, parseInt(limit, 10) || 5));
+    // Fetch store names for target store ids so we can attach store_name to items
+    const { data: storeRows } = await supabase
+      .from('stores')
+      .select('store_id, store_name')
+      .in('store_id', storeIds);
+    const storeMap = (storeRows || []).reduce((m, s) => (m[Number(s.store_id)] = s.store_name, m), {});
+
+    // Attach most representative store (by purchase count) to each item
+    items = items.map(it => {
+      const statsEntry = stats.get(Number(it.product_id));
+      if (statsEntry && statsEntry.storeCounts) {
+        const entries = Object.entries(statsEntry.storeCounts);
+        if (entries.length > 0) {
+          entries.sort((a,b) => b[1] - a[1]);
+          const primaryStoreId = Number(entries[0][0]);
+          return { ...it, store_id: primaryStoreId, store_name: storeMap[primaryStoreId] || null };
+        }
+      }
+      return { ...it, store_id: null, store_name: null };
+    });
+
+    // Sort by number of purchases (total_quantity) descending, then by sales as tiebreaker
+    items.sort((a, b) => (b.total_quantity || 0) - (a.total_quantity || 0) || (b.total_sales || 0) - (a.total_sales || 0));
+    items = items.slice(0, Math.max(0, parseInt(limit, 10) || 6));
 
     console.log(`📊 [TopProducts] Returning ${items.length} products`, items.map(i => `${i.product_name} (₱${i.total_sales})`));
 
@@ -822,6 +852,9 @@ export const getRecommendations = async (req, res) => {
           product_name: recProduct.product_name,
           product_image: recProduct.product_image,
           product_type: recProduct.product_type,
+          // preserve store origin if available
+          store_id: recProduct.store_id || null,
+          store_name: null,
           confidence: confidence,
           lift: lift,
           score: r.score,
@@ -849,6 +882,9 @@ export const getRecommendations = async (req, res) => {
           product_id: productId,
           product_name: productData.product_name,
           product_image: productData.product_image,
+          // attach store info for the antecedent product too
+          store_id: productData.store_id || null,
+          store_name: null,
           product_type: productData.product_type,
           support: productSupport.get(productId),
           recommended: recommendedProducts,
@@ -883,6 +919,9 @@ export const getRecommendations = async (req, res) => {
                 product_name: otherProduct.product_name,
                 product_image: otherProduct.product_image,
                 product_type: otherProduct.product_type,
+                // preserve store origin where available
+                store_id: otherProduct.store_id || null,
+                store_name: null,
                 confidence: 0,
                 lift: 0,
                 score: other.support,
@@ -899,6 +938,9 @@ export const getRecommendations = async (req, res) => {
               product_name: productData.product_name,
               product_image: productData.product_image,
               product_type: productData.product_type,
+              // preserve store origin
+              store_id: productData.store_id || null,
+              store_name: null,
               support: p.support,
               recommended: otherPopular,
               overallInsight: `"${productData.product_name}" is popular in your store (${p.supportPercent}% of orders). These other bestsellers might appeal to the same customers.`
@@ -915,6 +957,27 @@ export const getRecommendations = async (req, res) => {
     console.log(`✅ [Recommendations] Returning ${recommendations.length} product recommendations`);
     if (recommendations.length > 0) {
       console.log(`✅ [Recommendations] Sample:`, recommendations[0]);
+    }
+
+    // Attach store names by querying stores for any store_ids present in recommendations
+    try {
+      const allStoreIds = new Set();
+      recommendations.forEach(rec => {
+        if (rec.store_id) allStoreIds.add(rec.store_id);
+        (rec.recommended || []).forEach(r => { if (r.store_id) allStoreIds.add(r.store_id); });
+      });
+      if (allStoreIds.size) {
+        const ids = Array.from(allStoreIds);
+        const { data: storeRows } = await supabase.from('stores').select('store_id, store_name').in('store_id', ids);
+        const storeMap = (storeRows || []).reduce((m, s) => (m[Number(s.store_id)] = s.store_name, m), {});
+        // attach names
+        recommendations.forEach(rec => {
+          if (rec.store_id) rec.store_name = storeMap[rec.store_id] || null;
+          (rec.recommended || []).forEach(r => { if (r.store_id) r.store_name = storeMap[r.store_id] || null; });
+        });
+      }
+    } catch (attachErr) {
+      console.warn('Could not attach store names to recommendations:', attachErr);
     }
 
     return res.json({ 

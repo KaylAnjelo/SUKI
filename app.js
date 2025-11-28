@@ -68,7 +68,9 @@ hbs.registerHelper('eq', function(a, b, options) {
 });
 
 // Create the PG session store
-import pg from 'pg';
+// Import the CommonJS build directly to avoid environments where the
+// ESM entry (`pg/esm/index.mjs`) is missing from the installed package.
+import pg from 'pg/lib/index.js';
 import connectPgSimple from 'connect-pg-simple';
 
 // Use PostgreSQL for session storage

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/AdminStyles.css">
     <script src="/js/logout.js" defer></script>
     <script src="/js/sidebar.js" defer></script>
+    <script src="/js/customConfirm.js" defer></script>
     <link rel="icon" type="image/png" href="/assets/SUKI Logo 2.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -260,7 +261,7 @@
             editModalClose && editModalClose.addEventListener('click', closeEditModal);
             editCancel && editCancel.addEventListener('click', closeEditModal);
 
-            tbody.addEventListener('click', function (e) {
+            tbody.addEventListener('click', async function (e) {
                 const editBtn = e.target.closest('.edit-btn');
                 if (editBtn) {
                     const tr = editBtn.closest('tr');
@@ -274,7 +275,8 @@
                     const username = tr && tr.dataset && tr.dataset.username;
                     const userId = tr && tr.dataset && tr.dataset.userId;
                     const displayName = username || userId || 'vendor';
-                    if (!confirm('Delete vendor "' + displayName + '"? This action cannot be undone.')) return;
+                    const ok = (window.customConfirm) ? await window.customConfirm('Delete vendor "' + displayName + '"? This action cannot be undone.') : confirm('Delete vendor "' + displayName + '"? This action cannot be undone.');
+                    if (!ok) return;
 
                     const deleteUrl = userId ? '/users/id/' + encodeURIComponent(userId) : '/users/' + encodeURIComponent(username);
 
