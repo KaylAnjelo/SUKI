@@ -212,7 +212,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 style="color: #ffffff;">Edit Store</h2>
-        <span class="close-store">&times;</span>
+        <span class="close-store" style="cursor:pointer;">&times;</span>
       </div>
       <form id="editStoreForm" enctype="multipart/form-data">
         <input type="hidden" id="editStoreId" name="storeId">
@@ -249,10 +249,10 @@
 
   <!-- Change Password Modal -->
   <div id="changePasswordModal" class="modal">
-    <div class="modal-content" style="padding: 32px 24px;">
+    <div class="modal-content" style="padding: 18px 16px; max-height: 420px; overflow-y: auto;">
       <div class="modal-header">
         <h2 style="color: #ffffff;">Change Password</h2>
-        <span class="close-password">&times;</span>
+        <span class="close-password" style="cursor:pointer;">&times;</span>
       </div>
       <form id="requestCodeForm" style="margin-bottom: 16px;">
         <div id="emailStep">
@@ -327,17 +327,28 @@
                 });
               });
             </script>
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="currentPassword">Current Password</label>
-          <input type="password" id="currentPassword" name="currentPassword" required>
+          <input type="password" id="currentPassword" name="currentPassword" required style="padding-right:32px;">
+          <button type="button" id="toggleCurrentPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="newPassword">New Password</label>
-          <input type="password" id="newPassword" name="newPassword" required minlength="6">
+          <input type="password" id="newPassword" name="newPassword" required minlength="8" autocomplete="new-password" style="padding-right:32px;">
+          <button type="button" id="toggleNewPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
+          <div id="passwordStrength" style="margin-top:6px;font-size:13px;"></div>
+          <ul id="passwordRequirements" style="margin:6px 0 0 0;padding-left:18px;font-size:13px;">
+            <li id="req-length">At least 8 characters</li>
+            <li id="req-lower">At least 1 lowercase letter</li>
+            <li id="req-upper">At least 1 uppercase letter</li>
+            <li id="req-special">At least 1 special character (!@#$%^&* etc.)</li>
+          </ul>
+          <div id="passwordError" style="color:#b91c1c;font-size:13px;margin-top:4px;display:none;"></div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="confirmPassword">Confirm New Password</label>
-          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" autocomplete="new-password" style="padding-right:32px;">
+          <button type="button" id="toggleConfirmPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel-password">Cancel</button>
@@ -754,27 +765,108 @@
         }
       });
       
+      // Show/hide password toggles
+      function setupShowPasswordToggle(inputId, toggleId) {
+        const input = document.getElementById(inputId);
+        const toggle = document.getElementById(toggleId);
+        if (input && toggle) {
+          toggle.addEventListener('click', function() {
+            if (input.type === 'password') {
+              input.type = 'text';
+              toggle.innerHTML = '<i class="fa fa-eye-slash"></i>';
+            } else {
+              input.type = 'password';
+              toggle.innerHTML = '<i class="fa fa-eye"></i>';
+            }
+          });
+        }
+      }
+      setupShowPasswordToggle('currentPassword', 'toggleCurrentPassword');
+      setupShowPasswordToggle('newPassword', 'toggleNewPassword');
+      setupShowPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+
+      // Password strength and requirements validation
+      function checkPasswordStrength(pw) {
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[a-z]/.test(pw)) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        return score;
+      }
+
+      function updatePasswordRequirements(pw) {
+        document.getElementById('req-length').style.color = pw.length >= 8 ? '#16a34a' : '#b91c1c';
+        document.getElementById('req-lower').style.color = /[a-z]/.test(pw) ? '#16a34a' : '#b91c1c';
+        document.getElementById('req-upper').style.color = /[A-Z]/.test(pw) ? '#16a34a' : '#b91c1c';
+        document.getElementById('req-special').style.color = /[^A-Za-z0-9]/.test(pw) ? '#16a34a' : '#b91c1c';
+      }
+
+      function getPasswordError(pw) {
+        if (pw.length < 8) return 'Password must be at least 8 characters.';
+        if (!/[a-z]/.test(pw)) return 'Password must contain at least 1 lowercase letter.';
+        if (!/[A-Z]/.test(pw)) return 'Password must contain at least 1 uppercase letter.';
+        if (!/[^A-Za-z0-9]/.test(pw)) return 'Password must contain at least 1 special character.';
+        return '';
+      }
+
+      const newPasswordInput = document.getElementById('newPassword');
+      const passwordStrengthDiv = document.getElementById('passwordStrength');
+      const passwordErrorDiv = document.getElementById('passwordError');
+      if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', function() {
+          const pw = newPasswordInput.value;
+          updatePasswordRequirements(pw);
+          const score = checkPasswordStrength(pw);
+          let strength = '';
+          if (pw.length === 0) {
+            strength = '';
+          } else if (score <= 1) {
+            strength = '<span style="color:#b91c1c;">Weak</span>';
+          } else if (score === 2 || score === 3) {
+            strength = '<span style="color:#eab308;">Medium</span>';
+          } else if (score === 4) {
+            strength = '<span style="color:#16a34a;">Strong</span>';
+          }
+          passwordStrengthDiv.innerHTML = strength;
+          // Hide error while typing
+          passwordErrorDiv.style.display = 'none';
+        });
+      }
+
       // Handle password change form submission
       if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          
           const currentPassword = document.getElementById('currentPassword').value;
           const newPassword = document.getElementById('newPassword').value;
           const confirmPassword = document.getElementById('confirmPassword').value;
-          
+
+          // Validate requirements
+          const errorMsg = getPasswordError(newPassword);
+          if (errorMsg) {
+            passwordErrorDiv.textContent = errorMsg;
+            passwordErrorDiv.style.display = 'block';
+            newPasswordInput.focus();
+            return;
+          } else {
+            passwordErrorDiv.style.display = 'none';
+          }
+
           // Validate passwords match
           if (newPassword !== confirmPassword) {
-            alert('New passwords do not match!');
+            passwordErrorDiv.textContent = 'New passwords do not match!';
+            passwordErrorDiv.style.display = 'block';
+            document.getElementById('confirmPassword').focus();
             return;
           }
-          
+
           // Show loading state
           const saveBtn = changePasswordForm.querySelector('.btn-save');
           const originalText = saveBtn.textContent;
           saveBtn.textContent = 'Changing...';
           saveBtn.disabled = true;
-          
+
           try {
             const response = await fetch('/owner/change-password', {
               method: 'POST',
@@ -786,23 +878,27 @@
                 newPassword
               })
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
               alert('Password changed successfully!');
               passwordModal.style.display = 'none';
               changePasswordForm.reset();
+              passwordStrengthDiv.innerHTML = '';
+              updatePasswordRequirements('');
             } else {
-              alert('Failed to change password: ' + (result.error || 'Unknown error'));
+              passwordErrorDiv.textContent = 'Failed to change password: ' + (result.error || 'Unknown error');
+              passwordErrorDiv.style.display = 'block';
             }
           } catch (error) {
             console.error('Error changing password:', error);
-            alert('Failed to change password');
+            passwordErrorDiv.textContent = 'Failed to change password';
+            passwordErrorDiv.style.display = 'block';
           } finally {
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
-           }
+          }
         });
       }
     });
