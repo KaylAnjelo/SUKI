@@ -31,6 +31,29 @@ const EmailService = {
       html,
     });
   },
+
+  async sendOTP(to, code) {
+    const subject = 'Your Password Reset Code';
+    const text = `Your verification code is: ${code}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #7D0006;">Password Reset Request</h2>
+        <p>You have requested to reset your password. Please use the verification code below:</p>
+        <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+          ${code}
+        </div>
+        <p style="color: #666;">This code will expire in <strong>10 minutes</strong>.</p>
+        <p style="color: #666;">If you did not request this code, please ignore this email.</p>
+      </div>
+    `;
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'no-reply@example.com',
+      to,
+      subject,
+      text,
+      html,
+    });
+  },
 };
 
 export default EmailService;
