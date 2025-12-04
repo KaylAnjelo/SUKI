@@ -329,13 +329,15 @@
             </script>
         <div class="form-group" style="position:relative;">
           <label for="currentPassword">Current Password</label>
-          <input type="password" id="currentPassword" name="currentPassword" required style="padding-right:32px;">
-          <button type="button" id="toggleCurrentPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
+          <input type="password" id="currentPassword" name="currentPassword" required style="padding-right:40px;">
+          <button type="button" id="toggleCurrentPassword" style="position:absolute;bottom:8px;right:10px;background:none;border:none;cursor:pointer;padding:4px 6px;font-size:16px;color:#6b7280;" tabindex="-1"><i class="fa fa-eye"></i></button>
         </div>
-        <div class="form-group" style="position:relative;">
+        <div class="form-group">
           <label for="newPassword">New Password</label>
-          <input type="password" id="newPassword" name="newPassword" required minlength="8" autocomplete="new-password" style="padding-right:32px;">
-          <button type="button" id="toggleNewPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
+          <div style="position:relative;">
+            <input type="password" id="newPassword" name="newPassword" required minlength="8" autocomplete="new-password" style="padding-right:40px;">
+            <button type="button" id="toggleNewPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:10px;background:none;border:none;cursor:pointer;padding:4px 6px;font-size:16px;color:#6b7280;" tabindex="-1"><i class="fa fa-eye"></i></button>
+          </div>
           <div id="passwordStrength" style="margin-top:6px;font-size:13px;"></div>
           <ul id="passwordRequirements" style="margin:6px 0 0 0;padding-left:18px;font-size:13px;">
             <li id="req-length">At least 8 characters</li>
@@ -347,8 +349,8 @@
         </div>
         <div class="form-group" style="position:relative;">
           <label for="confirmPassword">Confirm New Password</label>
-          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" autocomplete="new-password" style="padding-right:32px;">
-          <button type="button" id="toggleConfirmPassword" style="position:absolute;top:50%;transform:translateY(-50%);right:8px;background:none;border:none;cursor:pointer;padding:0;font-size:16px;" tabindex="-1"><i class="fa fa-eye"></i></button>
+          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" autocomplete="new-password" style="padding-right:40px;">
+          <button type="button" id="toggleConfirmPassword" style="position:absolute;bottom:8px;right:10px;background:none;border:none;cursor:pointer;padding:4px 6px;font-size:16px;color:#6b7280;" tabindex="-1"><i class="fa fa-eye"></i></button>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel-password">Cancel</button>
