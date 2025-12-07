@@ -72,10 +72,8 @@
             <div class="store-profile-pic" id="storeProfilePic">
               {{#if user.profile_image}}
                 <img src="{{user.profile_image}}?t={{timestamp}}" alt="Owner Photo" id="storePhotoImg">
-              {{else if store.store_image}}
-                <img src="{{store.store_image}}" alt="Store Photo" id="storePhotoImg">
               {{else}}
-                <i class="fas fa-store" style="font-size: 48px; color: #9ca3af;"></i>
+                <i class="fas fa-user" style="font-size: 48px; color: #9ca3af;"></i>
               {{/if}}
             </div>
           </div>
@@ -289,12 +287,12 @@
                     if (data.success) {
                       emailStep.style.display = 'none';
                       codeStep.style.display = 'block';
-                      alert('Verification code sent to your email.');
+                      showMessage('Verification code sent to your email.', 'success');
                     } else {
-                      alert(data.error || 'Failed to send code.');
+                      showMessage(data.error || 'Failed to send code.', 'error');
                     }
                   } catch (err) {
-                    alert('Error sending code.');
+                    showMessage('Error sending code.', 'error');
                   }
                   sendCodeBtn.disabled = false;
                   sendCodeBtn.textContent = 'Send Code';
@@ -302,7 +300,7 @@
 
                 verifyCodeBtn.addEventListener('click', async function() {
                   const code = document.getElementById('emailCode').value;
-                  if (!code) return alert('Please enter the code.');
+                  if (!code) return showMessage('Please enter the code.', 'warning');
                   verifyCodeBtn.disabled = true;
                   verifyCodeBtn.textContent = 'Verifying...';
                   try {
@@ -315,12 +313,12 @@
                     if (data.success) {
                       codeStep.style.display = 'none';
                       changePasswordForm.style.display = 'block';
-                      alert('Code verified. You may now change your password.');
+                      showMessage('Code verified. You may now change your password.', 'success');
                     } else {
-                      alert(data.error || 'Invalid code.');
+                      showMessage(data.error || 'Invalid code.', 'error');
                     }
                   } catch (err) {
-                    alert('Error verifying code.');
+                    showMessage('Error verifying code.', 'error');
                   }
                   verifyCodeBtn.disabled = false;
                   verifyCodeBtn.textContent = 'Verify Code';
@@ -361,6 +359,38 @@
   </div>
 
   <script>
+    // Global message helper function
+    function showMessage(message, type = 'info') {
+      const el = document.getElementById('globalMessage');
+      if (!el) return;
+      
+      el.textContent = message;
+      el.style.display = 'block';
+      
+      if (type === 'success') {
+        el.style.background = '#ecfdf5';
+        el.style.color = '#065f46';
+        el.style.border = '2px solid #34d399';
+      } else if (type === 'error') {
+        el.style.background = '#fff1f2';
+        el.style.color = '#7f1d1d';
+        el.style.border = '2px solid #fca5a5';
+      } else if (type === 'warning') {
+        el.style.background = '#fffbeb';
+        el.style.color = '#92400e';
+        el.style.border = '2px solid #fbbf24';
+      } else {
+        el.style.background = '#eff6ff';
+        el.style.color = '#1e40af';
+        el.style.border = '2px solid #60a5fa';
+      }
+      
+      if (el._hideTimeout) clearTimeout(el._hideTimeout);
+      el._hideTimeout = setTimeout(() => {
+        el.style.display = 'none';
+      }, 4000);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Profile page loaded');
       
@@ -425,11 +455,11 @@
               // Show modal
               modal.style.display = 'block';
             } else {
-              alert('Failed to load profile data');
+              showMessage('Failed to load profile data', 'error');
             }
           } catch (error) {
             console.error('Error loading profile data:', error);
-            alert('Failed to load profile data');
+            showMessage('Failed to load profile data', 'error');
           }
         });
       }
@@ -487,16 +517,18 @@
               modal.style.display = 'none';
               
               // Show success message
-              alert('Profile updated successfully!');
+              showMessage('Profile updated successfully!', 'success');
               
               // Reload the page to reflect all changes
-              window.location.reload();
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
             } else {
-              alert('Failed to update profile: ' + (result.error || 'Unknown error'));
+              showMessage('Failed to update profile: ' + (result.error || 'Unknown error'), 'error');
             }
           } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Failed to update profile');
+            showMessage('Failed to update profile', 'error');
           } finally {
             // Reset button state
             saveBtn.textContent = originalText;
@@ -595,11 +627,11 @@
               // Show modal
               storeModal.style.display = 'block';
             } else {
-              alert('Failed to load store data');
+              showMessage('Failed to load store data', 'error');
             }
           } catch (error) {
             console.error('Error loading store data:', error);
-            alert('Failed to load store data');
+            showMessage('Failed to load store data', 'error');
           }
         }
       });
@@ -713,16 +745,18 @@
               storeModal.style.display = 'none';
               
               // Show success message
-              alert('Store updated successfully!');
+              showMessage('Store updated successfully!', 'success');
               
               // Reload the page to reflect all changes
-              window.location.reload();
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
             } else {
-              alert('Failed to update store: ' + (result.error || 'Unknown error'));
+              showMessage('Failed to update store: ' + (result.error || 'Unknown error'), 'error');
             }
           } catch (error) {
             console.error('Error updating store:', error);
-            alert('Failed to update store');
+            showMessage('Failed to update store', 'error');
           } finally {
             saveBtn.textContent = originalText;
             saveBtn.disabled = false;
@@ -884,7 +918,7 @@
             const result = await response.json();
 
             if (response.ok) {
-              alert('Password changed successfully!');
+              showMessage('Password changed successfully!', 'success');
               passwordModal.style.display = 'none';
               changePasswordForm.reset();
               passwordStrengthDiv.innerHTML = '';
@@ -905,5 +939,9 @@
       }
     });
   </script>
+
+  <!-- Global Message Container -->
+  <div id="globalMessage" role="status" aria-live="polite" style="position:fixed;right:20px;top:20px;z-index:10001;display:none;min-width:300px;max-width:400px;padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;font-weight:500;transition:all 0.3s ease;"></div>
+
 </body>
 </html>

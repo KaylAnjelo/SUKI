@@ -862,6 +862,38 @@
   </div>
 
   <script>
+    // Global message helper function
+    function showMessage(message, type = 'info') {
+      const el = document.getElementById('globalMessage');
+      if (!el) return;
+      
+      el.textContent = message;
+      el.style.display = 'block';
+      
+      if (type === 'success') {
+        el.style.background = '#ecfdf5';
+        el.style.color = '#065f46';
+        el.style.border = '2px solid #34d399';
+      } else if (type === 'error') {
+        el.style.background = '#fff1f2';
+        el.style.color = '#7f1d1d';
+        el.style.border = '2px solid #fca5a5';
+      } else if (type === 'warning') {
+        el.style.background = '#fffbeb';
+        el.style.color = '#92400e';
+        el.style.border = '2px solid #fbbf24';
+      } else {
+        el.style.background = '#eff6ff';
+        el.style.color = '#1e40af';
+        el.style.border = '2px solid #60a5fa';
+      }
+      
+      if (el._hideTimeout) clearTimeout(el._hideTimeout);
+      el._hideTimeout = setTimeout(() => {
+        el.style.display = 'none';
+      }, 4000);
+    }
+
     // Add store selector to form dynamically
     function initializeStoreSelector() {
       const modalBody = document.querySelector('#promotionForm .modal-body');
@@ -905,13 +937,13 @@
 
     // Store selector image update
     async function updateStoreImage(storeId) {
-      const imgContainer = document.getElementById('storeImageHeader');
-      const iconContainer = document.getElementById('storeIconHeader');
+      // Get the badge container (parent div)
+      const badgeContainer = document.querySelector('.profile-pic > div[style*="position:absolute"]');
+      if (!badgeContainer) return;
       
-      // If no store selected (All Stores), show default icon
+      // If no store selected, show default icon
       if (!storeId || storeId === '') {
-        if (imgContainer) imgContainer.style.display = 'none';
-        if (iconContainer) iconContainer.style.display = 'flex';
+        badgeContainer.innerHTML = '<i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>';
         return;
       }
       
@@ -921,20 +953,11 @@
           const store = await response.json();
           
           if (store.store_image) {
-            if (imgContainer) {
-              imgContainer.src = store.store_image;
-              imgContainer.style.display = 'block';
-            }
-            if (iconContainer) {
-              iconContainer.style.display = 'none';
-            }
+            // Create or update image element
+            badgeContainer.innerHTML = `<img id="storeImageHeader" src="${store.store_image}" alt="Store Badge" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1px solid rgba(0,0,0,0.06);">`;
           } else {
-            if (imgContainer) {
-              imgContainer.style.display = 'none';
-            }
-            if (iconContainer) {
-              iconContainer.style.display = 'flex';
-            }
+            // Show icon if no image
+            badgeContainer.innerHTML = '<i id="storeIconHeader" class="fas fa-store" style="font-size:12px;color:#9ca3af;margin:0;"></i>';
           }
         }
       } catch (error) {
@@ -971,7 +994,7 @@
         const data = await response.json();
         
         if (!response.ok) {
-          alert('Error loading promotion: ' + (data.error || 'Unknown error'));
+          showMessage('Error loading promotion: ' + (data.error || 'Unknown error'), 'error');
           return;
         }
         
@@ -1061,7 +1084,7 @@
         
       } catch (error) {
         console.error('Error loading promotion for edit:', error);
-        alert('Error loading promotion data. Please try again.');
+        showMessage('Error loading promotion data. Please try again.', 'error');
       }
     }
 
@@ -1097,14 +1120,16 @@
         const response = await fetch(`/api/owner/promotions/${id}`, { method: 'DELETE' });
         const result = await response.json();
         if (response.ok) {
-          alert('Promotion deleted successfully!');
-          loadPromotions();
+          showMessage('Promotion deleted successfully!', 'success');
+          setTimeout(() => {
+            loadPromotions();
+          }, 1500);
         } else {
-          alert('Error deleting promotion: ' + (result.error || 'Unknown error'));
+          showMessage('Error deleting promotion: ' + (result.error || 'Unknown error'), 'error');
         }
       } catch (error) {
         console.error('Error deleting promotion:', error);
-        alert('Network error. Please try again.');
+        showMessage('Network error. Please try again.', 'error');
       } finally {
         cancelDeletePromotion();
       }
@@ -1131,7 +1156,7 @@
         }, 2000);
       }).catch(err => {
         console.error('Failed to copy:', err);
-        alert('Failed to copy code');
+        showMessage('Failed to copy code', 'error');
       });
     }
 
@@ -1242,7 +1267,7 @@
         promotionData.discountPercentage = parseFloat(document.getElementById('discountPercentage').value || '0');
         // Validate discount percentage
         if (!promotionData.discountPercentage || promotionData.discountPercentage <= 0) {
-          alert('Please enter a valid discount percentage');
+          showMessage('Please enter a valid discount percentage', 'warning');
           return;
         }
       } else if (promotionData.discountType === 'free') {
@@ -1251,11 +1276,11 @@
         promotionData.description = document.getElementById('description').value;
         
         if (!promotionData.selectedProduct) {
-          alert('Please select a product for the free item promotion');
+          showMessage('Please select a product for the free item promotion', 'warning');
           return;
         }
         if (!promotionData.description) {
-          alert('Description is required for free item promotions');
+          showMessage('Description is required for free item promotions', 'warning');
           return;
         }
       } else if (promotionData.discountType === 'buy_x_get_y') {
@@ -1267,29 +1292,29 @@
         promotionData.description = document.getElementById('description').value;
         
         if (!promotionData.buyQuantity || promotionData.buyQuantity <= 0) {
-          alert('Please enter a valid buy quantity (X)');
+          showMessage('Please enter a valid buy quantity (X)', 'warning');
           return;
         }
         if (!promotionData.getQuantity || promotionData.getQuantity <= 0) {
-          alert('Please enter a valid get quantity (Y)');
+          showMessage('Please enter a valid get quantity (Y)', 'warning');
           return;
         }
         if (!promotionData.buyProduct) {
-          alert('Please select a product to buy (X)');
+          showMessage('Please select a product to buy (X)', 'warning');
           return;
         }
         if (!promotionData.getProduct) {
-          alert('Please select a product to get (Y)');
+          showMessage('Please select a product to get (Y)', 'warning');
           return;
         }
         if (!promotionData.description) {
-          alert('Description is required for Buy X Get Y promotions');
+          showMessage('Description is required for Buy X Get Y promotions', 'warning');
           return;
         }
       } else if (promotionData.discountType !== 'discount' && promotionData.discountType !== 'free' && promotionData.discountType !== 'buy_x_get_y') {
         // Validate discount value for other types
         if (!promotionData.discountValue || parseFloat(promotionData.discountValue) <= 0) {
-          alert('Please enter a valid discount value');
+          showMessage('Please enter a valid discount value', 'warning');
           return;
         }
       }
@@ -1297,7 +1322,7 @@
       // Validate points
       promotionData.points = parseInt(document.getElementById('points').value || '0', 10);
       if (promotionData.points < 0) {
-        alert('Points required cannot be negative');
+        showMessage('Points required cannot be negative', 'warning');
         return;
       }
       // Ensure points_required is sent for backend update
@@ -1332,21 +1357,23 @@
           
           // Show promotion code if creating new promotion
           if (!isEdit && result.promotionCode) {
-            message += `\n\n🎟️ Promotion Code: ${result.promotionCode}\n\nCustomers can use this code to redeem the promotion.`;
+            message += ` | Code: ${result.promotionCode}`;
           }
           
-          alert(message);
+          showMessage(message, 'success');
           closePromotionModal();
           // Clear edit ID
           delete this.dataset.editId;
           // Reload promotions list
-          loadPromotions();
+          setTimeout(() => {
+            loadPromotions();
+          }, 1500);
         } else {
-          alert('Error: ' + (result.error || (isEdit ? 'Failed to update promotion' : 'Failed to create promotion')));
+          showMessage('Error: ' + (result.error || (isEdit ? 'Failed to update promotion' : 'Failed to create promotion')), 'error');
         }
       } catch (error) {
         console.error('Error submitting promotion:', error);
-        alert('Network error. Please try again.');
+        showMessage('Network error. Please try again.', 'error');
       } finally {
         // Reset button state
         submitBtn.textContent = originalText;
@@ -1483,7 +1510,13 @@
     // Load existing promotions
     async function loadPromotions() {
       try {
-        const response = await fetch('/api/owner/promotions');
+        // Get the currently selected store from the dropdown
+        const storeSelector = document.getElementById('storeSelector');
+        const selectedStoreId = storeSelector ? storeSelector.value : '';
+        
+        // Build URL with store_id parameter if a store is selected
+        const url = selectedStoreId ? `/api/owner/promotions?store_id=${selectedStoreId}` : '/api/owner/promotions';
+        const response = await fetch(url);
         const data = await response.json();
         
         if (response.ok) {
@@ -1609,11 +1642,16 @@
         }
       });
       
+      // Load store image for currently selected store on page load
+      const storeSelector = document.getElementById('storeSelector');
+      if (storeSelector && storeSelector.value) {
+        updateStoreImage(storeSelector.value);
+      }
+      
       // Load existing promotions
       loadPromotions();
       
       // Handle store selector change
-      const storeSelector = document.getElementById('storeSelector');
       if (storeSelector) {
         storeSelector.addEventListener('change', function(e) {
           const selectedStoreId = e.target.value;
@@ -1624,5 +1662,9 @@
       }
     });
   </script>
+
+  <!-- Global Message Container -->
+  <div id="globalMessage" role="status" aria-live="polite" style="position:fixed;right:20px;top:20px;z-index:10001;display:none;min-width:300px;max-width:400px;padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;font-weight:500;transition:all 0.3s ease;"></div>
+
 </body>
 </html>
