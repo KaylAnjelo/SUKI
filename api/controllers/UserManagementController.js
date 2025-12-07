@@ -764,32 +764,27 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    // Archive each matched user row into users_dump (add deleted_at)
-    const toArchive = userRows.map(u => ({
-      ...u,
-      deleted_at: new Date().toISOString()
-    }));
+    // Archive each matched user row into users_dump
+    // Only copy columns that exist in users_dump table
+    const toArchive = userRows.map(u => {
+      const archived = {
+        user_id: u.user_id,
+        username: u.username,
+        password: u.password,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        contact_number: u.contact_number,
+        user_email: u.user_email,
+        role: u.role,
+        store_id: u.store_id,
+        profile_image: u.profile_image
+      };
+      return archived;
+    });
     const { error: archiveError } = await supabase.from('users_dump').insert(toArchive);
     if (archiveError) {
-      console.error('Error archiving user to users_dump:', archiveError);
-      // If the users_dump table doesn't have deleted_at, retry without that column for compatibility
-      const missingDeletedAt = (archiveError && (archiveError.code === 'PGRST204' || (archiveError.message && archiveError.message.includes('deleted_at'))));
-      if (missingDeletedAt) {
-        console.warn('users_dump appears to be missing deleted_at column; retrying archive without deleted_at');
-        const toArchiveNoDeletedAt = userRows.map(u => {
-          const copy = { ...u };
-          // remove deleted_at for compatibility
-          delete copy.deleted_at;
-          return copy;
-        });
-        const { error: archiveError2 } = await supabase.from('users_dump').insert(toArchiveNoDeletedAt);
-        if (archiveError2) {
-          console.error('Retry archive without deleted_at failed:', archiveError2);
-          return res.status(500).json({ success: false, error: 'Failed to archive user', details: archiveError2.message });
-        }
-      } else {
-        return res.status(500).json({ success: false, error: 'Failed to archive user', details: archiveError.message });
-      }
+      console.error('Error archiving user:', archiveError);
+      return res.status(500).json({ success: false, error: 'Failed to archive user', details: archiveError.message });
     }
 
     // Now perform the deletion
@@ -799,7 +794,7 @@ export const deleteUser = async (req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to delete user after archiving', details: deleteError.message });
     }
 
-    res.json({ success: true, deleted: userIdParam, message: 'User archived to users_dump and deleted' });
+    res.json({ success: true, deleted: userIdParam, message: 'User archived and deleted' });
   } catch (err) {
     console.error('Unexpected error in deleteUser:', err);
     res.status(500).json({ success: false, error: 'Server error', message: err.message });

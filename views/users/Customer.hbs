@@ -24,6 +24,7 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
+                vertical-align: middle;
                 transition: all 0.15s ease;
             }
             .btn-delete-store:hover { background:#fff6f6; transform: translateY(-1px); }
@@ -45,6 +46,10 @@
             }
             .btn-edit-store i { font-size:14px; }
             .btn-edit-store:hover { background:#5a0a0a; transform: translateY(-1px); }
+            /* Action column cell alignment */
+            td[style*="text-align:center"] {
+                white-space: nowrap;
+            }
             /* Edit modal action buttons hover */
             #editSave, #editCancel {
                 transition: all 0.12s ease;
@@ -551,7 +556,7 @@
                                                                 else tbodyEl.appendChild(tr);
                                                         }
 
-                                                        // show success (do not clear inputs here; clear only on explicit user-close)
+                                                        // show success message
                                                         const msgEl = document.getElementById('addMessage');
                                                         if (msgEl) {
                                                             msgEl.style.display = 'block';
@@ -560,7 +565,19 @@
                                                             msgEl.style.border = '1px solid #34d399';
                                                             msgEl.textContent = (data && data.message) ? data.message : 'Customer created';
                                                         }
-                                                        // keep modal open so admin can continue or explicitly close it
+                                                        // close modal after .5 seconds
+                                                        setTimeout(() => {
+                                                            el.style.display = 'none';
+                                                            if (addForm) {
+                                                                addForm.reset();
+                                                                const pw = document.getElementById('add_password');
+                                                                if (pw) pw.value = 'changemeplease';
+                                                            }
+                                                            if (msgEl) {
+                                                                msgEl.style.display = 'none';
+                                                                msgEl.textContent = '';
+                                                            }
+                                                        }, 500)
                                                 } catch (err) {
                                                         addMessage.style.display = 'block';
                                                         addMessage.style.background = '#fff1f2';
