@@ -227,8 +227,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       // Use header store selector if available
       const storeId = currentStoreId || (storeSelect ? storeSelect.value : '');
-      // Only use store-specific URL if storeId is not empty
-      const url = (storeId && storeId !== '') ? `/api/owner/transactions/${storeId}` : '/api/owner/transactions';
+      // Build URL with store_id query param (empty string for "All Stores")
+      const url = storeId ? `/api/owner/transactions?store_id=${storeId}` : '/api/owner/transactions?store_id=';
       
       const res = await fetch(url);
       if (!res.ok) {

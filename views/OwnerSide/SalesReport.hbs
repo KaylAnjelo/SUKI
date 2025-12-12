@@ -68,12 +68,14 @@
             </div>
             <div class="profile-info">
               <select id="storeSelector" class="store-dropdown">
+                {{!-- Always allow selecting all stores (empty value -> treated as null by frontend) --}}
+                <option value="" {{#unless store}}selected{{/unless}}>All stores</option>
                 {{#if stores}}
                   {{#each stores}}
                     <option value="{{this.store_id}}" {{#if this.is_selected}}selected{{/if}}>{{this.store_name}}</option>
                   {{/each}}
                 {{else}}
-                  <option value="">No stores available</option>
+                  <option value="" disabled>No stores available</option>
                 {{/if}}
               </select>
             </div>

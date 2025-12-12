@@ -24,7 +24,17 @@ export const getOwnerDashboard = async (req, res) => {
     if (storeError) throw storeError;
 
     // Get selected store from query param. If none provided, treat as "All stores" (store === null)
-    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    // Empty string '' also means "All stores" (null)
+    let selectedStoreId = null;
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      selectedStoreId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session for subsequent API calls/navigation
+      req.session.selectedStoreId = selectedStoreId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      selectedStoreId = req.session.selectedStoreId;
+    }
+
     let store = null;
     if (selectedStoreId && stores) {
       store = stores.find(s => s.store_id === selectedStoreId);

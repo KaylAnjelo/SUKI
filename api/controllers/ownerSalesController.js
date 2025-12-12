@@ -56,7 +56,19 @@ export const getSalesReport = async (req, res) => {
     console.log('session userId:', userId);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { dateFrom, dateTo, storeId, sortBy = 'newest', page = '1', limit = '10' } = req.query;
+    // Determine selected store: prefer `store_id` query param (could be '' for All Stores),
+    // otherwise fall back to session.selectedStoreId
+    let storeId = null;
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      storeId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session for subsequent API calls/navigation
+      req.session.selectedStoreId = storeId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      storeId = req.session.selectedStoreId;
+    }
+
+    const { dateFrom, dateTo, sortBy = 'newest', page = '1', limit = '10' } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const pageLimit = Math.max(1, parseInt(limit, 10) || 10);
 
