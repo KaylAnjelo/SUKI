@@ -15,11 +15,8 @@ const router = express.Router();
 router.get('/stores', getOwnerStores);
 router.get('/stores/:id', getStoreById);
 
-// GET /api/owner/transactions (all stores)
+// GET /api/owner/transactions (all stores or filtered by store_id query param)
 router.get('/transactions', getOwnerTransactions);
-
-// GET /api/owner/transactions/:storeId (filtered by store)
-router.get('/transactions/:storeId', getOwnerTransactions);
 
 // POST /api/owner/transactions
 router.post('/transactions', createOwnerTransaction);

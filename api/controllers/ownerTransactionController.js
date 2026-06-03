@@ -11,9 +11,19 @@ export const getOwnerTransactions = async (req, res) => {
     const userId = req.session?.userId || req.session?.user?.user_id || req.session?.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const storeIdParam = req.params.storeId;
-    const storeId = storeIdParam ? parseInt(storeIdParam, 10) : null;
-    if (storeIdParam && Number.isNaN(storeId)) {
+    // Determine selected store: prefer `store_id` query param (could be '' for All Stores),
+    // otherwise fall back to session.selectedStoreId
+    let storeId = null;
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      storeId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session for subsequent API calls/navigation
+      req.session.selectedStoreId = storeId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      storeId = req.session.selectedStoreId;
+    }
+
+    if (storeId !== null && Number.isNaN(storeId)) {
       return res.status(400).json({ error: 'Invalid store id' });
     }
 

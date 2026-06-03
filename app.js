@@ -267,18 +267,24 @@ app.get("/owner/sales-report", async (req, res) => {
       .select('*')
       .eq('owner_id', userId);
 
-    // Get selected store from query param or use first store
-    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    // Get selected store from query param (empty string or missing = "All Stores")
+    let selectedStoreId = null;
     let store = null;
+    
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      selectedStoreId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session
+      req.session.selectedStoreId = selectedStoreId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      selectedStoreId = req.session.selectedStoreId;
+    }
     
     if (selectedStoreId && stores) {
       store = stores.find(s => s.store_id === selectedStoreId);
     }
     
-    // Fallback to first store if no valid selection
-    if (!store && stores && stores.length > 0) {
-      store = stores[0];
-    }
+    // DO NOT fallback to first store - allow null for "All stores" view
 
     // Mark selected store in stores array
     const storesWithSelection = (stores || []).map(s => ({
@@ -319,18 +325,24 @@ app.get("/owner/transactions", async (req, res) => {
       .select('*')
       .eq('owner_id', userId);
 
-    // Get selected store from query param or use first store
-    const selectedStoreId = req.query.store_id ? parseInt(req.query.store_id) : null;
+    // Get selected store from query param (empty string or missing = "All Stores")
+    let selectedStoreId = null;
     let store = null;
+    
+    if (req.query && Object.prototype.hasOwnProperty.call(req.query, 'store_id')) {
+      // query param present (may be empty string meaning All Stores)
+      selectedStoreId = req.query.store_id === '' ? null : parseInt(req.query.store_id, 10);
+      // persist selection in session
+      req.session.selectedStoreId = selectedStoreId;
+    } else if (req.session && req.session.selectedStoreId !== undefined) {
+      selectedStoreId = req.session.selectedStoreId;
+    }
     
     if (selectedStoreId && stores) {
       store = stores.find(s => s.store_id === selectedStoreId);
     }
     
-    // Fallback to first store if no valid selection
-    if (!store && stores && stores.length > 0) {
-      store = stores[0];
-    }
+    // DO NOT fallback to first store - allow null for "All stores" view
 
     // Mark selected store in stores array
     const storesWithSelection = (stores || []).map(s => ({
@@ -567,7 +579,6 @@ setInterval(updatePromotionActiveStates, 60 * 60 * 1000);
 app.get('/api/owner/stores', ownerTransactions.getOwnerStores);
 app.get('/api/owner/stores/:id', ownerTransactions.getStoreById);
 app.get('/api/owner/transactions', ownerTransactions.getOwnerTransactions);
-app.get('/api/owner/transactions/:storeId', ownerTransactions.getOwnerTransactions);
 
 // Sales-report endpoints used by frontend
 app.get('/api/owner/sales-report/stores/dropdown', ownerSales.getStoresDropdown);
